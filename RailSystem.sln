@@ -1,0 +1,21 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Core", "Core\Core.csproj", "{C071F54D-FA03-463F-AB16-79FD984A7FF4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tools", "Tools\Tools.csproj", "{BA1521B9-90E8-4F27-B8B3-1B6392E7F19A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gauge2Wood", "Gauge2Wood\Gauge2Wood.csproj", "{67B9474C-D385-40AD-8753-36D19927CD71}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{C071F54D-FA03-463F-AB16-79FD984A7FF4}.Debug|x64.ActiveCfg = Debug|x64
+		{C071F54D-FA03-463F-AB16-79FD984A7FF4}.Debug|x64.Build.0 = Debug|x64
+		{BA1521B9-90E8-4F27-B8B3-1B6392E7F19A}.Debug|x64.ActiveCfg = Debug|x64
+		{BA1521B9-90E8-4F27-B8B3-1B6392E7F19A}.Debug|x64.Build.0 = Debug|x64
+		{67B9474C-D385-40AD-8753-36D19927CD71}.Debug|x64.ActiveCfg = Debug|x64
+		{67B9474C-D385-40AD-8753-36D19927CD71}.Debug|x64.Build.0 = Debug|x64
+	EndGlobalSection
+EndGlobal

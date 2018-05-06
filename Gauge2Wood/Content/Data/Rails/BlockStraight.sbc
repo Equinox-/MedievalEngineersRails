@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+    <Definition xsi:type="MyObjectBuilder_CubeBlockDefinition">
+        <Id Type="CubeBlock" Subtype="EquiRailGauge2Wood_Straight" />
+        <DisplayName>Straight Rail Segment (2m Gauge, Wood)</DisplayName>
+        <Public>true</Public>
+        <Icon>Textures\GUI\Icons\Equinox\RailBlockStraightGauge2Wood.dds</Icon>
+        <CubeSize>Large</CubeSize>
+        <BlockTopology>TriangleMesh</BlockTopology>
+        <Size x="4" y="1" z="1" />
+        <Center x="0" y="0" z="0" />
+        <Model>Models\Equinox\RailsGauge2\Wood\Bendy_10m.mwm</Model>
+
+        <BuildProgressModels>
+            <Model BuildPercentUpperBound="0.08" File="Models\Equinox\RailsGauge2\Wood\Bendy_10m_Build1.mwm" /> <!-- planning stakes -->
+            <Model BuildPercentUpperBound="0.25" File="Models\Equinox\RailsGauge2\Wood\Bendy_10m_Build2.mwm" /> <!-- sleepers 1 -->
+            <Model BuildPercentUpperBound="0.43" File="Models\Equinox\RailsGauge2\Wood\Bendy_10m_Build3.mwm" /> <!-- sleepers 2 -->
+            <Model BuildPercentUpperBound="0.64" File="Models\Equinox\RailsGauge2\Wood\Bendy_10m_Build4.mwm" /> <!-- sleepers 3 -->
+            <Model BuildPercentUpperBound="0.83" File="Models\Equinox\RailsGauge2\Wood\Bendy_10m_Build5.mwm" /> <!-- rails -->
+            <Model BuildPercentUpperBound="0.95" File="Models\Equinox\RailsGauge2\Wood\Bendy_10m_Build6.mwm" /> <!-- spikes -->
+        </BuildProgressModels>
+        <MirroringY>Z</MirroringY>
+        <MirroringZ>Y</MirroringZ>
+        <BuildTimeSeconds>12</BuildTimeSeconds>
+        <Direction>Horizontal</Direction>
+        <Rotation>Vertical</Rotation>
+        <BuildType>Cube</BuildType>
+        <PhysicalMaterial>Stone</PhysicalMaterial>
+        <Components>
+            <Component Tag="Timber" Count="24" /> <!-- ref value is 24 timbers -->
+            <Component Tag="ScrapWood" Count="4" /> <!-- ref value 32 stakes -->
+            <Component Tag="Ingot" Count="3"/> <!-- ref value is 6 m^2 of sheet metal.  Nominal thickness of 1mm.  Iron ingot is .015M^2-->
+        </Components>
+        <CriticalComponent Tag="Ingot" Index="0" /> <!-- match last ingot -->
+        <RandomRotation>true</RandomRotation>
+        <MaxIntegrity>21000</MaxIntegrity>
+        <NavigationDefinition>Default</NavigationDefinition>
+    </Definition>
+
+    <Definition xsi:type="MyObjectBuilder_BendyStaticComponentDefinition">
+        <Id Type="MyObjectBuilder_BendyStaticComponent" Subtype="EquiRailGauge2Wood_Straight" />
+        <Layer>TrainRailGauge2</Layer>
+        <Node>
+            <Position x="-5" y="-1.25" z="0" />
+            <Up x="0" y="1" z="0" />
+            <Forward x="1" y="0" z="0" />
+        </Node>
+        <Node>
+            <Position x="5" y="-1.25" z="0" />
+            <Up x="0" y="1" z="0" />
+            <Forward x="1" y="0" z="0" />
+        </Node>
+        <Edge From="0" To="1" />
+    </Definition>
+
+    <Definition xsi:type="MyObjectBuilder_ContainerDefinition">
+        <Id Type="CubeBlock" Subtype="EquiRailGauge2Wood_Straight" />
+        <Component Type="BendyStaticComponent" Subtype="EquiRailGauge2Wood_Straight" />
+    </Definition>
+</Definitions>

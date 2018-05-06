@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <Definition xsi:type="MyObjectBuilder_CogWheelBlockDefinition">
+    <Id Type="CubeBlock" Subtype="Bogie" />
+    <DisplayName>Bogie</DisplayName>
+    <Public>true</Public>
+    <Icon>Textures\GUI\Icons\Cubes\WheelMediumSmall.dds</Icon>
+    <CubeSize>Small</CubeSize>
+    <BlockTopology>TriangleMesh</BlockTopology>
+    <Size x="5" y="5" z="1" />
+    <ModelOffset x="0" y="0" z="0" />
+    <Model>Models\Cubes\Small\WheelMediumSmall.mwm</Model>
+    <Components>
+      <Component Tag="Timber" Count="2" />
+    </Components>
+    <CriticalComponent Tag="Timber" Index="0" />
+    <MaxIntegrity>200</MaxIntegrity>
+    <MountPoints>
+      <MountPoint Side="Front" StartX="1.0" StartY="1.0" EndX="4.0" EndY="4.0" />
+      <MountPoint Side="Back" StartX="2.0" StartY="2.0" EndX="3.0" EndY="3.0" />
+    </MountPoints>
+    <MirroringY>Z</MirroringY>
+    <MirroringZ>Y</MirroringZ>
+    <BuildTimeSeconds>6</BuildTimeSeconds>
+    <PhysicalMaterial>Wood</PhysicalMaterial>
+    <Mass>40</Mass>
+    <BreakableThreshold>100000</BreakableThreshold>
+    <MaxFrictionTorque>10</MaxFrictionTorque>
+    <VoxelPlacement>
+      <StaticMode>
+        <PlacementMode>Both</PlacementMode>
+        <MaxAllowed>1</MaxAllowed>
+        <MinAllowed>0</MinAllowed>
+      </StaticMode>
+      <DynamicMode>
+        <PlacementMode>Both</PlacementMode>
+        <MaxAllowed>1</MaxAllowed>
+        <MinAllowed>0</MinAllowed>
+      </DynamicMode>
+    </VoxelPlacement>
+  </Definition>
+  <Definition xsi:type="MyObjectBuilder_BogieComponentDefinition">
+    <Id Type="MyObjectBuilder_BogieComponent" Subtype="Test" />
+
+    <VerticalOffset>0.75</VerticalOffset>
+    <Layer>TrainRailGauge2</Layer>
+  </Definition>
+  
+  <Definition xsi:type="MyObjectBuilder_ContainerDefinition" Copy="Append">
+    <Id Type="MyObjectBuilder_CubeBlock" Subtype="Bogie" />
+
+    <Component Type="BogieComponent" Subtype="Test" />
+  </Definition>
+
+
+  <Definition xsi:type="MyObjectBuilder_CogWheelBlockDefinition">
+    <Id Type="CubeBlock" Subtype="PoweredBogie" />
+    <DisplayName>Powered Bogie</DisplayName>
+    <Public>true</Public>
+    <Icon>Textures\GUI\Icons\Cubes\WheelMediumSmall.dds</Icon>
+    <CubeSize>Small</CubeSize>
+    <BlockTopology>TriangleMesh</BlockTopology>
+    <Size x="5" y="5" z="1" />
+    <ModelOffset x="0" y="0" z="0" />
+    <Model>Models\Cubes\Small\WheelMediumSmall.mwm</Model>
+    <Components>
+      <Component Tag="Timber" Count="2" />
+    </Components>
+    <CriticalComponent Tag="Timber" Index="0" />
+    <MaxIntegrity>200</MaxIntegrity>
+    <MountPoints>
+      <MountPoint Side="Front" StartX="1.0" StartY="1.0" EndX="4.0" EndY="4.0" />
+      <MountPoint Side="Back" StartX="2.0" StartY="2.0" EndX="3.0" EndY="3.0" />
+    </MountPoints>
+    <MirroringY>Z</MirroringY>
+    <MirroringZ>Y</MirroringZ>
+    <BuildTimeSeconds>6</BuildTimeSeconds>
+    <PhysicalMaterial>Wood</PhysicalMaterial>
+    <Mass>40</Mass>
+    <BreakableThreshold>100000</BreakableThreshold>
+    <MaxFrictionTorque>10</MaxFrictionTorque>
+    <VoxelPlacement>
+      <StaticMode>
+        <PlacementMode>Both</PlacementMode>
+        <MaxAllowed>1</MaxAllowed>
+        <MinAllowed>0</MinAllowed>
+      </StaticMode>
+      <DynamicMode>
+        <PlacementMode>Both</PlacementMode>
+        <MaxAllowed>1</MaxAllowed>
+        <MinAllowed>0</MinAllowed>
+      </DynamicMode>
+    </VoxelPlacement>
+  </Definition>
+  <Definition xsi:type="MyObjectBuilder_BogieComponentDefinition">
+    <Id Type="MyObjectBuilder_BogieComponent" Subtype="PoweredBogie" />
+
+    <VerticalOffset>0.75</VerticalOffset>
+    <Layer>TrainRailGauge2</Layer>
+    <MaxVelocity>30</MaxVelocity>
+    <MaxForce>1000</MaxForce>
+  </Definition>
+  
+  <Definition xsi:type="MyObjectBuilder_ContainerDefinition" Copy="Append">
+    <Id Type="MyObjectBuilder_CubeBlock" Subtype="PoweredBogie" />
+
+    <Component Type="BogieComponent" Subtype="PoweredBogie" />
+  </Definition>
+</Definitions>
