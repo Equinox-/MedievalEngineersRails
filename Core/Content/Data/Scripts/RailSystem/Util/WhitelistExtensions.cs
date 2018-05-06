@@ -2,7 +2,6 @@
 using System.ComponentModel;
 using System.Xml.Serialization;
 using Medieval.GameSystems;
-using NLog.Targets;
 using Sandbox.ModAPI;
 using VRage.Game;
 using VRage.Game.Definitions;

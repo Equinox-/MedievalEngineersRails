@@ -35,6 +35,7 @@ using VRageMath;
 namespace Equinox76561198048419394.RailSystem.Voxel
 {
     [MyHandItemBehavior(typeof(MyObjectBuilder_RailGraderBehaviorDefinition))]
+    [StaticEventOwner]
     public class RailGraderBehavior : MyToolBehaviorBase
     {
         private const double GRADE_SCAN_DISTANCE = 25D;
@@ -90,48 +91,21 @@ namespace Equinox76561198048419394.RailSystem.Voxel
 
         protected override void Hit()
         {
-        }
-
-
-        private static readonly MyStorageData _storage = new MyStorageData();
-
-        private static void DoGrading(long holderEntityId, DefinitionIdBlit graderId, Vector3D target)
-        {
-            var Holder = MyEntities.GetEntityById(holderEntityId);
-            var
-            
-            if (Holder == null)
-            {
-                MyEventContext.ValidationFailed();
+            if (!MyAPIGateway.Session.IsServerDecider())
                 return;
-            }
-
             var player = MyAPIGateway.Players.GetPlayerControllingEntity(Holder);
             if (player == null)
-            {
-                MyEventContext.ValidationFailed();
                 return;
-            }
 
-            if (!player.HasPermission(target, MyPermissionsConstants.Mining))
+            if (!HasPermission(MyPermissionsConstants.Mining))
             {
                 player.ShowNotification("You don't have permission to terraform here.", 2000, null, new Vector4(1, 0, 0, 1));
-                MyEventContext.ValidationFailed();
                 return;
             }
 
             bool isExcavating = ActiveAction == MyHandItemActionEnum.Primary;
 
             var radius = isExcavating ? Definition.ExcavateRadius : Definition.FillRadius;
-            var voxelRadius = (int) Math.Ceiling(radius);
-            var centerWorld = Target.Position;
-            Vector3I center;
-            MyVoxelCoordSystems.WorldPositionToVoxelCoord(_voxel.PositionLeftBottomCorner, ref centerWorld, out center);
-            var voxMin = center - voxelRadius - 1;
-            var voxMax = center + voxelRadius + 1;
-            _storage.Resize(voxMin, voxMax);
-            _voxel.Storage.ReadRange(_storage, MyStorageDataTypeFlags.ContentAndMaterial, 0, voxMin, voxMax);
-
             uint availableForDeposit;
             StringBuilder requiredMaterials = null;
             if (isExcavating)
@@ -152,7 +126,7 @@ namespace Equinox76561198048419394.RailSystem.Voxel
                         amount /= item.Value;
                         if (amount == 0)
                         {
-                            if (requiredMaterials == null && IsLocallyControlled)
+                            if (requiredMaterials == null)
                                 requiredMaterials = new StringBuilder("You require ");
                             var itemDef = MyDefinitionManager.Get<MyInventoryItemDefinition>(item.Key);
                             andHead = requiredMaterials.Length;
@@ -172,122 +146,15 @@ namespace Equinox76561198048419394.RailSystem.Voxel
                 }
             }
 
-            uint totalDeposited = 0;
             uint availableForExcavate = Definition.ExcavateVolume;
-            uint totalExcavated = 0;
-            bool triedToChange = false;
-            bool changed = false;
 
-            #region Mutate
-
-            bool intersectedPlayer = false;
-
-            for (var i = 0; i <= voxelRadius && (!triedToChange || (availableForExcavate > 0 && availableForDeposit > 0)); i++)
-            for (var e = new ShellEnumerator(center - i, center + i); e.MoveNext() && (!triedToChange || (availableForExcavate > 0 && availableForDeposit > 0));)
-            {
-                var vCoord = e.Current;
-                var dataCoord = e.Current - voxMin;
-                Vector3D worldCoord;
-                MyVoxelCoordSystems.VoxelCoordToWorldPosition(_voxel.PositionLeftBottomCorner, ref vCoord, out worldCoord);
-                var cval = _storage.Get(MyStorageDataTypeEnum.Content, ref dataCoord);
-
-                byte? excavationDensity = null;
-                if (isExcavating && cval > 0 && (!triedToChange || availableForExcavate > 0))
-                {
-                    float density = 0;
-                    foreach (var c in _gradeComponents.Select(x => x.Excavation).Where(x => x != null))
-                        density = Math.Max(density, c.GetDensity(ref worldCoord));
-                    if (density > 0)
-                        excavationDensity = (byte) ((1 - density) * byte.MaxValue);
-                }
-
-                byte? fillDensity = null;
-                if (!isExcavating && cval < byte.MaxValue && (!triedToChange || availableForDeposit > 0))
-                {
-                    float density = 0;
-                    foreach (var c in _gradeComponents.Select(x => x.Support).Where(x => x != null))
-                        density = Math.Max(density, c.GetDensity(ref worldCoord));
-                    if (density > 0)
-                        fillDensity = (byte) (density * byte.MaxValue);
-                }
-
-                if ((!fillDensity.HasValue || cval >= fillDensity.Value) && (!excavationDensity.HasValue || cval <= excavationDensity.Value))
-                    continue;
-
-                if (excavationDensity.HasValue && excavationDensity.Value < cval)
-                {
-                    triedToChange = true;
-                    var toExtract = (uint) Math.Min(availableForExcavate, cval - excavationDensity.Value);
-                    if (toExtract > 0)
-                    {
-                        var mid = _storage.Get(MyStorageDataTypeEnum.Material, ref dataCoord);
-                        if (mid < _excavated.Length)
-                            _excavated[mid] += toExtract;
-                        DisableFarming(worldCoord);
-                        _storage.Set(MyStorageDataTypeEnum.Content, ref dataCoord, (byte) (cval - toExtract));
-                        totalExcavated += toExtract;
-                        availableForExcavate -= toExtract;
-                        changed = true;
-                    }
-
-                    continue;
-                }
-
-                if (!fillDensity.HasValue || fillDensity.Value <= cval)
-                    continue;
-                triedToChange = true;
-                var toFill = Math.Min(availableForDeposit, fillDensity.Value - cval);
-                if (toFill <= 0)
-                    continue;
-
-                // would this deposit in midair?
-                {
-                    var test = worldCoord;
-                    test += 2 * Vector3D.Normalize(MyGravityProviderSystem.CalculateNaturalGravityInPoint(worldCoord));
-                    Vector3I vtest;
-                    MyVoxelCoordSystems.WorldPositionToVoxelCoord(_voxel.PositionLeftBottomCorner, ref test, out vtest);
-                    vtest = Vector3I.Clamp(vtest, voxMin, voxMax) - voxMin;
-                    if (vtest != vCoord && _storage.Get(MyStorageDataTypeEnum.Content, ref vtest) == 0)
-                        continue;
-                }
-
-                // would it touch something dynamic?
-                {
-                    var box = new BoundingBoxD(worldCoord - 0.25, worldCoord + 0.25);
-                    var bad = false;
-                    foreach (var k in MyEntities.GetEntitiesInAABB(ref box))
-                    {
-                        if (k.Physics == null || k.Physics.IsStatic)
-                            continue;
-                        var obb = new OrientedBoundingBoxD(k.PositionComp.LocalAABB, k.WorldMatrix);
-                        if (!obb.Intersects(ref box)) continue;
-                        bad = true;
-                        break;
-                    }
-
-                    if (bad)
-                    {
-                        intersectedPlayer = true;
-                        continue;
-                    }
-                }
-
-                changed = true;
-                DisableFarming(worldCoord);
-                availableForDeposit = (uint) (availableForDeposit - toFill);
-                totalDeposited += (uint) toFill;
-                _storage.Set(MyStorageDataTypeEnum.Content, ref dataCoord, (byte) (cval + toFill));
-                if (fillDensity.Value <= cval * 1.5f) continue;
-                var t = -Vector3I.One;
-                for (var itrContent = new Vector3I_RangeIterator(ref t, ref Vector3I.One); itrContent.IsValid(); itrContent.MoveNext())
-                {
-                    var tpos = dataCoord + itrContent.Current;
-                    _storage.Set(MyStorageDataTypeEnum.Material, ref tpos, Definition.FillMaterial.Material.Index);
-                }
-            }
-
-            #endregion Mutate
-
+            uint totalDeposited;
+            uint totalExcavated;
+            bool triedToChange;
+            bool intersectedDynamic;
+            var result = RailGrader.DoGrading(_gradeComponents, Target.Position, radius, isExcavating, availableForDeposit, availableForExcavate, _excavated, Definition.FillMaterial.Material.Index,
+                out totalDeposited, out totalExcavated, testDynamic: true, triedToChange: out triedToChange, intersectedDynamic: out intersectedDynamic);
+            
             #region Give Items
 
             if (triedToChange && isExcavating)
@@ -305,7 +172,7 @@ namespace Equinox76561198048419394.RailSystem.Voxel
                     {
                         var amount = k.Value * count;
                         if (outputInventory != null && outputInventory.AddItems(k.Key, amount)) continue;
-                        var pos = MyAPIGateway.Entities.FindFreePlace(centerWorld, radius) ?? centerWorld;
+                        var pos = MyAPIGateway.Entities.FindFreePlace(Target.Position, radius) ?? Target.Position;
                         MyFloatingObjects.Spawn(MyInventoryItem.Create(k.Key, amount), MatrixD.CreateTranslation(pos), null);
                     }
                 }
@@ -338,19 +205,69 @@ namespace Equinox76561198048419394.RailSystem.Voxel
 
             #endregion
 
-            if (changed)
+            if (totalDeposited > 0 || totalExcavated > 0)
             {
-                _voxel.Storage.WriteRange(_storage, MyStorageDataTypeFlags.ContentAndMaterial, voxMin, voxMax);
                 GraderUsed?.Invoke(this, _gradeComponents, totalDeposited, totalExcavated);
+                MyAPIGateway.Multiplayer?.RaiseStaticEvent((x) => DoGrade, _gradeComponents.Select(x => x.Blit()).ToArray(), Target.Position,
+                    new GradingConfig()
+                    {
+                        Radius = radius,
+                        Excavate = isExcavating,
+                        DepositAvailable = availableForDeposit,
+                        ExcavateAvailable = availableForExcavate,
+                        MaterialToDeposit = Definition.FillMaterial.Material.Index,
+                        ExcavateExpected = totalExcavated,
+                        DepositExpected = totalDeposited
+                    });
                 return;
             }
 
-            if (!IsLocallyControlled) return;
-            if (!isExcavating && intersectedPlayer && triedToChange)
-                MyAPIGateway.Utilities.ShowNotification("Cannot fill where there are players or dynamic grids", 2000, null, new Vector4(1, 0, 0, 1));
+            if (!isExcavating && intersectedDynamic && triedToChange)
+                player.ShowNotification("Cannot fill where there are players or dynamic grids", 2000, null, new Vector4(1, 0, 0, 1));
             if (!isExcavating && requiredMaterials != null && triedToChange)
-                MyAPIGateway.Utilities.ShowNotification(requiredMaterials?.ToString(), 2000, null, new Vector4(1, 0, 0, 1));
+                player.ShowNotification(requiredMaterials?.ToString(), 2000, null, new Vector4(1, 0, 0, 1));
         }
+
+        private struct GradingConfig
+        {
+            public float Radius;
+            public bool Excavate;
+            public uint DepositAvailable;
+            public uint ExcavateAvailable;
+            public byte MaterialToDeposit;
+            public uint DepositExpected;
+            public uint ExcavateExpected;
+        }
+
+        [Event]
+        [Broadcast]
+        private static void DoGrade(RailGradeComponentBlit[] components, Vector3D target, GradingConfig config)
+        {
+            uint deposited;
+            uint excavated;
+            bool triedToChange;
+            bool intersectedDynamic;
+            var cbox = new IRailGradeComponent[components.Length];
+            for (var i = 0; i < components.Length; i++)
+                cbox[i] = components[i];
+            RailGrader.DoGrading(cbox, target, config.Radius, config.Excavate, config.DepositAvailable, config.ExcavateAvailable, null, config.MaterialToDeposit, out deposited, out excavated, testDynamic: true,
+                triedToChange: out triedToChange,
+                intersectedDynamic: out intersectedDynamic);
+
+            if (config.DepositExpected != deposited || config.ExcavateExpected != excavated)
+            {
+                MyLog.Default.Warning($"Grading desync occured!  {config.DepositExpected} != {deposited}, {config.ExcavateExpected} != {excavated}");
+                var red = new Vector4(1, 0, 0, 1);
+                var time = DateTime.Now;
+                if ((time - _lastGradingDesync) > TimeSpan.FromSeconds(30))
+                {
+                    MyAPIGateway.Utilities.ShowNotification("Grading desync occured!  If you experience movement problems try reconnected.", 5000, null, red);
+                    _lastGradingDesync = time;
+                }
+            }
+        }
+
+        private static DateTime _lastGradingDesync = new DateTime(0);
 
         private bool IsLocallyControlled => MySession.Static.PlayerEntity == Holder;
 
@@ -360,11 +277,6 @@ namespace Equinox76561198048419394.RailSystem.Voxel
             if (player == null)
                 return false;
             return MyAreaPermissionSystem.Static == null || MyAreaPermissionSystem.Static.HasPermission(player.IdentityId, Target.Position, id);
-        }
-
-        private static void DisableFarming(Vector3D pos)
-        {
-            FarmingExtensions.DisableItemsIn(new BoundingBoxD(pos - 1, pos + 1));
         }
 
         private readonly List<RailGradeComponent> _gradeComponents = new List<RailGradeComponent>();

@@ -22,7 +22,7 @@ namespace Equinox76561198048419394.RailSystem.Voxel
     [MyComponent(typeof(MyObjectBuilder_RailGradeComponent))]
     [MyDependency(typeof(BendyDynamicComponent), Critical = true)]
     [MyDefinitionRequired]
-    public class RailGradeComponent : MyEntityComponent, IConstructionPrereq
+    public class RailGradeComponent : MyEntityComponent, IConstructionPrereq, IRailGradeComponent
     {
         public RailGradeComponentDefinition Definition { get; private set; }
 
@@ -212,6 +212,53 @@ namespace Equinox76561198048419394.RailSystem.Voxel
                 return _isComplete;
             }
         }
+
+        public RailGradeComponentBlit Blit()
+        {
+            return new RailGradeComponentBlit()
+            {
+                Edge = new EdgeBlit(_bendy.Edge),
+                Definition = Definition.Id
+            };
+        }
+
+        public void Unblit(out RailGradeShape fillShape, out RailGradeShape excavateShape)
+        {
+            fillShape = Support;
+            excavateShape = Excavation;
+        }
+    }
+    
+    public struct RailGradeComponentBlit : IRailGradeComponent
+    {
+        public EdgeBlit Edge;
+        public DefinitionIdBlit Definition;
+
+        public void Unblit(out RailGradeShape fillShape, out RailGradeShape excavateShape)
+        {
+            fillShape = excavateShape = null;
+            
+            var def = MyDefinitionManager.Get<RailGradeComponentDefinition>(Definition);
+            if (def == null)
+                return;
+
+            if (def.Support.HasValue)
+            {
+                var s = def.Support.Value;
+                fillShape = new RailGradeShape(Edge, s.Width, s.RelaxAngleRadians, s.VerticalOffset, s.Segments, s.Height);
+            }
+            
+            if (def.Excavate.HasValue)
+            {
+                var s = def.Excavate.Value;
+                excavateShape = new RailGradeShape(Edge, s.Width, s.RelaxAngleRadians, s.VerticalOffset, s.Segments, s.Height);
+            }
+        }
+    }
+
+    public interface IRailGradeComponent
+    {
+        void Unblit(out RailGradeShape fillShape, out RailGradeShape excavateShape);
     }
 
     [MyObjectBuilderDefinition]
