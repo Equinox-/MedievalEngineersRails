@@ -49,8 +49,8 @@
         </Edges>
 
         <Distance Min="7" Max="15" />
-        <MaxGradeRatio>0.05</MaxGradeRatio>
-        <MaxAngleDegrees>20</MaxAngleDegrees>
+        <MaxGradeRatio>0.1</MaxGradeRatio>
+        <MaxAngleDegrees>15</MaxAngleDegrees>
     </Definition>
 
     <Definition xsi:type="MyObjectBuilder_ContainerDefinition">

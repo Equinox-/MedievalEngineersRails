@@ -236,6 +236,7 @@
     <Compile Include="Content\Data\Scripts\RailSystem\RailConstants.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Util\Assert.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Util\Curve\CubicCurve.cs" />
+    <Compile Include="Content\Data\Scripts\RailSystem\Util\Curve\CubicSphericalCurve.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Util\Curve\CurveBlit.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Util\Curve\CurveExtensions.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Util\Curve\ICurve.cs" />
@@ -251,6 +252,7 @@
     <Compile Include="Content\Data\Scripts\RailSystem\Util\Range.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Util\ReadonlyList.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Util\ShellEnumerator.cs" />
+    <Compile Include="Content\Data\Scripts\RailSystem\Util\SphericalExtensions.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Util\TriangleUtil.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Util\VectorExtensions.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Util\WhitelistExtensions.cs" />

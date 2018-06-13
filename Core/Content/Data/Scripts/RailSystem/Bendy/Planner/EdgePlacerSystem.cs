@@ -292,8 +292,9 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
                     continue;
 
                 var obContainer = new MyObjectBuilder_ComponentContainer();
-                var worldMatrix = MatrixD.CreateWorld((prevNode.Position + nextNode.Position) / 2, prevNode.Tangent,
-                    prevNode.Up);
+                var worldMatrix = MatrixD.CreateWorld((prevNode.Position + nextNode.Position) / 2,
+                    Vector3D.Normalize(nextNode.Position - prevNode.Position),
+                    Vector3D.Normalize(nextNode.Up + prevNode.Up));
                 var worldMatrixInv = MatrixD.Invert(worldMatrix);
                 ((ICollection<MyObjectBuilder_EntityComponent>) obContainer.Components).Add(
                     new MyObjectBuilder_BendyComponent()

@@ -3,10 +3,11 @@
     public static class RailConstants
     {
         // Maximum nodes in a single call
-        public const int MaxNodesPlaced = 32;
+        public const int MaxNodesPlaced = 128;
 
         // Factor applied to tolerances when doing long-placing
         public const float LongToleranceFactor = 0.75f;
+        public const float LongBezControlLimit = 500f;
 
         public const float DefaultMinLength = 7f;
         public const float DefaultMaxLength = 13f;

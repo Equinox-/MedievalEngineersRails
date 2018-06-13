@@ -38,6 +38,23 @@ namespace Equinox76561198048419394.RailSystem.Util.Curve
             return MatrixD.CreateWorld(x, Vector3D.Normalize(fwd), Vector3D.Normalize(up));
         }
 
+        public static void AlignFwd(ref MatrixD m1, ref MatrixD m2)
+        {
+            var desiredFwd = m2.Translation - m1.Translation;
+            if (desiredFwd.Dot(m1.Forward) < 0)
+            {
+                m1.Forward *= -1f;
+                m1.Right *= -1f;
+            }
+
+            // ReSharper disable once InvertIf
+            if (desiredFwd.Dot(m2.Forward) < 0)
+            {
+                m2.Forward *= -1f;
+                m2.Right *= -1f;
+            }
+        }
+
         public static double Length<T>(this T t, int steps = 20) where T : struct, ICurve
         {
             var c = t.Sample(0);
@@ -50,6 +67,28 @@ namespace Equinox76561198048419394.RailSystem.Util.Curve
             }
 
             return len;
+        }
+
+        public static Vector3D ExpandToCubic(Vector3D p0, Vector3D p0Ctl, Vector3D p1, float controlLimit)
+        {
+            // dist(p1Ctl, p1) == dist(p0Ctl, p0)
+            // angle(p1Ctl, p1, p0) == angle(p0Ctl, p0, p1)
+            
+            var cBias = p1 - p0;
+            var lenC = cBias.Normalize();
+            var aBias = p0Ctl - p0;
+            if (cBias.Dot(aBias) < 0)
+                aBias = -aBias;
+            var lenCtl = aBias.Normalize();
+            
+            var controlAngle = Math.Acos(cBias.Dot(aBias));
+            // Isosceles tri.  Define Q as the intersection of the bias vectors.
+            // lenC^2 = 2*lenQP0^2*(1-cos(theta))
+            var theta = Math.PI - controlAngle * 2;
+            var lenQp0 = Math.Sqrt(lenC * lenC / (2 * (1 - Math.Cos(theta))));
+
+            var qPoint = p0 + aBias * Math.Min(lenQp0, controlLimit);
+            return p1 + (qPoint - p1) * (lenCtl / lenQp0);
         }
     }
 }

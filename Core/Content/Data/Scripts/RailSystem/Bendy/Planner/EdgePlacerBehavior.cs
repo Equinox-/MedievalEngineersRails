@@ -9,6 +9,7 @@ using Equinox76561198048419394.RailSystem.Util;
 using Equinox76561198048419394.RailSystem.Util.Curve;
 using Medieval.Constants;
 using Sandbox.Definitions.Equipment;
+using Sandbox.Game.Entities;
 using Sandbox.Game.EntityComponents.Character;
 using Sandbox.Game.GameSystems;
 using Sandbox.Game.Inventory;
@@ -139,20 +140,37 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
             if (vert.Node != null)
                 return vert.Node.Matrix;
 
-            var prevPos = (index - 1) >= 0 ? (Vector3D?) _vertices[index - 1].Position : null;
-            var nextPos = (index + 1) < _vertices.Count ? (Vector3D?) _vertices[index + 1].Position : null;
+            var prevPos = (index - 1) >= 0 ? (VertexData?) _vertices[index - 1] : null;
+            var nextPos = (index + 1) < _vertices.Count ? (VertexData?) _vertices[index + 1] : null;
 
             var tan = Vector3D.Zero;
             if (prevPos.HasValue)
             {
-                var t = (vert.Position - prevPos.Value).SafeNormalized();
+                var t = (vert.Position - prevPos.Value.Position).SafeNormalized();
                 tan += tan.Dot(t) < 0 ? -t : t;
             }
 
             if (nextPos.HasValue)
             {
-                var t = (vert.Position - nextPos.Value).SafeNormalized();
-                tan += tan.Dot(t) < 0 ? -t : t;
+                var t2 = (vert.Position - nextPos.Value.Position).SafeNormalized();
+                tan += tan.Dot(t2) < 0 ? -t2 : t2;
+            }
+
+            if (prevPos.HasValue != nextPos.HasValue)
+            {
+                // try Quadratic bez with control point equidistance from both nodes.
+                if (prevPos?.Node != null)
+                {
+                    var pp = prevPos.Value.Node;
+                    tan = CurveExtensions.ExpandToCubic(pp.Position, pp.Position + pp.Tangent, vert.Position,
+                              RailConstants.LongBezControlLimit) - vert.Position;
+                }
+                else if (nextPos?.Node != null)
+                {
+                    var pp = nextPos.Value.Node;
+                    tan = CurveExtensions.ExpandToCubic(pp.Position, pp.Position + pp.Tangent, vert.Position,
+                              RailConstants.LongBezControlLimit) - vert.Position;
+                }
             }
 
             if (!tan.IsValid() || tan.LengthSquared() < 1e-3f)
@@ -202,10 +220,6 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
                 {
                     var nextVert = _vertices[i];
                     var currentVert = _vertices[i - 1];
-                    if (Math.Min(Vector3D.DistanceSquared(cam.GetPosition(), nextVert.Position),
-                            Vector3D.DistanceSquared(cam.GetPosition(), currentVert.Position)) > 100 * 100)
-                        continue;
-
                     var prevPos = i >= 2
                         ? _vertices[i - 2].Position
                         : currentVert.Node?.Opposition(nextVert.Position)?.Position;
@@ -213,12 +227,23 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
                     var nextMatrix = ComputeVertexMatrix(nextVert, i);
                     var currentMatrix = ComputeVertexMatrix(currentVert, i - 1);
 
-                    var curve = PrepareBez(currentMatrix, nextMatrix);
-                    DrawBez(currentMatrix.Up, nextMatrix.Up, curve,
-                        PlacedDefinition == null || EdgePlacerSystem.VerifyJoint(PlacedDefinition, prevPos,
-                            currentVert.Position, nextVert.Position, null)
-                            ? _edgeColor
-                            : _edgeColorBad);
+                    var color = PlacedDefinition == null || EdgePlacerSystem.VerifyJoint(PlacedDefinition, prevPos,
+                                    currentVert.Position, nextVert.Position, null)
+                        ? _edgeColor
+                        : _edgeColorBad;
+                    if (Vector3D.DistanceSquared(currentMatrix.Translation, nextMatrix.Translation) > 30 * 30)
+                    {
+                        var curve = PrepareSphericalBez(currentMatrix, nextMatrix);
+                        DrawBez(currentMatrix.Up, nextMatrix.Up, curve, color, 100);
+                    }
+                    else
+                    {
+                        if (Math.Min(Vector3D.DistanceSquared(cam.GetPosition(), nextVert.Position),
+                                Vector3D.DistanceSquared(cam.GetPosition(), currentVert.Position)) > 100 * 100)
+                            continue;
+                        var curve = PrepareNormalBez(currentMatrix, nextMatrix);
+                        DrawBez(currentMatrix.Up, nextMatrix.Up, curve, color);
+                    }
                 }
 
                 if (nextNode.HasValue)
@@ -226,35 +251,32 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
             }
         }
 
-        private static CubicCurve PrepareBez(MatrixD m1, MatrixD m2)
+        private static CubicSphericalCurve PrepareSphericalBez(MatrixD m1, MatrixD m2)
         {
-            var desiredFwd = m2.Translation - m1.Translation;
-            if (desiredFwd.Dot(m1.Forward) < 0)
-            {
-                m1.Forward *= -1f;
-                m1.Right *= -1f;
-            }
+            CurveExtensions.AlignFwd(ref m1, ref m2);
+            return new CubicSphericalCurve(
+                MyGamePruningStructure.GetClosestPlanet(m1.Translation)?.PositionComp.WorldVolume.Center ??
+                Vector3D.Zero, m1, m2);
+        }
 
-            // ReSharper disable once InvertIf
-            if (desiredFwd.Dot(m2.Forward) < 0)
-            {
-                m2.Forward *= -1f;
-                m2.Right *= -1f;
-            }
-
+        private static CubicCurve PrepareNormalBez(MatrixD m1, MatrixD m2)
+        {
+            CurveExtensions.AlignFwd(ref m1, ref m2);
             return new CubicCurve(m1, m2);
         }
 
-        private static void DrawBez<T>(Vector3D up1, Vector3D up2, CubicCurve bezCurve, Vector4 color)
+        private static void DrawBez<T>(Vector3D up1, Vector3D up2, T bezCurve, Vector4 color, int? forcedLod = null)
             where T : ICurve
         {
             var cam = MyCameraComponent.ActiveCamera;
             if (cam == null)
                 return;
-            var center = (bezCurve.P0 + bezCurve.P1 + bezCurve.P2 + bezCurve.P3) / 4;
-            var factor = Math.Sqrt(Vector3D.DistanceSquared(bezCurve.P0, bezCurve.P3) /
+            var first = bezCurve.Sample(0);
+            var last = bezCurve.Sample(1);
+            var center = (first + last) / 2;
+            var factor = Math.Sqrt(Vector3D.DistanceSquared(first, last) /
                                    (1 + Vector3D.DistanceSquared(cam.GetPosition(), center)));
-            var count = MathHelper.Clamp(factor * 100, 1, 10);
+            var count = forcedLod ?? MathHelper.Clamp(factor * 100, 1, 10);
             var lastPos = default(Vector3D);
             for (var t = 0; t <= count; t++)
             {
@@ -446,7 +468,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
             _vertices.Add(last);
             var m1 = ComputeVertexMatrix(first, 0);
             var m2 = ComputeVertexMatrix(last, 1);
-            var bez = PrepareBez(m1, m2);
+            var bez = PrepareSphericalBez(m1, m2);
 
             var length = 0d;
             var prev = default(Vector3D);
@@ -470,11 +492,12 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
             var time = 0f;
             prev = bez.Sample(0);
             var lengthElapsed = 0d;
+            const float timeStep = .001f;
             for (var i = 1; i < count; i++)
             {
                 while (lengthElapsed < lenPerCount * i)
                 {
-                    time += 0.01f;
+                    time += timeStep;
                     var curr = bez.Sample(time);
                     lengthElapsed += Vector3D.Distance(prev, curr);
                     prev = curr;
