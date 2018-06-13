@@ -1,26 +1,23 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Xml.Serialization;
 using Equinox76561198048419394.RailSystem.Bendy;
 using Equinox76561198048419394.RailSystem.Construction;
 using Equinox76561198048419394.RailSystem.Util;
 using Sandbox.Game.Entities;
-using Sandbox.Game.GameSystems;
-using Sandbox.ModAPI;
 using VRage.Factory;
 using VRage.Game;
 using VRage.Game.Components;
 using VRage.Game.ObjectBuilders.ComponentSystem;
-using VRage.Library.Logging;
 using VRage.ObjectBuilders;
-using VRage.Utils;
 using VRage.Voxels;
 using VRageMath;
 
 namespace Equinox76561198048419394.RailSystem.Voxel
 {
     [MyComponent(typeof(MyObjectBuilder_RailGradeComponent))]
-    [MyDependency(typeof(BendyDynamicComponent), Critical = true)]
+    [MyDependency(typeof(BendyComponent), Critical = true)]
     [MyDefinitionRequired]
     public class RailGradeComponent : MyEntityComponent, IConstructionPrereq, IRailGradeComponent
     {
@@ -32,25 +29,25 @@ namespace Equinox76561198048419394.RailSystem.Voxel
             Definition = (RailGradeComponentDefinition) definition;
         }
 
-        private BendyDynamicComponent _bendy;
+        private BendyComponent _bendy;
 
         public override void OnAddedToContainer()
         {
             base.OnAddedToContainer();
-            _bendy = Entity.Components.Get<BendyDynamicComponent>();
-            _bendy.EdgeChanged += OnEdgeChanged;
-            OnEdgeChanged();
+            _bendy = Entity.Components.Get<BendyComponent>();
+            _bendy.EdgeSetupChanged += EdgeSetupChanged;
+            EdgeSetupChanged(_bendy);
         }
 
         public override void OnBeforeRemovedFromContainer()
         {
             base.OnBeforeRemovedFromContainer();
-            _bendy.EdgeChanged -= OnEdgeChanged;
+            _bendy.EdgeSetupChanged -= EdgeSetupChanged;
+            EdgeSetupChanged(_bendy);
             _bendy = null;
-            OnEdgeChanged();
         }
 
-        private void OnEdgeChanged()
+        private void EdgeSetupChanged(BendyComponent comp)
         {
             _excavationCache = null;
             _shapeDirty = true;
@@ -63,7 +60,7 @@ namespace Equinox76561198048419394.RailSystem.Voxel
             get
             {
                 if (_excavationCache != null) return _excavationCache;
-                var e = _bendy?.Edge;
+                var e = _bendy?.Edges.FirstOrDefault();
                 if (e == null || !Definition.Excavate.HasValue) return _excavationCache;
                 var s = Definition.Excavate.Value;
                 return _excavationCache = new RailGradeShape(new EdgeBlit(e), s.Width, s.RelaxAngleRadians, s.VerticalOffset, s.Segments, -s.Height);
@@ -77,7 +74,7 @@ namespace Equinox76561198048419394.RailSystem.Voxel
             get
             {
                 if (_supportCache != null) return _supportCache;
-                var e = _bendy?.Edge;
+                var e = _bendy?.Edges.FirstOrDefault();
                 if (e == null || !Definition.Support.HasValue) return _supportCache;
                 var s = Definition.Support.Value;
                 return _supportCache = new RailGradeShape(new EdgeBlit(e), s.Width, s.RelaxAngleRadians, s.VerticalOffset, s.Segments, s.Height);
@@ -98,7 +95,9 @@ namespace Equinox76561198048419394.RailSystem.Voxel
                 return;
             _shapeDirty = false;
             var shape = Definition.RequiredSupport.Value;
-            var edge = _bendy.Edge;
+            var edge = _bendy.Edges.FirstOrDefault();
+            if (edge == null)
+                return;
             var curve = edge.Curve;
             _requiredShape.Clear();
             _localBox = BoundingBoxD.CreateInvalid();
@@ -217,7 +216,7 @@ namespace Equinox76561198048419394.RailSystem.Voxel
         {
             return new RailGradeComponentBlit()
             {
-                Edge = new EdgeBlit(_bendy.Edge),
+                Edge = new EdgeBlit(_bendy.Edges.First()),
                 Definition = Definition.Id
             };
         }
@@ -251,7 +250,7 @@ namespace Equinox76561198048419394.RailSystem.Voxel
             if (def.Excavate.HasValue)
             {
                 var s = def.Excavate.Value;
-                excavateShape = new RailGradeShape(Edge, s.Width, s.RelaxAngleRadians, s.VerticalOffset, s.Segments, s.Height);
+                excavateShape = new RailGradeShape(Edge, s.Width, s.RelaxAngleRadians, s.VerticalOffset, s.Segments, -s.Height);
             }
         }
     }

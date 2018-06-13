@@ -4,17 +4,13 @@ using System.Xml.Serialization;
 using Equinox76561198048419394.RailSystem.Bendy.Planner;
 using Equinox76561198048419394.RailSystem.Util;
 using Medieval.Definitions.Quests.Conditions;
-using Medieval.Entities.Components.Quests;
 using Medieval.Entities.Components.Quests.Conditions;
-using Medieval.GameSystems.Tools;
 using Medieval.ObjectBuilders.Components.Quests.Conditions;
 using Medieval.ObjectBuilders.Definitions.Quests.Conditions;
-using Sandbox.Game.Players;
 using Sandbox.ModAPI;
-using VRage;
-using VRage.Definitions.Cube;
 using VRage.Game;
 using VRage.Game.Entity;
+using VRage.Game.ModAPI;
 using VRage.ObjectBuilder;
 using VRage.ObjectBuilders;
 
@@ -52,15 +48,15 @@ namespace Equinox76561198048419394.RailSystem.Quest.Conditions
                 return;
             }
 
-            EdgePlacerBehavior.EntityAdded += EdgePlacerBehaviorOnEntityAdded;
+            EdgePlacerSystem.EntityAdded += EdgePlacerBehaviorOnEntityAdded;
         }
 
-        private void EdgePlacerBehaviorOnEntityAdded(EdgePlacerBehavior arg1, MyEntity arg2)
+        private void EdgePlacerBehaviorOnEntityAdded(MyEntity holderEntity, IMyPlayer holderPlayer, MyEntity modifiedEntity)
         {
-            if (Owner?.Entity == null || arg1.Owner != Owner.Entity || !arg2.DefinitionId.HasValue)
+            if (Owner?.Entity == null || holderEntity != Owner.Entity || !modifiedEntity.DefinitionId.HasValue)
                 return;
 
-            if (Definition.AllowedEntities != null && Definition.AllowedEntities.Count > 0 && !Definition.AllowedEntities.Contains(arg2.DefinitionId.Value))
+            if (Definition.AllowedEntities != null && Definition.AllowedEntities.Count > 0 && !Definition.AllowedEntities.Contains(modifiedEntity.DefinitionId.Value))
                 return;
 
             _amountPlanned++;
@@ -76,7 +72,7 @@ namespace Equinox76561198048419394.RailSystem.Quest.Conditions
             if (!MyAPIGateway.Session.IsServerDecider())
                 return;
 
-            EdgePlacerBehavior.EntityAdded -= EdgePlacerBehaviorOnEntityAdded;
+            EdgePlacerSystem.EntityAdded -= EdgePlacerBehaviorOnEntityAdded;
         }
 
         public static string DescContainer(MyDefinitionId id)

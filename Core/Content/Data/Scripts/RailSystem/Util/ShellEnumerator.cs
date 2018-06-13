@@ -1,7 +1,5 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-using Sandbox.ModAPI;
-using VRage.Library.Logging;
 using VRageMath;
 
 namespace Equinox76561198048419394.RailSystem.Util

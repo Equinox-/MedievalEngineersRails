@@ -1,23 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Xml.Serialization;
 using Equinox76561198048419394.RailSystem.Bendy;
+using Equinox76561198048419394.RailSystem.Construction;
+using Equinox76561198048419394.RailSystem.Definition;
 using Equinox76561198048419394.RailSystem.Util;
 using Sandbox.Engine.Physics;
 using Sandbox.Game.Entities;
-using Sandbox.Game.Entities.Cube;
 using Sandbox.Game.EntityComponents.Character;
 using Sandbox.Game.GameSystems;
 using Sandbox.ModAPI;
+using VRage.Components.Entity;
 using VRage.Game;
 using VRage.Game.Components;
 using VRage.Game.Entity;
-using VRage.Game.ModAPI;
 using VRage.Game.ObjectBuilders.ComponentSystem;
-using VRage.Input.Devices.Keyboard;
 using VRage.ObjectBuilders;
 using VRage.Session;
 using VRage.Utils;
@@ -52,12 +49,84 @@ namespace Equinox76561198048419394.RailSystem.Physics
 
         private bool _debugDraw = false;
 
+        private static readonly MyStringHash SkinHash = MyStringHash.GetOrCompute("Skin");
+        private static readonly MyStringId DebugMtl = MyStringId.GetOrCompute("Square");
+        private static readonly MyStringId SpeedZVar = MyStringId.GetOrCompute("rail_speed_z");
+        private static readonly MyStringId BrakingVar = MyStringId.GetOrCompute("brake");
+
+        private readonly HashSet<MyAnimationControllerComponent> _controllers =
+            new HashSet<MyAnimationControllerComponent>();
+
+        private readonly HashSet<MyAnimationControllerComponent> _goodControllers =
+            new HashSet<MyAnimationControllerComponent>();
+
+        private readonly List<MyAnimationControllerComponent> _tmp = new List<MyAnimationControllerComponent>();
+
+        private static readonly MyStringId AnimRailSync = MyStringId.GetOrCompute("equi_rail_sync");
+
+        private void SetAnimVar(MyStringId key, float val)
+        {
+            var attacher = Entity.Components.Get<MyModelAttachmentComponent>();
+            if (attacher != null)
+                foreach (var e in attacher.GetAttachedEntities(MyStringHash.GetOrCompute("Skin")))
+                    e.Components.Get<MyAnimationControllerComponent>()?.Variables.SetValue(key, val);
+            Entity.Components.Get<MyAnimationControllerComponent>()?.Variables.SetValue(key, val);
+
+            if (key == SpeedZVar)
+            {
+                _goodControllers.Clear();
+                FindAttachedAnimControllers(Entity);
+
+                _tmp.Clear();
+                foreach (var k in _controllers)
+                    if (!_goodControllers.Contains(k))
+                        _tmp.Add(k);
+
+                foreach (var k in _tmp)
+                    _controllers.Remove(k);
+                _tmp.Clear();
+
+                bool sync = false;
+                foreach (var k in _goodControllers)
+                    if (_controllers.Add(k))
+                        sync = true;
+
+                foreach (var k in _controllers)
+                    k.Variables.SetValue(key, val);
+
+                if (sync)
+                    AddScheduledCallback((dt) =>
+                    {
+                        var attt = Entity.Components.Get<MyModelAttachmentComponent>();
+                        if (attt != null)
+                            foreach (var e in attt.GetAttachedEntities(MyStringHash.GetOrCompute("Skin")))
+                                e.Components.Get<MyAnimationControllerComponent>()?.TriggerAction(AnimRailSync);
+                        Entity.Components.Get<MyAnimationControllerComponent>()?.TriggerAction(AnimRailSync);
+                        foreach (var k in _goodControllers)
+                            k.TriggerAction(AnimRailSync);
+                    }, 30);
+            }
+        }
+
+        private void FindAttachedAnimControllers(MyEntity e)
+        {
+            MyAnimationControllerComponent c;
+            foreach (var k in e.Components.GetComponents<EquiPlayerAttachmentComponent>())
+                if (k.AttachedCharacter != null && k.AttachedCharacter.Components.TryGet(out c))
+                    _goodControllers.Add(c);
+            if (e.Hierarchy != null)
+                foreach (var child in e.Hierarchy.Children)
+                    FindAttachedAnimControllers(child.Entity);
+        }
+
         private void Simulate()
         {
-            var pivotWorld = Entity.PositionComp.WorldAABB.Center;
+            var pivotWorld = Entity.PositionComp.WorldMatrix.Translation;
 
             double best = double.MaxValue;
             Edge bestEdge = null;
+            RailSegmentComponent bestEdgeSegment;
+            RailSegmentDefinition.RailSegmentCaps? bestEdgeCaps = null;
             float bestTime = 0;
             using (var e = Graph.Edges.SortedByDistance(pivotWorld))
                 while (e.MoveNext())
@@ -67,6 +136,10 @@ namespace Equinox76561198048419394.RailSystem.Physics
                     var edge = Graph.Edges.GetUserData<Edge>(e.Current.Key);
                     if (edge.Curve == null)
                         continue;
+                    var edgeSegment = edge.Owner.Entity.Components.Get<RailSegmentComponent>();
+                    var edgeCaps = edgeSegment?.Definition.CapabilitiesFor(edge.Owner.Entity.GetBuildRatio());
+                    if (edgeSegment != null && !edgeCaps.HasValue)
+                        continue; // no capabilities at this stage
                     float t0 = 0, t1 = 1;
                     Bezier.BSplineNearest(edge.Curve, pivotWorld, 16, ref t0, ref t1);
                     var p0 = edge.Curve.Sample(t0);
@@ -80,14 +153,13 @@ namespace Equinox76561198048419394.RailSystem.Physics
                     {
                         best = dist;
                         bestEdge = edge;
+                        bestEdgeSegment = edgeSegment;
+                        bestEdgeCaps = edgeCaps;
                         bestTime = t;
                     }
                 }
 
-            if (bestEdge == null)
-                return;
-
-            MyEntity root = Entity;
+            var root = Entity;
 
             while (root != null && root.Physics == null)
                 root = root.Parent;
@@ -96,9 +168,15 @@ namespace Equinox76561198048419394.RailSystem.Physics
                 return;
 
             var physics = root.Physics;
+            SetAnimVar(SpeedZVar, physics.LinearVelocity.Dot((Vector3) Entity.PositionComp.WorldMatrix.Forward));
+            if (bestEdge == null)
+                return;
+            if (!bestEdgeCaps.HasValue)
+                bestEdgeCaps = RailSegmentDefinition.RailSegmentCaps.Default;
+
             var up = (Vector3) Vector3D.Lerp(bestEdge.From.Up, bestEdge.To.Up, bestTime);
             var tangent = (Vector3) bestEdge.Curve.SampleDerivative(bestTime);
-            if (Entity.PositionComp.WorldMatrix.Up.Dot(tangent) < 0)
+            if (Entity.PositionComp.WorldMatrix.Forward.Dot(tangent) < 0)
                 tangent = -tangent;
             tangent.Normalize();
             var position = bestEdge.Curve.Sample(bestTime) + up * Definition.VerticalOffset;
@@ -109,21 +187,23 @@ namespace Equinox76561198048419394.RailSystem.Physics
             var impulse = Vector3.Zero;
             var err = (Vector3) (position - pivotWorld);
 
-            if (err.LengthSquared() > RailConstants.DetachDistance * RailConstants.DetachDistance)
+            if (err.LengthSquared() > Definition.DetachDistance * Definition.DetachDistance)
                 return;
 
-            var massTensor = Matrix.CreateScale(physics.Mass);
+            var effectiveMass = physics.Mass;
             var inertiaTensor = CreateInertiaTensor(root);
-            impulse += Vector3.Dot(MyGravityProviderSystem.CalculateTotalGravityInPoint(pivotWorld), up) * up * physics.Mass * MyEngineConstants.UPDATE_STEP_SIZE_IN_SECONDS;
 
-            impulse += SolveImpulse(err, normal, physics.LinearVelocity, massTensor);
+            // preemptive up force to counteract gravity.
+            impulse += Vector3.Dot(MyGravityProviderSystem.CalculateTotalGravityInPoint(pivotWorld), up) * up *
+                       physics.Mass * MyEngineConstants.UPDATE_STEP_SIZE_IN_SECONDS;
+
+            impulse += SolveImpulse(err, normal, physics.LinearVelocity, effectiveMass);
 
             // b) half spring joint along up to get dot(up, (pivot*matrix - position)) >= 0
-            impulse += SolveImpulse(err, up, physics.LinearVelocity, massTensor, 1); // only up force
-
+            impulse += SolveImpulse(err, up, physics.LinearVelocity, effectiveMass, 1); // only up force
 
             var qCurrent = Quaternion.CreateFromRotationMatrix(Entity.PositionComp.WorldMatrix);
-            var qDesired = Quaternion.CreateFromRotationMatrix(Matrix.CreateWorld(Vector3.Zero, up, tangent));
+            var qDesired = Quaternion.CreateFromRotationMatrix(Matrix.CreateWorld(Vector3.Zero, tangent, up));
 
 
             var qConj = Quaternion.Multiply(Quaternion.Conjugate(qCurrent), qDesired);
@@ -132,26 +212,43 @@ namespace Equinox76561198048419394.RailSystem.Physics
             var rotApply = desiredAngular;
             desiredAngular -= 0.25f * physics.AngularVelocity;
 
-            var angularImpulse = Vector3.TransformNormal(desiredAngular, inertiaTensor) / MyEngineConstants.UPDATE_STEP_SIZE_IN_SECONDS;
+            var angularImpulse = Vector3.TransformNormal(desiredAngular, inertiaTensor) /
+                                 MyEngineConstants.UPDATE_STEP_SIZE_IN_SECONDS;
 
             var com = physics.GetCenterOfMassWorld();
 
-            if (_debugDraw)
-            {
-                var colorTarget = Vector4.One;
-                MySimpleObjectDraw.DrawLine(pivotWorld, position, MyStringId.GetOrCompute("Square"), ref colorTarget, .01f);
-            }
+            var frictiveNormalForce = Math.Max(0, impulse.Dot(up) / MyEngineConstants.UPDATE_STEP_SIZE_IN_SECONDS);
+            var frictiveForce = Definition.CoefficientOfFriction * (bestEdgeCaps?.Friction ?? 1) * frictiveNormalForce;
+            // clamp frictive impulse to at-max stopping.
+            var tangentMomentumAfterUpdate = (physics.LinearVelocity + impulse).Dot(tangent);
+            var frictiveImpulse = -Math.Sign(tangentMomentumAfterUpdate) *
+                                  Math.Min(frictiveForce * MyEngineConstants.UPDATE_STEP_SIZE_IN_SECONDS,
+                                      Math.Abs(tangentMomentumAfterUpdate)) * tangent;
+            impulse += frictiveImpulse;
 
             if (_debugDraw)
             {
+                var drawPivot = pivotWorld + 4 * up;
+                var colorTarget = Vector4.One;
+                MySimpleObjectDraw.DrawLine(pivotWorld, position, DebugMtl, ref colorTarget,
+                    .01f);
+
+                var colorMarker = new Vector4(0, 1, 0, 1);
+                MySimpleObjectDraw.DrawLine(drawPivot, drawPivot + frictiveImpulse * 10, DebugMtl, ref colorMarker,
+                    .01f);
+
                 var colorImpulse = new Vector4(1, 0, 0, 1);
-                MySimpleObjectDraw.DrawLine(com, com + impulse, MyStringId.GetOrCompute("Square"), ref colorImpulse, .01f);
+                MySimpleObjectDraw.DrawLine(drawPivot, drawPivot + impulse, DebugMtl, ref colorImpulse,
+                    .01f);
 
                 var colorAngImpulse = new Vector4(0, 0, 1, 1);
-                MySimpleObjectDraw.DrawLine(com, com + rotApply, MyStringId.GetOrCompute("Square"), ref colorAngImpulse, .01f);
+                MySimpleObjectDraw.DrawLine(drawPivot, drawPivot + rotApply, DebugMtl, ref colorAngImpulse,
+                    .01f);
             }
 
-            physics.AddForce(MyPhysicsForceType.APPLY_WORLD_IMPULSE_AND_WORLD_ANGULAR_IMPULSE, impulse, com, angularImpulse);
+
+            physics.AddForce(MyPhysicsForceType.APPLY_WORLD_IMPULSE_AND_WORLD_ANGULAR_IMPULSE, impulse, com,
+                angularImpulse);
 
             if (Definition.MaxVelocity > 0)
             {
@@ -196,22 +293,34 @@ namespace Equinox76561198048419394.RailSystem.Physics
                         control *= max;
                     }
 
+
                     var cvel = physics.LinearVelocity.Dot(tangent);
+                    bool braking = Math.Sign(cvel) != Math.Sign(control) && Math.Abs(cvel) > 0.01 &&
+                                   Math.Abs(control) > 0.01;
+                    SetAnimVar(BrakingVar, braking ? 1 : 0);
                     _powerFactor = MathHelper.Clamp(_powerFactor * (1 - _powerSmooth) + control * _powerSmooth, -1, 1);
                     if (Math.Abs(control) < .01f)
                         _powerFactor = 0;
 
-                    var forceFactorBase = MathHelper.Clamp(1 - Math.Abs(cvel) / Definition.MaxVelocity, 0, 1);
+                    var velocityLimit = Definition.MaxVelocity;
+                    if (bestEdgeCaps.HasValue)
+                        velocityLimit = Math.Min(velocityLimit, bestEdgeCaps.Value.MaxSpeed);
+
+                    var forceFactorBase = MathHelper.Clamp(1 - Math.Abs(cvel) / velocityLimit, 0, 1);
                     var forceFactorControl = Math.Abs(_powerFactor);
                     var dir = Math.Sign(_powerFactor);
                     if (dir != Math.Sign(cvel))
                         forceFactorBase = 1;
 
-                    var force = Definition.MaxForce * forceFactorControl * forceFactorBase * dir * tangent * MyEngineConstants.UPDATE_STEP_SIZE_IN_SECONDS;
+                    var force = Definition.MaxForce * forceFactorControl * forceFactorBase * dir * tangent *
+                                MyEngineConstants.UPDATE_STEP_SIZE_IN_SECONDS;
                     var colorAngImpulse = new Vector4(0, 1, 0, 1);
-                    if (component.Entity == MyAPIGateway.Session.ControlledObject && !MyAPIGateway.Utilities.IsDedicated)
-                        MySimpleObjectDraw.DrawLine(com, com + force, MyStringId.GetOrCompute("Square"), ref colorAngImpulse, .01f);
-                    physics.AddForce(MyPhysicsForceType.APPLY_WORLD_IMPULSE_AND_WORLD_ANGULAR_IMPULSE, force, com, Vector3.Zero);
+                    if (component.Entity == MyAPIGateway.Session.ControlledObject &&
+                        !MyAPIGateway.Utilities.IsDedicated)
+                        MySimpleObjectDraw.DrawLine(com, com + force, MyStringId.GetOrCompute("Square"),
+                            ref colorAngImpulse, .01f);
+                    physics.AddForce(MyPhysicsForceType.APPLY_WORLD_IMPULSE_AND_WORLD_ANGULAR_IMPULSE, force, com,
+                        Vector3.Zero);
                 }
             }
         }
@@ -246,7 +355,7 @@ namespace Equinox76561198048419394.RailSystem.Physics
         }
 
         private static Vector3 SolveImpulse(Vector3 error, Vector3 dir, Vector3 vel,
-            Matrix mass, int signFlags = 3)
+            float mass, int signFlags = 3)
         {
             var errorOnAxis = dir.Dot(error);
             var velOnAxis = dir.Dot(vel);
@@ -257,7 +366,7 @@ namespace Equinox76561198048419394.RailSystem.Physics
                 return Vector3.Zero;
             if ((signFlags & 2) == 0 && errorOnAxis < 0)
                 return Vector3.Zero;
-            return Vector3.TransformNormal(dir * (desiredVel - velOnAxis), mass);
+            return dir * (desiredVel - velOnAxis) * mass;
         }
     }
 

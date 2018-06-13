@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using VRage.ObjectBuilder;
-
-namespace Equinox76561198048419394.RailSystem
+﻿namespace Equinox76561198048419394.RailSystem
 {
     public static class RailConstants
     {
@@ -16,7 +9,7 @@ namespace Equinox76561198048419394.RailSystem
         public const float DefaultMinLength = 7f;
         public const float DefaultMaxLength = 13f;
 
-        public const float DefaultMaxElevationChange = 3f;
+        public const float DefaultMaxGradeRatio = .05f;
         public const float DefaultMaxAngleDegrees = 20f;
 
         /// <summary>

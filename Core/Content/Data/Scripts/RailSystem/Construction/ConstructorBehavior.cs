@@ -1,18 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Serialization;
-using Equinox76561198048419394.RailSystem.Bendy;
 using Equinox76561198048419394.RailSystem.Bendy.Shape;
 using Equinox76561198048419394.RailSystem.Util;
 using Medieval.Constants;
 using Medieval.GameSystems;
-using Medieval.GameSystems.Tools;
 using Sandbox.Definitions.Equipment;
 using Sandbox.Game.Entities.Inventory;
 using Sandbox.Game.EntityComponents.Character;
-using Sandbox.Game.Gui;
-using Sandbox.Game.Players;
 using Sandbox.ModAPI;
 using VRage.Definitions.Inventory;
 using VRage.Game;
@@ -21,7 +16,6 @@ using VRage.Game.Entity;
 using VRage.ObjectBuilders;
 using VRage.ObjectBuilders.Definitions.Equipment;
 using VRage.ObjectBuilders.Definitions.Inventory;
-using VRage.Session;
 using VRage.Utils;
 using VRageMath;
 

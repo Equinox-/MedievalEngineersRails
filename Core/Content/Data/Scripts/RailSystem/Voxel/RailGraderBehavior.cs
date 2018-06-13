@@ -8,11 +8,9 @@ using Medieval.Constants;
 using Medieval.GameSystems;
 using Sandbox.Definitions;
 using Sandbox.Definitions.Equipment;
-using Sandbox.Game;
 using Sandbox.Game.Entities;
 using Sandbox.Game.Entities.Inventory;
 using Sandbox.Game.EntityComponents.Character;
-using Sandbox.Game.GameSystems;
 using Sandbox.Game.Inventory;
 using Sandbox.ModAPI;
 using VRage.Definitions;
@@ -22,14 +20,10 @@ using VRage.Game.Definitions;
 using VRage.Game.Entity;
 using VRage.Library.Logging;
 using VRage.Network;
-using VRage.ObjectBuilder;
-using VRage.ObjectBuilder.Merging;
 using VRage.ObjectBuilders;
-using VRage.ObjectBuilders.Definitions;
 using VRage.ObjectBuilders.Definitions.Equipment;
 using VRage.Session;
 using VRage.Utils;
-using VRage.Voxels;
 using VRageMath;
 
 namespace Equinox76561198048419394.RailSystem.Voxel
@@ -146,14 +140,16 @@ namespace Equinox76561198048419394.RailSystem.Voxel
                 }
             }
 
-            uint availableForExcavate = Definition.ExcavateVolume;
+            var availableForExcavate = isExcavating ? Definition.ExcavateVolume : 0;
 
             uint totalDeposited;
             uint totalExcavated;
             bool triedToChange;
             bool intersectedDynamic;
-            var result = RailGrader.DoGrading(_gradeComponents, Target.Position, radius, isExcavating, availableForDeposit, availableForExcavate, _excavated, Definition.FillMaterial.Material.Index,
-                out totalDeposited, out totalExcavated, testDynamic: true, triedToChange: out triedToChange, intersectedDynamic: out intersectedDynamic);
+            var result = RailGrader.DoGrading(_gradeComponents, Target.Position, radius, availableForDeposit, 
+                availableForExcavate, _excavated, Definition.FillMaterial.Material.Index,
+                out totalDeposited, out totalExcavated, testDynamic: true, 
+                triedToChange: out triedToChange, intersectedDynamic: out intersectedDynamic);
             
             #region Give Items
 
@@ -212,7 +208,6 @@ namespace Equinox76561198048419394.RailSystem.Voxel
                     new GradingConfig()
                     {
                         Radius = radius,
-                        Excavate = isExcavating,
                         DepositAvailable = availableForDeposit,
                         ExcavateAvailable = availableForExcavate,
                         MaterialToDeposit = Definition.FillMaterial.Material.Index,
@@ -231,7 +226,6 @@ namespace Equinox76561198048419394.RailSystem.Voxel
         private struct GradingConfig
         {
             public float Radius;
-            public bool Excavate;
             public uint DepositAvailable;
             public uint ExcavateAvailable;
             public byte MaterialToDeposit;
@@ -250,18 +244,18 @@ namespace Equinox76561198048419394.RailSystem.Voxel
             var cbox = new IRailGradeComponent[components.Length];
             for (var i = 0; i < components.Length; i++)
                 cbox[i] = components[i];
-            RailGrader.DoGrading(cbox, target, config.Radius, config.Excavate, config.DepositAvailable, config.ExcavateAvailable, null, config.MaterialToDeposit, out deposited, out excavated, testDynamic: true,
+            RailGrader.DoGrading(cbox, target, config.Radius, config.DepositAvailable, config.ExcavateAvailable, null, config.MaterialToDeposit, out deposited, out excavated, testDynamic: true,
                 triedToChange: out triedToChange,
                 intersectedDynamic: out intersectedDynamic);
 
             if (config.DepositExpected != deposited || config.ExcavateExpected != excavated)
             {
                 MyLog.Default.Warning($"Grading desync occured!  {config.DepositExpected} != {deposited}, {config.ExcavateExpected} != {excavated}");
-                var red = new Vector4(1, 0, 0, 1);
                 var time = DateTime.Now;
                 if ((time - _lastGradingDesync) > TimeSpan.FromSeconds(30))
                 {
-                    MyAPIGateway.Utilities.ShowNotification("Grading desync occured!  If you experience movement problems try reconnected.", 5000, null, red);
+                    var red = new Vector4(1, 0, 0, 1);
+                    MyAPIGateway.Utilities.ShowNotification("Grading desync occured!  If you experience movement problems try reconnecting.", 5000, null, red);
                     _lastGradingDesync = time;
                 }
             }

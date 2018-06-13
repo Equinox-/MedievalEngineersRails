@@ -1,27 +1,10 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
-using System.Globalization;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using Equinox76561198048419394.RailSystem.Bendy;
 using Equinox76561198048419394.RailSystem.Util;
-using Sandbox.Game.Entities;
-using Sandbox.ModAPI;
 using VRage.Components.Entity.Camera;
-using VRage.Definitions;
 using VRage.Game;
-using VRage.Game.ModAPI;
-using VRage.ModAPI;
-using VRage.Session;
-using VRage.Systems;
 using VRage.Utils;
-using VRage.Voxels;
-using VRage.Voxels.Mesh;
 using VRageMath;
 
 namespace Equinox76561198048419394.RailSystem.Voxel

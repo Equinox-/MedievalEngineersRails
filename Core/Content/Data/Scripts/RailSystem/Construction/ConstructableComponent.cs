@@ -1,14 +1,9 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices;
-using System.Runtime.InteropServices.ComTypes;
 using System.Xml.Serialization;
-using Equinox76561198048419394.RailSystem.Physics;
 using Equinox76561198048419394.RailSystem.Util;
 using Sandbox.Game.Entities;
-using Sandbox.Game.Entities.Inventory;
 using Sandbox.Game.Replication;
 using Sandbox.ModAPI;
 using VRage.Collections;
@@ -16,16 +11,12 @@ using VRage.Definitions.Inventory;
 using VRage.Game;
 using VRage.Game.Components;
 using VRage.Game.Entity;
-using VRage.Game.ModAPI;
 using VRage.Game.ObjectBuilders.ComponentSystem;
 using VRage.Library.Logging;
 using VRage.Network;
 using VRage.ObjectBuilders;
 using VRage.ObjectBuilders.Definitions.Inventory;
-using VRage.Serialization;
 using VRage.Session;
-using VRage.Systems;
-using VRageMath;
 
 namespace Equinox76561198048419394.RailSystem.Construction
 {
@@ -116,7 +107,8 @@ namespace Equinox76561198048419394.RailSystem.Construction
                         _stockpile.Items.Clear();
                         var count = (int) stream.Read7BitEncoded();
                         for (var i = 0; i < count; i++)
-                            _stockpile.AddItem(controller.Decode((int) stream.Read7BitEncoded()), (int) stream.Read7BitEncoded());
+                            _stockpile.AddItem(controller.Decode((int) stream.Read7BitEncoded()),
+                                (int) stream.Read7BitEncoded());
                     }
                     catch (Exception e)
                     {
@@ -134,14 +126,16 @@ namespace Equinox76561198048419394.RailSystem.Construction
             BuildIntegrity = ob.BInteg;
         }
 
-        public ConstructableComponentDefinition.CcBuildModel CurrentBuildModel => Definition.BuildModelFor(BuildIntegrity);
+        public ConstructableComponentDefinition.CcBuildModel CurrentBuildModel =>
+            Definition.BuildModelFor(BuildIntegrity);
 
         public override void OnAddedToContainer()
         {
             base.OnAddedToContainer();
             ModelChanged = null;
             IntegrityChanged = null;
-            IntegrityChanged += () => MyAPIGateway.Multiplayer?.RaiseEvent(this, cc => cc.SyncIntegrity, BuildIntegrity);
+            IntegrityChanged += () =>
+                MyAPIGateway.Multiplayer?.RaiseEvent(this, cc => cc.SyncIntegrity, BuildIntegrity);
         }
 
         public override void OnBeforeRemovedFromContainer()
@@ -173,8 +167,11 @@ namespace Equinox76561198048419394.RailSystem.Construction
             var stage = Definition.BuildModelFor(BuildIntegrity / Definition.MaxIntegrity);
             if (stage.Model == _currentModel) return;
             Entity.RefreshModels(stage.Model, null);
-            Entity.Render.RemoveRenderObjects();
-            Entity.Render.AddRenderObjects();
+            if (Entity.Render != null && Entity.Render.GetRenderObjectID() != uint.MaxValue)
+            {
+                Entity.Render.RemoveRenderObjects();
+                Entity.Render.AddRenderObjects();
+            }
             _currentModel = stage.Model;
             ModelChanged?.Invoke();
         }
@@ -266,7 +263,8 @@ namespace Equinox76561198048419394.RailSystem.Construction
                 amount = 0;
         }
 
-        private void InstallWorkerFromInventories(IEnumerable<MyInventoryBase> invs, MyDefinitionId request, ref int amount)
+        private void InstallWorkerFromInventories(IEnumerable<MyInventoryBase> invs, MyDefinitionId request,
+            ref int amount)
         {
             var removeRemain = amount;
             amount = 0;
@@ -314,7 +312,8 @@ namespace Equinox76561198048419394.RailSystem.Construction
                     int componentsRemain = LockedComponents;
                     foreach (var c in Definition.Components)
                     {
-                        componentsRemain -= _tmpStockpile.RemoveItemFuzzy(c.Required, Math.Min(c.Count, componentsRemain));
+                        componentsRemain -=
+                            _tmpStockpile.RemoveItemFuzzy(c.Required, Math.Min(c.Count, componentsRemain));
                         if (componentsRemain <= 0)
                             break;
                     }
@@ -329,7 +328,8 @@ namespace Equinox76561198048419394.RailSystem.Construction
                         var count = item.Value;
                         uninstaller.Invoke(userData, item.Key, ref count);
                         if (count > 0)
-                            Assert.Equals(count, _stockpile.RemoveItem(item.Key, count), "Removed count not equal to uninstalled count");
+                            Assert.Equals(count, _stockpile.RemoveItem(item.Key, count),
+                                "Removed count not equal to uninstalled count");
                     }
 
                     if (_stockpile.IsEmpty())
@@ -382,7 +382,8 @@ namespace Equinox76561198048419394.RailSystem.Construction
 
         #endregion
 
-        public void IncreaseIntegrity(float hammerTime, out ConstructableComponentDefinition.CcComponent requiredComponent, out int requiredCount)
+        public void IncreaseIntegrity(float hammerTime,
+            out ConstructableComponentDefinition.CcComponent requiredComponent, out int requiredCount)
         {
             var di = hammerTime * Definition.IntegrityPerSecond;
             var maxIntegrity = ComputeMaxPossibleIntegrity(out requiredComponent, out requiredCount);
@@ -403,7 +404,8 @@ namespace Equinox76561198048419394.RailSystem.Construction
             CheckModel();
         }
 
-        private float ComputeMaxPossibleIntegrity(out ConstructableComponentDefinition.CcComponent requiredComponent, out int requiredCount)
+        private float ComputeMaxPossibleIntegrity(out ConstructableComponentDefinition.CcComponent requiredComponent,
+            out int requiredCount)
         {
             requiredComponent = default(ConstructableComponentDefinition.CcComponent);
             requiredCount = 0;
@@ -439,7 +441,8 @@ namespace Equinox76561198048419394.RailSystem.Construction
 
         private struct StockpileSyncWatcher : IDisposable
         {
-            private static readonly MyConcurrentQueue<Dictionary<MyDefinitionId, int>> _snapshotCache = new MyConcurrentQueue<Dictionary<MyDefinitionId, int>>();
+            private static readonly MyConcurrentQueue<Dictionary<MyDefinitionId, int>> _snapshotCache =
+                new MyConcurrentQueue<Dictionary<MyDefinitionId, int>>();
 
             private ConstructableComponent _component;
             private Dictionary<MyDefinitionId, int> _snapshot;
@@ -467,15 +470,18 @@ namespace Equinox76561198048419394.RailSystem.Construction
 
             public void Dispose()
             {
-                if (_snapshot != null && _snapshot.Count > 0 && (_component._stockpile == null || _component._stockpile.IsEmpty()))
+                if (_snapshot != null && _snapshot.Count > 0 &&
+                    (_component._stockpile == null || _component._stockpile.IsEmpty()))
                 {
                     // full resync, clear
                     MyAPIGateway.Multiplayer?.RaiseEvent(_component, cc => cc.SyncFullState, SyncComponentBlit.Empty);
                 }
-                else if ((_snapshot == null || _snapshot.Count == 0) && (_component._stockpile != null && !_component._stockpile.IsEmpty()))
+                else if ((_snapshot == null || _snapshot.Count == 0) &&
+                         (_component._stockpile != null && !_component._stockpile.IsEmpty()))
                 {
                     // full resync, set
-                    MyAPIGateway.Multiplayer?.RaiseEvent(_component, cc => cc.SyncFullState, _component._stockpile.Items.Select(x => (SyncComponentBlit) x).ToArray());
+                    MyAPIGateway.Multiplayer?.RaiseEvent(_component, cc => cc.SyncFullState,
+                        _component._stockpile.Items.Select(x => (SyncComponentBlit) x).ToArray());
                 }
                 else if (_snapshot != null && _component._stockpile != null)
                 {
@@ -493,7 +499,8 @@ namespace Equinox76561198048419394.RailSystem.Construction
                     foreach (var k in _snapshot)
                         changes.Add(new SyncComponentBlit() {Id = k.Key, Count = _snapshot.GetValueOrDefault(k.Key)});
                     var arr = changes.Count == 0 ? SyncComponentBlit.Empty : changes.ToArray();
-                    MyAPIGateway.Multiplayer?.RaiseEvent(_component, cc => cc.SyncPartialState, arr, _component.ComputeComponentHash());
+                    MyAPIGateway.Multiplayer?.RaiseEvent(_component, cc => cc.SyncPartialState, arr,
+                        _component.ComputeComponentHash());
                 }
 
                 _component = null;
@@ -566,7 +573,8 @@ namespace Equinox76561198048419394.RailSystem.Construction
         [Server]
         private void SyncRequestFullState()
         {
-            MyAPIGateway.Multiplayer.RaiseEvent(this, cc => cc.SyncFullState, _stockpile?.Items.Select(x => (SyncComponentBlit) x).ToArray() ?? SyncComponentBlit.Empty,
+            MyAPIGateway.Multiplayer.RaiseEvent(this, cc => cc.SyncFullState,
+                _stockpile?.Items.Select(x => (SyncComponentBlit) x).ToArray() ?? SyncComponentBlit.Empty,
                 MyEventContext.Current.Sender);
         }
 
@@ -606,13 +614,11 @@ namespace Equinox76561198048419394.RailSystem.Construction
         /// <summary>
         /// Base64 packed stockpile data
         /// </summary>
-        [XmlAttribute]
-        public string SPacked;
+        [XmlAttribute] public string SPacked;
 
         /// <summary>
         /// Build integrity
         /// </summary>
-        [XmlAttribute]
-        public float BInteg;
+        [XmlAttribute] public float BInteg;
     }
 }

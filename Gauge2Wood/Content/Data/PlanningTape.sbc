@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
     <Definition xsi:type="MyObjectBuilder_HandItemDefinition">
-        <Id Type="HandItem" Subtype="EquiRailGauge2WoodPlanner"/>
+        <Id Type="HandItem" Subtype="EquiRailGaugeStandardWoodPlanner"/>
 
-        <DisplayName>Rail Planner (2m Gauge, Wood)</DisplayName>
-        <Description>Rail Planner for 2m gauge, metal capped wooden rails</Description>
+        <DisplayName>Rail Planner (Standard Gauge, Wood)</DisplayName>
+        <Description>Rail Planner for standard gauge, wooden rails</Description>
         <Icon>Textures\GUI\Icons\Equinox\RailPlannerGauge2Wood.dds</Icon>
         <Size>
             <X>1.2</X>
@@ -57,24 +57,21 @@
 
         <StanceToBehavior>
             <StanceName>NormalMode</StanceName>
-            <BehaviorId Type="MyObjectBuilder_EdgePlacerBehaviorDefinition" Subtype="EquiRailGauge2WoodPlanner"/>
+            <BehaviorId Type="MyObjectBuilder_EdgePlacerBehaviorDefinition" Subtype="EquiRailGaugeStandardWoodPlanner"/>
         </StanceToBehavior>
     </Definition>
 
     <Definition xsi:type="MyObjectBuilder_EdgePlacerBehaviorDefinition">
-        <Id Type="MyObjectBuilder_EdgePlacerBehaviorDefinition" Subtype="EquiRailGauge2WoodPlanner"/>
-        <Layer>TrainRailGauge2</Layer>
+        <Id Type="MyObjectBuilder_EdgePlacerBehaviorDefinition" Subtype="EquiRailGaugeStandardWoodPlanner"/>
+        <Layer>TrainRailGaugeStandard</Layer>
         <CrosshairPrefix>EquiTrainRail</CrosshairPrefix>
-        <Placed Type="MyObjectBuilder_EntityBase" Subtype="EquiRailGauge2Wood"/>
-        <Distance Min="7" Max="15"/>
-        <MaxElevationChange>3</MaxElevationChange>
-        <MaxAngleDegrees>20</MaxAngleDegrees>
+        <Placed Type="MyObjectBuilder_EntityBase" Subtype="EquiRailGaugeStandard_Wood_Bendy"/>
     </Definition>
 
     <Definition xsi:type="MyObjectBuilder_CraftingRecipeDefinition">
-        <Id Type="MyObjectBuilder_CraftingRecipeDefinition" Subtype="EquiRailGauge2WoodPlanner"/>
-        <DisplayName>Rail Planner (2m Gauge, Wood)</DisplayName>
-        <Description>Rail Planner for 2m gauge, metal capped wooden rails</Description>
+        <Id Type="MyObjectBuilder_CraftingRecipeDefinition" Subtype="EquiRailGaugeStandardWoodPlanner"/>
+        <DisplayName>Rail Planner (Standard Gauge, Steel)</DisplayName>
+        <Description>Rail Planner for standard gauge, steel rails</Description>
         <Category>Weaving</Category>
         <Icon>Textures\GUI\Icons\Equinox\RailPlannerGauge2Wood.dds</Icon>
         <Prerequisites>
@@ -82,7 +79,7 @@
             <Item Amount="1" Tag="Timber" />
         </Prerequisites>
         <Results>
-            <Item Amount="1" Type="HandItem" Subtype="EquiRailGauge2WoodPlanner"/>
+            <Item Amount="1" Type="HandItem" Subtype="EquiRailGaugeStandardWoodPlanner"/>
         </Results>
         <CraftingTime Seconds="1"/>
     </Definition>

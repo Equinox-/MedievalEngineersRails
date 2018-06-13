@@ -1,80 +1,62 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
     <Definition xsi:type="MyObjectBuilder_ContainerDefinition" Copy="Append">
-        <Id Type="EntityBase" Subtype="EquiRailGauge2Wood" />
+        <Id Type="EntityBase" Subtype="EquiRailGaugeStandard_Wood_Bendy" />
 
-        <Component Type="ModelComponent" Subtype="EquiRailGauge2Wood" />
-        <Component Type="SkeletonComponent" Subtype="EquiRailGauge2Wood"/>
-        <Component Type="RenderComponentCharacter" Subtype="EquiRailGauge2Wood"/>
-        <Component Type="BendyDynamicComponent" Subtype="EquiRailGauge2Wood"/>
-        <Component Type="ConstructableComponent" Subtype="EquiRailGauge2Wood"/>
+        <Component Type="ModelComponent" Subtype="EquiRailGaugeStandard_Wood_Bendy" />
+        <Component Type="SkeletonComponent" />
+        <Component Type="RenderComponentRigged" />
+        <Component Type="BendyComponent" Subtype="EquiRailGaugeStandard_Wood_Bendy"/>
+        <Component Type="ConstructableComponent" Subtype="EquiRailGaugeStandard_Wood_Bendy"/>
         <Component Type="MultiplayerComponent" />
-        <Component Type="BendyPhysicsComponent" Subtype="EquiRailGauge2Wood"/>
-        <Component Type="BendyDetectorComponent" Subtype="EquiRailGauge2Wood"/>
-        <Component Type="RailGradeComponent" Subtype="EquiRailGauge2Wood"/>
+        <Component Type="BendyPhysicsComponent" Subtype="EquiRailGaugeStandard_Wood_Bendy"/>
+        <Component Type="RailGradeComponent" Subtype="EquiRailGaugeStandard_Wood"/>
+        <Component Type="RailSegmentComponent" Subtype="EquiRailGaugeStandard_Wood" />
     </Definition>
 
     <Definition xsi:type="MyObjectBuilder_ModelComponentDefinition">
-        <Id Type="MyObjectBuilder_ModelComponent" Subtype="EquiRailGauge2Wood" />
+        <Id Type="MyObjectBuilder_ModelComponent" Subtype="EquiRailGaugeStandard_Wood_Bendy" />
         <DisplayName>BendableRailModel</DisplayName>
-        <Model>Models\BendableRailSegment_10m_Large.mwm</Model>
+        <Model>Models\Equinox\RailsGaugeStandard\Wood\Bendy_10m.mwm</Model>
     </Definition>
+    
+    <Definition xsi:type="MyObjectBuilder_BendyComponentDefinition">
+        <Id Type="MyObjectBuilder_BendyComponent" Subtype="EquiRailGaugeStandard_Wood_Bendy" />
+        <Layer>TrainRailGaugeStandard</Layer>
+        <Nodes>
+            <Node Movable="true">
+                <Position x="-5" y="-1.25" z="0" />
+                <Up x="0" y="1" z="0" />
+                <Forward x="1" y="0" z="0" />
+            </Node>
+            <Node Movable="true">
+                <Position x="5" y="-1.25" z="0" />
+                <Up x="0" y="1" z="0" />
+                <Forward x="1" y="0" z="0" />
+            </Node>
+        </Nodes>
+        <Edges>
+            <Edge From="0" To="1" Mode="CubicBez">
+                <Bones>RailBone_000 RailBone_001 RailBone_002 RailBone_003 RailBone_004 RailBone_005 RailBone_006 RailBone_007 RailBone_008 RailBone_009 RailBone_010 RailBone_011 RailBone_012 RailBone_013 RailBone_014 RailBone_015</Bones>
+            </Edge>
+        </Edges>
 
-    <Definition xsi:type="MyObjectBuilder_SkeletonComponentDefinition">
-        <Id Type="SkeletonComponent" Subtype="EquiRailGauge2Wood" />
-    </Definition>
-
-    <Definition xsi:type="MyObjectBuilder_RenderComponentCharacterDefinition">
-        <Id Type="RenderComponentCharacter" Subtype="EquiRailGauge2Wood" />
-    </Definition>
-
-    <Definition xsi:type="MyObjectBuilder_BendyDynamicComponentDefinition">
-        <Id Type="MyObjectBuilder_BendyDynamicComponent" Subtype="EquiRailGauge2Wood" />
-
-        <LeadingBones>0</LeadingBones>
-        <PrimaryBones>9</PrimaryBones>
-        <TrailingBones>0</TrailingBones>
-        <BonePrefix>Bone_</BonePrefix>
-        <Layer>TrainRailGauge2</Layer>
+        <Distance Min="7" Max="15" />
+        <MaxGradeRatio>0.05</MaxGradeRatio>
+        <MaxAngleDegrees>20</MaxAngleDegrees>
     </Definition>
 
     <Definition xsi:type="MyObjectBuilder_BendyPhysicsComponentDefinition">
-        <Id Type="MyObjectBuilder_BendyPhysicsComponent" Subtype="EquiRailGauge2Wood" />
+        <Id Type="MyObjectBuilder_BendyPhysicsComponent" Subtype="EquiRailGaugeStandard_Wood_Bendy" />
 
         <Width>2.5</Width>
-        <Height>0.25</Height>
-        <Segments>6</Segments>
+        <Height>0.15</Height>
+        <Segments>12</Segments>
         <DestroyEnvItems>true</DestroyEnvItems>
-
-        <ActivationUpperBound>
-            <percent>0.08</percent>
-            <percent>0.25</percent>
-            <percent>0.43</percent>
-            <percent>0.43</percent>
-            <percent>1.1</percent>
-            <percent>1.1</percent>
-        </ActivationUpperBound>
-    </Definition>
-
-    <Definition xsi:type="MyObjectBuilder_BendyDetectorComponentDefinition">
-        <Id Type="MyObjectBuilder_BendyDetectorComponent" Subtype="EquiRailGauge2Wood" />
-
-        <Width>2.5</Width>
-        <Height>0.25</Height>
-        <Segments>6</Segments>
-    </Definition>
-
-    <Definition xsi:type="MyObjectBuilder_RailGradeComponentDefinition">
-        <Id Type="MyObjectBuilder_RailGradeComponent" Subtype="EquiRailGauge2Wood" />
-
-        <Support Width="3.5" VerticalOffset="0.2" Height="10" RelaxAngleDegrees="60" />
-        <Excavate Width="3.5" VerticalOffset="0.225" Height="5" RelaxAngleDegrees="75" />
-
-        <RequiredSupport Width="0.25" VerticalOffset="0" />
     </Definition>
 
     <Definition xsi:type="MyObjectBuilder_ConstructableComponentDefinition">
-        <Id Type="MyObjectBuilder_ConstructableComponent" Subtype="EquiRailGauge2Wood" />
+        <Id Type="MyObjectBuilder_ConstructableComponent" Subtype="EquiRailGaugeStandard_Wood_Bendy" />
 
         <Components>
             <Component Tag="Timber" Count="24" /> <!-- ref value is 24 timbers -->
@@ -83,13 +65,13 @@
         </Components>
 
         <BuildStages>
-            <Stage BuildPercentUpperBound="0.08" Model="Models\Equinox\RailsGauge2\Wood\Bendy_10m_Build1.mwm" /> <!-- planning stakes -->
-            <Stage BuildPercentUpperBound="0.25" Model="Models\Equinox\RailsGauge2\Wood\Bendy_10m_Build2.mwm" /> <!-- sleepers 1 -->
-            <Stage BuildPercentUpperBound="0.43" Model="Models\Equinox\RailsGauge2\Wood\Bendy_10m_Build3.mwm" /> <!-- sleepers 2 -->
-            <Stage BuildPercentUpperBound="0.64" Model="Models\Equinox\RailsGauge2\Wood\Bendy_10m_Build4.mwm" /> <!-- sleepers 3 -->
-            <Stage BuildPercentUpperBound="0.83" Model="Models\Equinox\RailsGauge2\Wood\Bendy_10m_Build5.mwm" /> <!-- rails -->
-            <Stage BuildPercentUpperBound="0.95" Model="Models\Equinox\RailsGauge2\Wood\Bendy_10m_Build6.mwm" /> <!-- spikes -->
-            <Stage BuildPercentUpperBound="1.10" Model="Models\Equinox\RailsGauge2\Wood\Bendy_10m.mwm" /> <!-- caps -->
+            <Stage BuildPercentUpperBound="0.08" Model="Models\Equinox\RailsGaugeStandard\Wood\Bendy_10m_Build1.mwm" /> <!-- planning stakes -->
+            <Stage BuildPercentUpperBound="0.25" Model="Models\Equinox\RailsGaugeStandard\Wood\Bendy_10m_Build2.mwm" /> <!-- sleepers 1 -->
+            <Stage BuildPercentUpperBound="0.43" Model="Models\Equinox\RailsGaugeStandard\Wood\Bendy_10m_Build3.mwm" /> <!-- sleepers 2 -->
+            <Stage BuildPercentUpperBound="0.64" Model="Models\Equinox\RailsGaugeStandard\Wood\Bendy_10m_Build4.mwm" /> <!-- sleepers 3 -->
+            <Stage BuildPercentUpperBound="0.83" Model="Models\Equinox\RailsGaugeStandard\Wood\Bendy_10m_Build5.mwm" /> <!-- sleepers 4 -->
+            <Stage BuildPercentUpperBound="0.95" Model="Models\Equinox\RailsGaugeStandard\Wood\Bendy_10m_Build6.mwm" /> <!-- rails -->
+            <Stage BuildPercentUpperBound="1.10" Model="Models\Equinox\RailsGaugeStandard\Wood\Bendy_10m.mwm" /> <!-- spikes -->
         </BuildStages>
 
         <MaxIntegrity>1000</MaxIntegrity>

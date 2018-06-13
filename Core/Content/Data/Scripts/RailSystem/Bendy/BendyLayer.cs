@@ -3,8 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Serialization;
 using Equinox76561198048419394.RailSystem.Util;
+using NLog.Targets;
+using Sandbox.Game.GameSystems;
 using VRage.Definitions.Inventory;
 using VRage.Game;
+using VRage.Game.Entity;
 using VRage.Library.Logging;
 using VRage.ObjectBuilders;
 using VRageMath;
@@ -66,18 +69,27 @@ namespace Equinox76561198048419394.RailSystem.Bendy
                 return nearest;
             return null;
         }
-
-        public Node GetOrCreateNode(Vector3D pos, Vector3D up)
+        
+        public Node GetOrCreateNode(Vector3D pos, Vector3D? up = null)
         {
             var nearest = NearestNode(pos);
             if (nearest != null && Vector3D.DistanceSquared(nearest.Position, pos) < RailConstants.NodeMergeDistanceSq)
                 return nearest;
-            return new Node(this, pos, up);
+
+            // ReSharper disable once InvertIf
+            if (!up.HasValue)
+            {
+                up = Vector3D.Normalize(-MyGravityProviderSystem.CalculateNaturalGravityInPoint(pos));
+                if (!up.Value.IsValid() || up.Value.LengthSquared() < 1e-3f)
+                    up = Vector3D.Up;
+            }
+
+            return new Node(this, pos, up.Value);
         }
 
-        public Edge CreateEdge(Node from, Node to, CurveMode mode)
+        public Edge CreateEdge(BendyComponent owner, Node from, Node to, CurveMode mode)
         {
-            return new Edge(from, to, mode);
+            return new Edge(owner, from, to, mode);
         }
 
         internal void UpdateAfterSimulation()

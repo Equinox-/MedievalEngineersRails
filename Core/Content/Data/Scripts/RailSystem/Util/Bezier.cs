@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using VRageMath;
 
 namespace Equinox76561198048419394.RailSystem.Util
@@ -29,9 +25,9 @@ namespace Equinox76561198048419394.RailSystem.Util
 
             public IBezier Convert()
             {
-                if (P3.IsValid())
+                if (P3.LengthSquared() > 0)
                     return new CubicBezier(P0, P1, P2, P3);
-                if (P2.IsValid())
+                if (P2.LengthSquared() > 0)
                     return new QuadraticBezier(P0, P1, P2);
                 return new LinearCurve(P0, P1);
             }

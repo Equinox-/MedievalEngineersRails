@@ -1,0 +1,129 @@
+<?xml version="1.0"?>
+<Definitions xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Definition xsi:type="AnimationControllerDefinition" Enabled="true" Merge="Append">
+    <Id Type="MyObjectBuilder_CharacterAnimationControllerComponent" Subtype="Medieval_male" />
+    <CopyFrom xsi:nil="true" />
+    <Layers>
+      <Layer>
+        <Name>EquiRailHandcartStdGauge</Name>
+        <Mode>Replace</Mode>
+        <StateMachine>EquiRailHandcartStdGauge</StateMachine>
+        <InitialSMNode>Nothing</InitialSMNode>
+        <BoneMask>FirstCameraDummy HeadDummy LHand ME_main_root ME_RigAprone_L_01 ME_RigAprone_L_02 ME_RigAprone_L_03 ME_RigAprone_M_01 ME_RigAprone_M_02 ME_RigAprone_M_03 ME_RigAprone_R_01 ME_RigAprone_R_02 ME_RigAprone_R_03 ME_RigBag_bone ME_RigL_Cap_bone_1 ME_RigL_Cap_bone_2 ME_RigL_Index_1 ME_RigL_Index_2 ME_RigL_Index_3 ME_RigL_Little_1 ME_RigL_Little_2 ME_RigL_Little_3 ME_RigL_Middle_1 ME_RigL_Middle_2 ME_RigL_Middle_3 ME_RigL_Ring_1 ME_RigL_Ring_2 ME_RigL_Ring_3 ME_RigL_Thumb_1 ME_RigL_Thumb_2 ME_RigL_Thumb_3 ME_RigL_Weapon_pin ME_RigLCalf ME_RigLCollarbone ME_RigLFoot ME_RigLForearm1 ME_RigLForearm2 ME_RigLForearm3 ME_RigLPalm ME_RigLR_Foot_tip1 ME_RigLThigh ME_RigLUpperarm1 ME_RigLUpperarm2 ME_RigNeck1 ME_RigNeck2 ME_RigNose_L ME_RigNose_R ME_RigPelvis ME_RigR_Index_1 ME_RigR_Index_2 ME_RigR_Index_3 ME_RigR_Little_1 ME_RigR_Little_2 ME_RigR_Little_3 ME_RigR_Middle_1 ME_RigR_Middle_2 ME_RigR_Middle_3 ME_RigR_Ring_1 ME_RigR_Ring_2 ME_RigR_Ring_3 ME_RigR_Thumb_1 ME_RigR_Thumb_2 ME_RigR_Thumb_3 ME_RigR_Weapon_pin ME_RigRCalf ME_RigRCollarbone ME_RigRFoot ME_RigRForearm1 ME_RigRForearm2 ME_RigRForearm3 ME_RigRibcage ME_RigRibcageBone001 ME_RigRPalm ME_RigRR_Foot_tip1 ME_RigRThigh ME_RigRUpperarm1 ME_RigRUpperarm2 ME_RigSpine1 ME_RigSpine2 ME_RigSpine3 ME_RigSpine4 ME_RigSpine5 RootNode ThirdCameraDummy ToolOffset WeaponDummy</BoneMask>
+      </Layer>
+    </Layers>
+    <StateMachines>
+      <StateMachine>
+        <Name>EquiRailHandcartStdGauge</Name>
+        <Nodes>
+          <Node>
+            <Name>Nothing</Name>
+            <AnimationTree>
+              <EdPos>
+                <X>0</X>
+                <Y>0</Y>
+              </EdPos>
+              <Child xsi:type="MyObjectBuilder_AnimationTreeNodeSetter">
+                <EdPos>
+                  <X>230</X>
+                  <Y>-66</Y>
+                </EdPos>
+                <Time>0</Time>
+                <Value>
+                  <Name>sitting</Name>
+                  <Value>0</Value>
+                </Value>
+                <ResetValueEnabled>false</ResetValueEnabled>
+                <ResetValue>0</ResetValue>
+              </Child>
+            </AnimationTree>
+            <EdPos>
+              <X>-772</X>
+              <Y>191</Y>
+            </EdPos>
+            <Type>Normal</Type>
+          </Node>
+          <Node>
+            <Name>EquiRailHandcartStdGaugeForward</Name>
+            <AnimationTree>
+              <EdPos>
+                <X>-468</X>
+                <Y>-78</Y>
+              </EdPos>
+              <Child xsi:type="MyObjectBuilder_AnimationTreeNodeSetter">
+                <EdPos>
+                  <X>230</X>
+                  <Y>-66</Y>
+                </EdPos>
+                <Time>0</Time>
+                <Value>
+                  <Name>sitting</Name>
+                  <Value>1</Value>
+                </Value>
+                <ResetValueEnabled>false</ResetValueEnabled>
+                <ResetValue>0</ResetValue>
+                <Child xsi:type="MyObjectBuilder_AnimationTreeNodeSpeedModifier">
+                  <EdPos>
+                    <X>-50</X>
+                    <Y>-68</Y>
+                  </EdPos>
+                  <ParameterName>rail_speed_z</ParameterName>
+                  <Child xsi:type="MyObjectBuilder_AnimationTreeNodeTrack">
+                    <EdPos>
+                      <X>199</X>
+                      <Y>-78</Y>
+                    </EdPos>
+                    <PathToModel>Models\Equinox\Handcart\Animation\Handcart_User_Male_Forward.mwm</PathToModel>
+                    <AnimationName>AnimStack::Armature|ArmatureAction.001</AnimationName>
+                    <Loop>true</Loop>
+                    <Speed>1</Speed>
+                    <Interpolate>true</Interpolate>
+                  </Child>
+                  <SpeedMapping>
+                    <Param>-1000</Param>
+                    <Speed>-1000</Speed>
+                  </SpeedMapping>
+                  <SpeedMapping>
+                    <Param>1000</Param>
+                    <Speed>1000</Speed>
+                  </SpeedMapping>
+                </Child>
+              </Child>
+            </AnimationTree>
+            <EdPos>
+              <X>-539</X>
+              <Y>180</Y>
+            </EdPos>
+            <Type>Normal</Type>
+          </Node>
+          <Node>
+            <Name>AnimSync</Name>
+            <EdPos>
+              <X>-235</X>
+              <Y>63</Y>
+            </EdPos>
+            <Type>PassThrough</Type>
+          </Node>
+        </Nodes>
+        <Transitions>
+          <Transition Name="equi_attach_end" From="EquiRailHandcartStdGaugeForward" To="Nothing" TimeInSec="0" Sync="Restart">
+            <Priority xsi:nil="true" />
+            <Curve>Smooth</Curve>
+          </Transition>
+          <Transition Name="equi_rail_handcart_std_gauge_forward" From="Nothing" To="EquiRailHandcartStdGaugeForward" TimeInSec="0" Sync="Restart">
+            <Priority xsi:nil="true" />
+            <Curve>Smooth</Curve>
+          </Transition>
+          <Transition Name="equi_rail_sync" From="EquiRailHandcartStdGaugeForward" To="AnimSync" TimeInSec="0" Sync="Restart">
+            <Priority xsi:nil="true" />
+            <Curve>Smooth</Curve>
+          </Transition>
+          <Transition From="AnimSync" To="EquiRailHandcartStdGaugeForward" TimeInSec="0" Sync="Restart">
+            <Priority xsi:nil="true" />
+            <Curve>Smooth</Curve>
+          </Transition>
+        </Transitions>
+      </StateMachine>
+    </StateMachines>
+  </Definition>
+</Definitions>

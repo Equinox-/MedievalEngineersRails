@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Xml.Serialization;
+﻿using System.Xml.Serialization;
 using VRage.Game;
 using VRage.Game.Definitions;
 using VRage.ObjectBuilders;
@@ -17,6 +12,20 @@ namespace Equinox76561198048419394.RailSystem.Physics
         public string Layer { get; private set; }
         public float MaxVelocity { get; private set; }
         public float MaxForce { get; private set; }
+        public float CoefficientOfFriction { get; private set; }
+        private float _detachDistance;
+
+        public float DetachDistance
+        {
+            get { return _detachDistance; }
+            private set
+            {
+                _detachDistance = value;
+                DetachDistanceSq = value * value;
+            }
+        }
+
+        public float DetachDistanceSq { get; private set; }
 
         protected override void Init(MyObjectBuilder_DefinitionBase def)
         {
@@ -26,6 +35,8 @@ namespace Equinox76561198048419394.RailSystem.Physics
             Layer = ob.Layer;
             MaxVelocity = ob.MaxVelocity;
             MaxForce = ob.MaxForce;
+            DetachDistance = ob.DetachDistance;
+            CoefficientOfFriction = ob.CoefficientOfFriction;
         }
     }
 
@@ -35,6 +46,11 @@ namespace Equinox76561198048419394.RailSystem.Physics
     {
         public float VerticalOffset;
         public string Layer;
+        
+        // For this bogie on new steel rails.  Other rail types use a multiplier.
+        public float CoefficientOfFriction;
+        
         public float MaxVelocity, MaxForce;
+        public float DetachDistance;
     }
 }

@@ -100,14 +100,14 @@
 
     <ExcavateDefinition Type="MyObjectBuilder_VoxelMiningDefinition" Subtype="Pickaxe"/>
     <ExcavateRadius>2</ExcavateRadius>
-    <ExcavateVolume>256</ExcavateVolume>
+    <ExcavateVolume>1024</ExcavateVolume>
 
     <FillMaterial VoxelMaterial="Rocks_moss" Volume="256">
       <MinedItem Type="InventoryItem" Subtype="Dirt" Amount="1" />
       <MinedItem Type="InventoryItem" Subtype="StoneSmall" Amount="1" />
     </FillMaterial>
     <FillRadius>2</FillRadius>
-    <FillVolume>256</FillVolume>
+    <FillVolume>1024</FillVolume>
 
     <PrimaryEffect>
       <HitTime>.5</HitTime>

@@ -6,8 +6,6 @@ using Sandbox.ModAPI;
 using VRage.Game;
 using VRage.Game.Definitions;
 using VRage.Game.ModAPI;
-using VRage.ObjectBuilder.Merging;
-using VRage.ObjectBuilders.Definitions;
 using VRage.Utils;
 using VRageMath;
 

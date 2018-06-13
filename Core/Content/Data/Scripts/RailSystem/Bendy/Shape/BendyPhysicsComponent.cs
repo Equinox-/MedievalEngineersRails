@@ -1,34 +1,22 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Net.Cache;
+﻿using System.Collections.Generic;
 using System.Xml.Serialization;
 using Equinox76561198048419394.RailSystem.Construction;
 using Equinox76561198048419394.RailSystem.Util;
-using Sandbox.Definitions.Inventory;
 using Sandbox.Engine.Physics;
-using Sandbox.Entities.Components;
-using Sandbox.Game.Components;
-using Sandbox.Game.EntityComponents.Renders;
 using Sandbox.ModAPI;
 using VRage;
-using VRage.Components;
-using VRage.Components.Entity.Animations;
-using VRage.Entity.EntityComponents;
 using VRage.Factory;
 using VRage.Game;
 using VRage.Game.Components;
 using VRage.Game.Entity;
 using VRage.Game.ObjectBuilders.ComponentSystem;
 using VRage.ObjectBuilders;
-using VRage.Session;
-using VRage.Systems;
-using VRage.Utils;
 using VRageMath;
 
 namespace Equinox76561198048419394.RailSystem.Bendy.Shape
 {
     [MyComponent(typeof(MyObjectBuilder_BendyPhysicsComponent))]
-    [MyDependency(typeof(BendyDynamicComponent), Critical = true, Recursive = true)]
+    [MyDependency(typeof(BendyComponent), Critical = true, Recursive = true)]
     [MyDependency(typeof(ConstructableComponent), Critical = false, Recursive = false)]
     [MyDefinitionRequired]
     public class BendyPhysicsComponent : BendyShapeComponent
@@ -50,6 +38,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Shape
             foreach (var k in _physicsProxies)
                 k.Close();
             _physicsProxies.Clear();
+//            AddFixedUpdate(DebugDraw);
         }
 
         public override void OnRemovedFromScene()

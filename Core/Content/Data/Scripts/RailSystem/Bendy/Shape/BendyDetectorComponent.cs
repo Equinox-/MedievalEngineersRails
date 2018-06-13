@@ -1,12 +1,9 @@
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Xml.Serialization;
 using Equinox76561198048419394.RailSystem.Construction;
-using Equinox76561198048419394.RailSystem.Util;
 using Sandbox.Engine.Physics;
 using Sandbox.ModAPI;
 using VRage;
-using VRage.Components.Entity.Camera;
 using VRage.Factory;
 using VRage.Game;
 using VRage.Game.Components;
@@ -19,7 +16,7 @@ using VRageMath;
 namespace Equinox76561198048419394.RailSystem.Bendy.Shape
 {
     [MyComponent(typeof(MyObjectBuilder_BendyDetectorComponent))]
-    [MyDependency(typeof(BendyDynamicComponent), Critical = true, Recursive = true)]
+    [MyDependency(typeof(BendyComponent), Critical = true, Recursive = true)]
     [MyDependency(typeof(ConstructableComponent), Critical = false, Recursive = false)]
     [MyDefinitionRequired]
     public class BendyDetectorComponent : BendyShapeComponent

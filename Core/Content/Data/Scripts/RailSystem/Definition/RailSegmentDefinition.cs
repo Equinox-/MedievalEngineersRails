@@ -1,98 +1,90 @@
-﻿
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
 using System.Xml.Serialization;
 using VRage.Game;
+using VRage.Game.Definitions;
 using VRage.ObjectBuilders;
-using VRage.ObjectBuilders.Definitions.Inventory;
 
 namespace Equinox76561198048419394.RailSystem.Definition
 {
-    public class RailSegmentDefinition
+    [MyDefinitionType(typeof(MyObjectBuilder_RailSegmentDefinition))]
+    public class RailSegmentDefinition : MyEntityComponentDefinition
     {
-        
+        public struct RailSegmentCaps
+        {
+            public readonly float ActivationLevel;
+            public readonly float Friction;
+            public readonly float MaxSpeed;
+
+            public static readonly RailSegmentCaps Default = new RailSegmentCaps(0.95f, 1f, float.PositiveInfinity);
+
+            private RailSegmentCaps(float activate, float fric, float max)
+            {
+                ActivationLevel = activate;
+                Friction = fric;
+                MaxSpeed = max;
+            }
+
+            internal RailSegmentCaps(MyObjectBuilder_RailSegmentDefinition.RsObRailSegmentCaps caps)
+            {
+                ActivationLevel = caps.ActivationLevel;
+                Friction = caps.Friction;
+                MaxSpeed = caps.MaxSpeed;
+            }
+        }
+
+        private RailSegmentCaps[] _caps;
+
+        protected override void Init(MyObjectBuilder_DefinitionBase def)
+        {
+            base.Init(def);
+            var ob = (MyObjectBuilder_RailSegmentDefinition) def;
+            if (ob.Capabilities == null || ob.Capabilities.Length == 0)
+            {
+                MyDefinitionErrors.Add(def.ModContext, $"Definition {def.Id} has no defined capabilities, using default", TErrorSeverity.Warning);
+                _caps = new[] {RailSegmentCaps.Default};
+                return;
+            }
+
+            _caps = new RailSegmentCaps[ob.Capabilities.Length];
+            for (var i = 0; i < ob.Capabilities.Length; i++)
+                _caps[i] = new RailSegmentCaps(ob.Capabilities[i]);
+            Array.Sort(_caps, (a, b) => Comparer<float>.Default.Compare(a.ActivationLevel, b.ActivationLevel));
+        }
+
+        public RailSegmentCaps? CapabilitiesFor(float activationLevel)
+        {
+            for (var i = _caps.Length - 1; i >= 0; i--)
+                if (_caps[i].ActivationLevel <= activationLevel)
+                    return _caps[i];
+
+            return null;
+        }
     }
-    
+
     [MyObjectBuilderDefinition]
     [XmlSerializerAssembly("MedievalEngineers.ObjectBuilders.XmlSerializers")]
     public class MyObjectBuilder_RailSegmentDefinition : MyObjectBuilder_EntityComponentDefinition
     {
         public class RsObRailSegmentCaps
         {
+            // Build ratio at which this is activated.
             [XmlAttribute]
-            public int ComponentsInstalled;
+            [DefaultValue(0.95)]
+            public float ActivationLevel = 0.95f;
+
+            // Multiplier applied on the base (new steel rail) friction.
+            [XmlAttribute]
+            [DefaultValue(1)]
+            public float Friction = 1;
 
             [XmlAttribute]
-            public float Friction;
-            
-            [XmlAttribute]
-            public float MaxSpeed;
-
-            [XmlAttribute]
-            public float TurningRadius;
+            [DefaultValue(float.PositiveInfinity)]
+            public float MaxSpeed = float.PositiveInfinity;
         }
-
-        public class RsObComponent
-        {
-            [XmlAttribute]
-            public string Type
-            {
-                get
-                {
-                    return Definition.Type;
-                }
-                set
-                {
-                    Definition.Type = value;
-                }
-            }
-            [XmlAttribute]
-            public string Subtype
-            {
-                get
-                {
-                    return Definition.Subtype;
-                }
-                set
-                {
-                    Definition.Subtype = value;
-                }
-            }
-            [XmlAttribute]
-            public string Tag
-            {
-                get
-                {
-                    return Definition.Tag;
-                }
-                set
-                {
-                    Definition.Tag = value;
-                }
-            }
-            [XmlIgnore]
-            public DefinitionTagId Definition;
-            
-            [XmlAttribute]
-            public ushort Count;
-            
-            public DefinitionTagId? ReturnedItem;
-        }
-
-        public class RsObBuildModel
-        {
-            [XmlAttribute]
-            public int ComponentsInstalled;
-
-            [XmlAttribute]
-            public string Model;
-        }
-        
-        [XmlArrayItem("Component")]
-        public MyObjectBuilder_CubeBlockDefinition.CbObCubeBlockComponent[] Components;
 
         [XmlArrayItem("Capability")]
         public RsObRailSegmentCaps[] Capabilities;
-
-        [XmlArrayItem("Stage")]
-        public RsObBuildModel[] BuildStages;
     }
 }

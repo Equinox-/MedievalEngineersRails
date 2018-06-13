@@ -4,24 +4,28 @@ using VRageMath;
 
 namespace Equinox76561198048419394.RailSystem.Bendy
 {
+    public enum CurveMode
+    {
+        Linear,
+        CubicBez
+    }
+    
     public class Edge
     {
         public readonly BendyLayer Graph;
         public readonly Node From, To;
         public Bezier.IBezier Curve { get; private set; }
         public readonly CurveMode Mode;
+        public readonly BendyComponent Owner;
 
-        internal Edge(Node from, Node to, CurveMode mode)
+        internal Edge(BendyComponent owner, Node from, Node to, CurveMode mode)
         {
+            Owner = owner;
             Graph = from.Graph;
             From = from;
             To = to;
             Mode = mode;
-            Node.AddConnection(this);
-            Graph.EdgeList.Add(this);
-            From.MarkDirty();
-            To.MarkDirty();
-            MarkDirty();
+            EnsureInScene();
         }
 
         public void MarkDirty()
@@ -72,16 +76,31 @@ namespace Equinox76561198048419394.RailSystem.Bendy
                     throw new Exception($"Unsupported curve mode {Mode}");
             }
 
-            CurveUpdated?.Invoke();
+            CurveUpdated?.Invoke(this);
         }
 
-        public event Action CurveUpdated;
+        public event Action<Edge> CurveUpdated;
 
         private bool _dirty;
         private int _proxyId = -1;
 
+        
+        public bool InScene { get; private set; }
+
+        public void EnsureInScene()
+        {
+            if (InScene)
+                return;
+            Node.AddConnection(this);
+            Graph.EdgeList.Add(this);
+            From.MarkDirty();
+            To.MarkDirty();
+            MarkDirty();
+        }
+        
         public virtual void Close()
         {
+            InScene = false;
             Node.RemoveConnection(this);
             if (_proxyId >= 0)
             {

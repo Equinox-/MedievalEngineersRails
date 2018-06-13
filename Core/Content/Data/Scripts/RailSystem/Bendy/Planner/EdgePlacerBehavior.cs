@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Xml.Serialization;
 using Equinox76561198048419394.RailSystem.Bendy.Shape;
@@ -8,6 +9,7 @@ using Equinox76561198048419394.RailSystem.Util;
 using Equinox76561198048419394.RailSystem.Voxel;
 using Medieval.Constants;
 using Medieval.GameSystems;
+using Microsoft.CodeAnalysis.CSharp;
 using Sandbox.Definitions.Equipment;
 using Sandbox.Game.Entities;
 using Sandbox.Game.EntityComponents.Character;
@@ -42,64 +44,173 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
 
         public MyEntity Owner => Holder;
 
-        public static event Action<EdgePlacerBehavior, MyEntity> EntityAdded, EntityRemoved;
-
-        private MatrixD? _prevNodeLocation;
-
-        private MatrixD? PrevNodeLocation
+        private struct VertexData
         {
-            get { return _prevNodeLocation; }
-            set
+            public readonly Vector3D Position;
+            public readonly Vector3D Up;
+            public readonly Node Node;
+
+            public VertexData(Vector3D pos, Vector3D up, Node node)
             {
-                var old = _prevNodeLocation;
-                _prevNodeLocation = value;
-                if (!IsLocallyControlled)
-                    return;
-                if (old.HasValue && !value.HasValue)
-                    MySession.Static.Components.Get<MyUpdateComponent>().RemoveFixedUpdate(DrawConnection);
-                else if (!old.HasValue && value.HasValue)
-                    MySession.Static.Components.Get<MyUpdateComponent>().AddFixedUpdate(DrawConnection);
+                Position = pos;
+                Up = up;
+                Node = node;
             }
         }
 
-        private void DrawConnection()
+        private readonly List<VertexData> _vertices = new List<VertexData>();
+        private bool _connectToPlayer = true;
+
+
+        private VertexData CreateVertex(Vector3D worldPos)
         {
-            if (PrevNodeLocation == null || Holder.PositionComp == null)
-                return;
-            var prevNodeValue = PrevNodeLocation.Value;
-            var prevNodeActual = Graph.GetNode(prevNodeValue.Translation);
-            if (prevNodeActual != null)
-                prevNodeValue = MatrixD.CreateWorld(prevNodeActual.Position, prevNodeActual.Tangent, prevNodeActual.Up);
-
-            var prevPos = prevNodeValue.Translation;
-            var targetNode = Graph.GetNode(Holder.PositionComp.WorldMatrix.Translation);
-            var nextPos = targetNode?.Position ?? Holder.PositionComp.WorldMatrix.Translation;
-
-            var forward = nextPos - prevPos;
-
-            MatrixD prev = MatrixD.CreateWorld(prevPos, prevNodeValue.Forward * Math.Sign(Vector3D.Dot(prevNodeValue.Forward, forward)), prevNodeValue.Up);
-            MatrixD next;
-            if (targetNode == null)
+            var node = Graph.GetNode(worldPos);
+            Vector3D up;
+            if (node != null)
             {
-                var npos = Holder.PositionComp.WorldMatrix.Translation;
-                var up = Vector3D.Normalize(-MyGravityProviderSystem.CalculateNaturalGravityInPoint(Target.Position));
-                if (!up.IsValid())
-                    up = Vector3D.Up;
-                var tan = Vector3D.Normalize(forward);
-                var aux = Vector3D.Cross(tan, up);
-                var upReal = Vector3D.Cross(aux, tan);
-                upReal.Normalize();
-                next = MatrixD.CreateWorld(npos, tan, upReal);
+                up = node.Up;
+                worldPos = node.Position;
             }
             else
             {
-                next = MatrixD.CreateWorld(targetNode.Position, targetNode.Tangent * Math.Sign(Vector3D.Dot(targetNode.Tangent, forward)), targetNode.Up);
+                up = Vector3D.Normalize(-MyGravityProviderSystem.CalculateNaturalGravityInPoint(worldPos));
+                if (!up.IsValid() || up.LengthSquared() < 1e-3f)
+                    up = Vector3D.Up;
             }
 
+            return new VertexData(worldPos, up, node);
+        }
 
+        private const float _edgeWidth = 0.05f;
+        private const float _nodeWidth = 0.01f;
+        private static readonly Vector4 _edgeColor = new Vector4(0, 0, 1, 0.1f);
+        private static readonly Vector4 _edgeColorBad = new Vector4(1, 0, 0, 0.1f);
+        private static readonly Vector4 _nodeColor = new Vector4(0, 0, 1, 0.1f);
+        private static readonly MyStringId _squareMaterial = MyStringId.GetOrCompute("Square");
+
+        private const float _nodeMarkerSize = 1;
+        private const float _edgeMarkerVertOffset = 0.325f;
+
+        private BendyLayer Graph { get; set; }
+        private string Layer => Definition.Layer;
+        private new EdgePlacerBehaviorDefinition Definition { get; set; }
+        private BendyComponentDefinition PlacedDefinition { get; set; }
+
+        public override void Init(MyEntity holder, MyHandItem item, MyHandItemBehaviorDefinition definition)
+        {
+            base.Init(holder, item, definition);
+            Definition = (EdgePlacerBehaviorDefinition) definition;
+            PlacedDefinition = EdgePlacerSystem.DefinitionFor(Definition.Placed);
+        }
+
+        public override void Activate()
+        {
+            base.Activate();
+            Graph = MySession.Static.Components.Get<BendyController>().GetOrCreateLayer(Layer);
+            _vertices.Clear();
+            if (IsLocallyControlled)
+                MySession.Static.Components.Get<MyUpdateComponent>().AddFixedUpdate(Render);
+        }
+
+        public override void Deactivate()
+        {
+            base.Deactivate();
+            _vertices.Clear();
+            Graph = null;
+            MySession.Static.Components.Get<MyUpdateComponent>().RemoveFixedUpdate(Render);
+            _hintInfo?.Hide();
+            _hintInfo = null;
+        }
+
+        #region Rendering
+
+        private MatrixD ComputeVertexMatrix(VertexData vert, int index)
+        {
+            if (vert.Node != null)
+                return vert.Node.Matrix;
+
+            var prevPos = (index - 1) >= 0 ? (Vector3D?) _vertices[index - 1].Position : null;
+            var nextPos = (index + 1) < _vertices.Count ? (Vector3D?) _vertices[index + 1].Position : null;
+
+            var tan = Vector3D.Zero;
+            if (prevPos.HasValue)
+            {
+                var t = (vert.Position - prevPos.Value).SafeNormalized();
+                tan += tan.Dot(t) < 0 ? -t : t;
+            }
+
+            if (nextPos.HasValue)
+            {
+                var t = (vert.Position - nextPos.Value).SafeNormalized();
+                tan += tan.Dot(t) < 0 ? -t : t;
+            }
+
+            if (!tan.IsValid() || tan.LengthSquared() < 1e-3f)
+                tan = Vector3D.Cross(vert.Up, vert.Up.Shifted());
+            tan.SafeNormalized();
+            return MatrixD.CreateWorld(vert.Position, tan, vert.Up);
+        }
+
+        private void Render()
+        {
+            var cam = MyCameraComponent.ActiveCamera;
+            if (Graph == null || cam == null) return;
+
+            {
+                // draw node markers
+                var proj = cam.GetProjectionSetup();
+                proj.FarPlane = 100;
+                var frust = new BoundingFrustumD(cam.GetViewMatrix() * proj.ProjectionMatrix);
+                Graph.Nodes.OverlapAllFrustum(ref frust, (Node node, bool intersects) =>
+                {
+                    var color = _nodeColor;
+                    var p1 = node.Position;
+                    var p2 = node.Position + _nodeMarkerSize * node.Up;
+                    MySimpleObjectDraw.DrawLine(p1, p2, _squareMaterial, ref color, _nodeWidth);
+                });
+            }
+
+            {
+                var nextNode = _connectToPlayer && Holder != null
+                    ? (VertexData?) CreateVertex(Holder.GetPosition())
+                    : null;
+                if (nextNode.HasValue)
+                    _vertices.Add(nextNode.Value);
+
+                for (var i = 1; i < _vertices.Count; i++)
+                {
+                    var nextVert = _vertices[i];
+                    var nextMatrix = ComputeVertexMatrix(nextVert, i);
+
+                    var currentVert = _vertices[i - 1];
+                    var prevPos = i >= 2
+                        ? (Vector3D?) _vertices[i - 2].Position
+                        : currentVert.Node?.Opposition(nextVert.Position)?.Position;
+                    var currentMatrix = ComputeVertexMatrix(currentVert, i - 1);
+
+                    DrawBez(currentMatrix, nextMatrix,
+                        PlacedDefinition == null || EdgePlacerSystem.VerifyJoint(PlacedDefinition, prevPos,
+                            currentVert.Position, nextVert.Position, null)
+                            ? _edgeColor
+                            : _edgeColorBad);
+                }
+
+                if (nextNode.HasValue)
+                    _vertices.RemoveAt(_vertices.Count - 1);
+            }
+        }
+
+        private static void DrawBez(MatrixD prev, MatrixD next, Vector4 color)
+        {
+            var cam = MyCameraComponent.ActiveCamera;
+            if (cam == null)
+                return;
+            var center = (prev.Translation + next.Translation) / 2;
+            var factor = Math.Sqrt(Vector3D.DistanceSquared(prev.Translation, next.Translation) /
+                                   (1 + Vector3D.DistanceSquared(cam.GetPosition(), center)));
+            var count = MathHelper.Clamp(factor * 100, 1, 10);
             var lastPos = default(Vector3D);
-            var color = _edgeColor;
-            for (var t = 0; t <= 10; t++)
+            for (var t = 0; t <= count; t++)
             {
                 var pos = Bezier.BSpline(prev, next, t / 10f);
                 var pact = pos.Translation + pos.Up * _edgeMarkerVertOffset;
@@ -109,59 +220,9 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
             }
         }
 
-        private const float _edgeWidth = 0.05f;
-        private const float _nodeWidth = 0.01f;
-        private static readonly Vector4 _edgeColor = new Vector4(0, 0, 1, 0.1f);
-        private static readonly Vector4 _nodeColor = new Vector4(1, 0, 0, 0.1f);
-        private static readonly MyStringId _squareMaterial = MyStringId.GetOrCompute("Square");
+        #endregion
 
-        private const float _nodeMarkerSize = 1;
-        private const float _edgeMarkerVertOffset = 0.325f;
-
-        private BendyLayer Graph { get; set; }
-        private string Layer => Definition.Layer;
-        private new EdgePlacerBehaviorDefinition Definition { get; set; }
-
-        public override void Init(MyEntity holder, MyHandItem item, MyHandItemBehaviorDefinition definition)
-        {
-            base.Init(holder, item, definition);
-            Definition = (EdgePlacerBehaviorDefinition) definition;
-        }
-
-        public override void Activate()
-        {
-            base.Activate();
-            Graph = MySession.Static.Components.Get<BendyController>().GetOrCreateLayer(Layer);
-            PrevNodeLocation = null;
-            if (IsLocallyControlled)
-                MySession.Static.Components.Get<MyUpdateComponent>().AddFixedUpdate(DrawNodes);
-        }
-
-        public override void Deactivate()
-        {
-            base.Deactivate();
-            PrevNodeLocation = null;
-            Graph = null;
-            MySession.Static.Components.Get<MyUpdateComponent>().RemoveFixedUpdate(DrawNodes);
-            _hintInfo?.Hide();
-            _hintInfo = null;
-        }
-
-        private void DrawNodes()
-        {
-            var cam = MyCameraComponent.ActiveCamera;
-            if (Graph == null || cam == null) return;
-            var proj = cam.GetProjectionSetup();
-            proj.FarPlane = 100;
-            var frust = new BoundingFrustumD(cam.GetViewMatrix() * proj.ProjectionMatrix);
-            Graph.Nodes.OverlapAllFrustum(ref frust, (Node node, bool intersects) =>
-            {
-                var color = _nodeColor;
-                var p1 = node.Position;
-                var p2 = node.Position + _nodeMarkerSize * node.Up;
-                MySimpleObjectDraw.DrawLine(p1, p2, _squareMaterial, ref color, _nodeWidth);
-            });
-        }
+        private readonly List<string> _tmpMessages = new List<string>();
 
         protected override bool Start(MyHandItemActionEnum action)
         {
@@ -172,17 +233,23 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
             switch (action)
             {
                 case MyHandItemActionEnum.Tertiary:
-                    return true;
+                    return _vertices.Count > 0;
                 case MyHandItemActionEnum.Secondary:
-                    string tmp;
-                    if (ValidateQuickDeconstruct(out tmp)) return true;
-                    if (MyAPIGateway.Session.IsServerDecider())
-                        player.ShowNotification(tmp, 2000, null, new Vector4(1, 0, 0, 1));
+                    string err;
+                    if (ValidateDeconstruct(out err, true))
+                        return true;
+                    if (!string.IsNullOrEmpty(err))
+                        player.ShowNotification(err, 2000, null,
+                            new Vector4(1, 0, 0, 1));
                     return false;
                 case MyHandItemActionEnum.Primary:
-                    if (ValidateSpacing() && ValidateTargetNode()) return true;
-                    if (MyAPIGateway.Session.IsServerDecider())
-                        player.ShowNotification(string.Join("\n", GetHints(false)), 2000, null, new Vector4(1, 0, 0, 1));
+                    _tmpMessages.Clear();
+                    if (ValidatePlace(_tmpMessages, true))
+                        return true;
+                    if (_tmpMessages.Count > 0)
+                        player.ShowNotification(string.Join("\n", _tmpMessages), 2000, null,
+                            new Vector4(1, 0, 0, 1));
+                    _tmpMessages.Clear();
                     return false;
                 case MyHandItemActionEnum.None:
                 default:
@@ -190,126 +257,87 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
             }
         }
 
-        private bool ValidateQuickDeconstruct(out string msg, bool ignorePermission = false)
-        {
-            msg = null;
-            if (!ignorePermission && !HasPermission(MyPermissionsConstants.QuickDeconstruct))
-            {
-                msg = "You don't have permission to quick deconstruct here";
-                return false;
-            }
-
-            var entity = Target.Entity?.Components.Get<BendyShapeProxy>()?.Owner ?? Target.Entity;
-            var dynCon = entity?.Components.Get<BendyDynamicComponent>();
-            if (dynCon == null || dynCon.Edge?.Graph != Graph)
-                return false;
-            var constructionCon = entity?.Components.Get<ConstructableComponent>();
-            // ReSharper disable once InvertIf
-            if (constructionCon != null && (constructionCon.BuildIntegrity > 0 || !constructionCon.StockpileEmpty) && !MyAPIGateway.Session.IsCreative())
-            {
-                msg = "Can't quick deconstruct the rail segment here";
-                return false;
-            }
-
-            return true;
-        }
+        private bool TargetIsStatic => Target.Entity?.Physics?.IsStatic ?? true;
 
         private bool IsLocallyControlled => MySession.Static.PlayerEntity == Holder;
-
-        private bool HasPermission(MyStringId id)
-        {
-            var player = MyAPIGateway.Players.GetPlayerControllingEntity(Holder);
-            if (player == null)
-                return false;
-            return MyAreaPermissionSystem.Static == null || MyAreaPermissionSystem.Static.HasPermission(player.IdentityId, Target.Position, id);
-        }
 
         private IMyHudNotification _hintInfo;
 
         protected override void Hit()
         {
+            if (!IsLocallyControlled)
+                return;
+
             switch (ActiveAction)
             {
                 case MyHandItemActionEnum.Tertiary:
                 {
-                    if (!IsLocallyControlled) return;
+                    if (_vertices.Count == 0)
+                        return;
                     if (_hintInfo == null)
                         _hintInfo = MyAPIGateway.Utilities.CreateNotification("");
                     var sb = new StringBuilder();
-                    foreach (var msg in GetHints(true))
-                        sb.AppendLine(msg);
+
+                    if (!TargetIsStatic)
+                        sb.AppendLine("Can't place node on dynamic physics");
+                    else
+                    {
+                        var jointData = EdgePlacerSystem.ComputeJointParameters(
+                            _vertices.Count > 1 ? (Vector3D?) _vertices[_vertices.Count - 2].Position : null,
+                            _vertices[_vertices.Count - 1].Position, Target.Position);
+                        sb.Append($"Length {jointData.Length:F1} m");
+                        if (PlacedDefinition != null && jointData.Length > PlacedDefinition.Distance.Max)
+                            sb.AppendLine($" > {PlacedDefinition.Distance.Max:F1} m");
+                        else if (PlacedDefinition != null && jointData.Length < PlacedDefinition.Distance.Min)
+                            sb.AppendLine($" < {PlacedDefinition.Distance.Min:F1} m");
+                        else
+                            sb.AppendLine();
+                        if (jointData.BendRadians.HasValue)
+                        {
+                            var b = jointData.BendRadians.Value;
+                            sb.Append($"Curve {b * 180 / Math.PI:F0}º");
+                            if (PlacedDefinition != null && b > PlacedDefinition.MaxAngleRadians)
+                                sb.AppendLine($" > {PlacedDefinition.MaxAngleDegrees}º");
+                            else
+                                sb.AppendLine();
+                        }
+
+                        if (jointData.Grade.HasValue)
+                        {
+                            var g = jointData.Grade.Value;
+                            sb.Append($"Grade {g * 100:F0}%");
+                            if (PlacedDefinition != null && g > PlacedDefinition.MaxGradeRatio)
+                                sb.AppendLine($" > {PlacedDefinition.MaxGradeRatio * 100:F0}%");
+                            else
+                                sb.AppendLine();
+                        }
+                    }
+
                     _hintInfo.Text = sb.ToString();
-                    _hintInfo.Show(); // resets alive time + adds to queue if it's no in it
+                    _hintInfo.Show(); // resets alive time + adds to queue if it's not in it
                     return;
                 }
                 case MyHandItemActionEnum.Secondary:
                 {
-                    string msg;
-                    if (!ValidateQuickDeconstruct(out msg))
-                    {
-                        if (IsLocallyControlled)
-                            MyAPIGateway.Utilities.ShowNotification(msg, 2000, null, new Vector4(1, 0, 0, 1));
-                        return;
-                    }
-
-                    PrevNodeLocation = null;
+                    _vertices.Clear();
                     var entity = Target.Entity?.Components.Get<BendyShapeProxy>()?.Owner ?? Target.Entity;
-                    var dynCon = entity?.Components.Get<BendyDynamicComponent>();
-                    if (dynCon == null || dynCon.Edge?.Graph != Graph)
+                    var dynCon = entity?.Components.Get<BendyComponent>();
+                    if (dynCon == null || dynCon.Graph != Graph)
                         return;
-                    if (!MyAPIGateway.Session.IsServerDecider()) return;
-                    entity.Close();
-                    EntityRemoved?.Invoke(this, entity);
+                    EdgePlacerSystem.RaiseRemoveEdge(Holder.EntityId, entity.EntityId);
                     return;
                 }
                 case MyHandItemActionEnum.Primary:
                 {
-                    Vector3D up = Vector3D.Normalize(-MyGravityProviderSystem.CalculateNaturalGravityInPoint(Target.Position));
-                    if (!up.IsValid())
-                        up = Vector3D.Up;
-
-                    if (MyAPIGateway.Session.IsServerDecider())
-                    {
-                        if (!ValidateTargetNode())
-                            return;
-
-                        var nextNode = Graph.GetOrCreateNode(Target.Position, up);
-                        var prevNode = PrevNodeLocation.HasValue ? Graph.GetOrCreateNode(PrevNodeLocation.Value.Translation, PrevNodeLocation.Value.Up) : null;
-
-                        if (prevNode != null && nextNode != null && Graph.GetEdge(prevNode, nextNode) == null)
+                    _vertices.Add(CreateVertex(Target.Position));
+                    if (_vertices.Count < 2) return;
+                    EdgePlacerSystem.RaisePlaceEdge(new EdgePlacerSystem.EdgePlacerConfig()
                         {
-                            var obContainer = new MyObjectBuilder_ComponentContainer();
-                            ((ICollection<MyObjectBuilder_EntityComponent>) obContainer.Components).Add(new MyObjectBuilder_BendyDynamicComponent()
-                            {
-                                From = prevNode.Position,
-                                FromUp = (Vector3) prevNode.Up,
-                                To = nextNode.Position,
-                                ToUp = (Vector3) nextNode.Up
-                            });
-                            var entOb = new MyObjectBuilder_EntityBase()
-                            {
-                                EntityDefinitionId = Definition.Placed,
-                                PersistentFlags = MyPersistentEntityFlags2.InScene,
-                                PositionAndOrientation = new MyPositionAndOrientation(prevNode.Position, (Vector3) prevNode.Tangent, (Vector3) prevNode.Up),
-                                ComponentContainer = obContainer
-                            };
-                            var entity = MyAPIGateway.Entities.CreateFromObjectBuilderAndAdd(entOb);
-                            if (MyAPIGateway.Session.IsCreative())
-                            {
-                                entity.Components.Get<ConstructableComponent>()?.InstallFromCreative();
-                                ConstructableComponentDefinition.CcComponent test;
-                                int test2;
-                                entity.Components.Get<ConstructableComponent>()?.IncreaseIntegrity(1e9f, out test, out test2);
-                            }
-
-                            EntityAdded?.Invoke(this, entity);
-                        }
-
-                        PrevNodeLocation = nextNode?.Matrix ?? MatrixD.CreateWorld(Target.Position, Vector3.Normalize(Vector3D.Cross(up, up.Shifted())), up);
-                    }
-                    else
-                        PrevNodeLocation = MatrixD.CreateWorld(Target.Position, Vector3.Normalize(Vector3D.Cross(up, up.Shifted())), up);
-
+                            EntityPlacing = Holder.EntityId,
+                            Placed = Definition.Placed
+                        },
+                        _vertices.Select(x => x.Position).ToArray());
+                    _vertices.RemoveRange(0, _vertices.Count - 1);
                     return;
                 }
                 case MyHandItemActionEnum.None:
@@ -318,189 +346,103 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
             }
         }
 
-        private bool ValidateSpacing()
-        {
-            var pnode = PrevNodeLocation.HasValue ? Graph.GetNode(PrevNodeLocation.Value.Translation) : null;
-            if (pnode == null)
-                return true;
-            var d = Vector3D.DistanceSquared(pnode.Position, Target.Position);
-            if (d < Definition.Distance.Min * Definition.Distance.Min || d > Definition.Distance.Max * Definition.Distance.Max)
-                return false;
+        #region Validation
 
-            var prevHeight = pnode.Position.GetElevation();
-            var currHeight = Target.Position.GetElevation();
-            var elevationChange = Math.Abs(prevHeight - currHeight);
-            // ReSharper disable once ConvertIfStatementToReturnStatement
-            if (elevationChange > Definition.MaxElevationChange)
-                return false;
-
-
-            // ReSharper disable once UseNullPropagation
-            {
-                var prevPrevNode = pnode.Opposition(Target.Position);
-                if (prevPrevNode != null)
-                {
-                    var p1 = Vector3D.Normalize(pnode.Position - prevPrevNode.Position);
-                    var p2 = Vector3D.Normalize(Target.Position - pnode.Position);
-                    var angle = Math.Acos(MathHelper.Clamp(Vector3D.Dot(p1, p2), 0, 1));
-                    if (angle > Definition.MaxAngleRadians)
-                        return false;
-                }
-            }
-
-            var targetNode = Graph.GetNode(Target.Position);
-            // ReSharper disable once InvertIf
-            if (targetNode != null)
-            {
-                var nextNode = targetNode.Opposition(pnode);
-                var p1 = Vector3D.Normalize(nextNode.Position - targetNode.Position);
-                var p2 = Vector3D.Normalize(targetNode.Position - pnode.Position);
-                var angle = Math.Acos(MathHelper.Clamp(Vector3D.Dot(p1, p2), 0, 1));
-                if (angle > Definition.MaxAngleRadians)
-                {
-                    return false;
-                }
-            }
-
-            return true;
-        }
-
-        private bool ValidateTargetNode(bool ignorePermissions = false)
+        private bool ValidatePlace(IList<string> errors, bool testPermissions)
         {
             var player = MyAPIGateway.Players.GetPlayerControllingEntity(Holder);
-            if (!ignorePermissions && !HasPermission(MyPermissionsConstants.Build))
+            if (player == null)
                 return false;
-            var targetNode = Graph.GetNode(Target.Position);
-            if (targetNode != null)
+
+            if (!TargetIsStatic || PlacedDefinition == null)
+            {
+                errors?.Add("Can't place node on dynamic physics");
+                return false;
+            }
+
+            var vert = CreateVertex(Target.Position);
+            if (testPermissions)
+            {
+                if (!player.HasPermission(vert.Position, MyPermissionsConstants.Build))
+                {
+                    errors?.Add("You cannot build here");
+                    return false;
+                }
+
+                foreach (var t in _vertices)
+                    if (!player.HasPermission(t.Position, MyPermissionsConstants.Build))
+                    {
+                        errors?.Add("You cannot build here");
+                        return false;
+                    }
+            }
+
+            if (_vertices.Count == 0)
                 return true;
-            MyEntity ent = Target.Entity;
-            while (ent != null && ent.Physics == null)
-                ent = ent.Parent;
-            return ent?.Physics != null && ent.Physics.IsStatic;
+            var prev = _vertices[_vertices.Count - 1];
+            var prevPrevPos = _vertices.Count >= 2
+                ? _vertices[_vertices.Count - 2].Position
+                : prev.Node?.Opposition(vert.Position)?.Position;
+            if (!EdgePlacerSystem.VerifyJoint(PlacedDefinition, prevPrevPos, prev.Position, vert.Position, errors))
+                return false;
+            Array.Resize(ref _tempPositions, _vertices.Count + 1);
+            for (var i = 0; i < _vertices.Count; i++)
+                _tempPositions[i] = _vertices[i].Position;
+            _tempPositions[_tempPositions.Length - 1] = vert.Position;
+            return EdgePlacerSystem.ValidatePath(PlacedDefinition, Graph, _tempPositions, errors);
         }
 
-        private IEnumerable<string> GetHints(bool allHints)
+        private Vector3D[] _tempPositions;
+
+        private bool ValidateDeconstruct(out string err, bool testPermission)
         {
-            if (!HasPermission(MyPermissionsConstants.Build))
-            {
-                yield return $"You don't have permission to build here";
-                yield break;
-            }
-
+            err = null;
             if (Target.Entity == null)
-                yield break;
-            var targetNode = Graph.GetNode(Target.Position);
-            if (targetNode == null)
-            {
-                MyEntity ent = Target.Entity;
-                while (ent != null && ent.Physics == null)
-                    ent = ent.Parent;
-                if (ent?.Physics == null || !ent.Physics.IsStatic)
-                {
-                    yield return "Cannot place a node on non-static physics";
-                    if (!allHints)
-                        yield break;
-                }
-            }
-
-            var prevNode = PrevNodeLocation.HasValue ? Graph.GetNode(PrevNodeLocation.Value.Translation) : null;
-            if (prevNode != null)
-            {
-                var d = Vector3D.Distance(prevNode.Position, Target.Position);
-                if (d < Definition.Distance.Min)
-                {
-                    yield return $"Too close to previous node {d:F1} m < {Definition.Distance.Min:F1} m";
-                    if (!allHints)
-                        yield break;
-                }
-
-                if (d > Definition.Distance.Max)
-                {
-                    yield return $"Too far from previous node {d:F1} m > {Definition.Distance.Max:F1} m";
-                    if (!allHints)
-                        yield break;
-                }
-
-                if (allHints && d >= Definition.Distance.Min && d <= Definition.Distance.Max)
-                {
-                    yield return $"Length {d:F1} m";
-                }
-
-                var prevHeight = prevNode.Position.GetElevation();
-                var currHeight = Target.Position.GetElevation();
-                var elevationChange = Math.Abs(prevHeight - currHeight);
-// ReSharper disable once ConvertIfStatementToReturnStatement
-                if (elevationChange > Definition.MaxElevationChange)
-                {
-                    yield return $"Too much elevation change {elevationChange:F1} m > {Definition.MaxElevationChange:F1} m";
-                    if (!allHints)
-                        yield break;
-                }
-                else if (allHints)
-                {
-                    yield return $"Elevation {elevationChange:F1} m";
-                }
-
-                var prevPrevNode = prevNode.Opposition(Target.Position);
-                if (prevPrevNode != null)
-                {
-                    var p1 = Vector3D.Normalize(prevNode.Position - prevPrevNode.Position);
-                    var p2 = Vector3D.Normalize(Target.Position - prevNode.Position);
-                    var angle = Math.Acos(MathHelper.Clamp(Vector3D.Dot(p1, p2), 0, 1));
-                    if (angle > Definition.MaxAngleRadians)
-                    {
-                        yield return $"Too curvy (prev), {angle * 180f / Math.PI:F1}º > {Definition.MaxAngleRadians * 180f / Math.PI:F1}º";
-                        if (!allHints)
-                            yield break;
-                    }
-                    else if (allHints)
-                    {
-                        yield return $"Curve (prev) {angle * 180f / Math.PI:F1}º";
-                    }
-                }
-            }
-
-            if (targetNode != null && prevNode != null)
-            {
-                var nextNode = targetNode.Opposition(prevNode);
-                var p1 = Vector3D.Normalize(nextNode.Position - targetNode.Position);
-                var p2 = Vector3D.Normalize(targetNode.Position - prevNode.Position);
-                var angle = Math.Acos(MathHelper.Clamp(Vector3D.Dot(p1, p2), 0, 1));
-                if (angle > Definition.MaxAngleRadians)
-                {
-                    yield return $"Too curvy (next), {angle * 180f / Math.PI:F1}º > {Definition.MaxAngleRadians * 180f / Math.PI:F1}º";
-                    if (!allHints)
-                        yield break;
-                }
-                else if (allHints)
-                {
-                    yield return $"Curve (next) {angle * 180f / Math.PI:F1}º";
-                }
-            }
-
-            if (targetNode != null)
-                yield return "Connect to existing node";
-            else
-                yield return "Connect to new node";
+                return false;
+            var player = MyAPIGateway.Players.GetPlayerControllingEntity(Holder);
+            if (player == null)
+                return false;
+            if (!testPermission ||
+                player.HasPermission(Target.Entity.GetPosition(), MyPermissionsConstants.QuickDeconstruct))
+                return Target.Entity != null && EdgePlacerSystem.ValidateQuickRemove(player, Target.Entity, out err);
+            err = "You cannot quick deconstruct here";
+            return false;
         }
+
+        #endregion
+
+        #region Hints
 
         public override IEnumerable<string> GetHintTexts()
         {
-            if (ValidateSpacing() && ValidateTargetNode())
+            if (ValidatePlace(null, true))
                 yield return "Press LMB to place";
             string tmp;
-            if (ValidateQuickDeconstruct(out tmp))
+            if (ValidateDeconstruct(out tmp, true))
                 yield return "Press RMB to remove";
         }
 
         public override IEnumerable<MyCrosshairIconInfo> GetIconsStates()
         {
-            if (Definition.CrosshairPrefix == null)
+            var player = MyAPIGateway.Players.GetPlayerControllingEntity(Holder);
+            if (Definition.CrosshairPrefix == null || player == null)
                 yield break;
 
-            if (ValidateSpacing() && ValidateTargetNode(true))
+            if (ValidatePlace(null, false))
             {
-                if (HasPermission(MyPermissionsConstants.Build))
+                var hasPerms = true;
+                var vert = CreateVertex(Target.Position);
+                if (!player.HasPermission(vert.Position, MyPermissionsConstants.Build))
+                    hasPerms = false;
+
+                foreach (var t in _vertices)
+                    if (!player.HasPermission(t.Position, MyPermissionsConstants.Build))
+                    {
+                        hasPerms = false;
+                        break;
+                    }
+
+                if (hasPerms)
                 {
                     if (Definition.CrosshairPlace.HasValue)
                         yield return Definition.CrosshairPlace.Value;
@@ -509,13 +451,13 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
                     yield return Definition.CrosshairPlaceNoPermission.Value;
             }
 
-            if (_prevNodeLocation != null && Definition.CrosshairQuestion.HasValue)
+            if (_vertices.Count > 0 && Definition.CrosshairQuestion.HasValue)
                 yield return Definition.CrosshairQuestion.Value;
             string tmp;
             // ReSharper disable once InvertIf
-            if (ValidateQuickDeconstruct(out tmp, true))
+            if (ValidateDeconstruct(out tmp, true))
             {
-                if (HasPermission(MyPermissionsConstants.QuickDeconstruct))
+                if (player.HasPermission(Target.Entity.GetPosition(), MyPermissionsConstants.QuickDeconstruct))
                 {
                     if (Definition.CrosshairRemove.HasValue)
                         yield return Definition.CrosshairRemove.Value;
@@ -524,6 +466,8 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
                     yield return Definition.CrosshairRemoveNoPermission.Value;
             }
         }
+
+        #endregion
     }
 
     [MyDefinitionType(typeof(MyObjectBuilder_EdgePlacerBehaviorDefinition))]
@@ -531,10 +475,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
     {
         public string Layer { get; private set; }
         public MyDefinitionId Placed { get; private set; }
-        public ImmutableRange<float> Distance { get; private set; }
         public string CrosshairPrefix { get; private set; }
-        public float MaxElevationChange { get; private set; }
-        public float MaxAngleRadians { get; private set; }
 
         public MyCrosshairIconInfo? CrosshairPlace { get; private set; }
         public MyCrosshairIconInfo? CrosshairPlaceNoPermission { get; private set; }
@@ -554,17 +495,23 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
             base.Init(builder);
             var ob = (MyObjectBuilder_EdgePlacerBehaviorDefinition) builder;
             Layer = ob.Layer;
+            if (string.IsNullOrWhiteSpace(Layer))
+                MyDefinitionErrors.Add(builder.ModContext,
+                    $"{nameof(EdgePlacerBehaviorDefinition)} {builder.GetId()} has {nameof(Layer)} that is null or whitespace",
+                    TErrorSeverity.Error);
             Placed = ob.Placed;
+            if (Placed.TypeId.IsNull)
+                MyDefinitionErrors.Add(builder.ModContext,
+                    $"{nameof(EdgePlacerBehaviorDefinition)} {builder.GetId()} has {nameof(Placed)} that is null",
+                    TErrorSeverity.Error);
             CrosshairPrefix = ob.CrosshairPrefix;
-            Distance = (ob.Distance ?? new MutableRange<float>(RailConstants.DefaultMinLength, RailConstants.DefaultMaxLength)).Immutable();
-            MaxElevationChange = ob.MaxElevationChange ?? RailConstants.DefaultMaxElevationChange;
-            MaxAngleRadians = (float) ((ob.MaxAngleDegrees ?? RailConstants.DefaultMaxAngleDegrees) * Math.PI / 180f);
 
             CrosshairPlace = Create("_Place", MyCrosshairIconInfo.IconPosition.TopLeftCorner);
             CrosshairPlaceNoPermission = Create("_Place_NoPermission", MyCrosshairIconInfo.IconPosition.TopLeftCorner);
             CrosshairQuestion = Create("_Question", MyCrosshairIconInfo.IconPosition.Center);
             CrosshairRemove = Create("_Remove", MyCrosshairIconInfo.IconPosition.TopRightCorner);
-            CrosshairRemoveNoPermission = Create("_Remove_NoPermission", MyCrosshairIconInfo.IconPosition.TopRightCorner);
+            CrosshairRemoveNoPermission =
+                Create("_Remove_NoPermission", MyCrosshairIconInfo.IconPosition.TopRightCorner);
         }
     }
 
@@ -580,14 +527,5 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
 
         [XmlElement]
         public SerializableDefinitionId Placed;
-
-        [XmlElement]
-        public MutableRange<float>? Distance;
-
-        [XmlElement]
-        public float? MaxElevationChange;
-
-        [XmlElement]
-        public float? MaxAngleDegrees;
     }
 }

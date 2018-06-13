@@ -1,24 +1,8 @@
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Xml.Serialization;
-using Equinox76561198048419394.RailSystem.Bendy;
-using Equinox76561198048419394.RailSystem.Bendy.Shape;
-using Equinox76561198048419394.RailSystem.Construction;
-using Equinox76561198048419394.RailSystem.Util;
-using Sandbox.Engine.Physics;
-using Sandbox.ModAPI;
-using VRage;
 using VRage.Components.Entity.Camera;
-using VRage.Factory;
 using VRage.Game;
 using VRage.Game.Components;
-using VRage.Game.Entity;
-using VRage.Game.ObjectBuilders.ComponentSystem;
-using VRage.Input.Devices.Keyboard;
-using VRage.ObjectBuilders;
-using VRage.Session;
-using VRage.Systems;
 using VRage.Utils;
 using VRageMath;
 
@@ -26,7 +10,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Shape
 {
     public abstract class BendyShapeComponent : MyEntityComponent
     {
-        private BendyDynamicComponent _bendyDynamicComponent;
+        private BendyComponent _bendyDynamicComponent;
         public BendyShapeComponentDefinition Definition { get; private set; }
 
         private readonly List<OrientedBoundingBox> _boxes = new List<OrientedBoundingBox>();
@@ -41,18 +25,11 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Shape
         public override void OnAddedToContainer()
         {
             base.OnAddedToContainer();
-            _bendyDynamicComponent = Entity.Components.Get<BendyDynamicComponent>();
-            _bendyDynamicComponent.EdgeChanged += OnEdgeChanged;
-            OnEdgeChanged();
-
-            foreach (var c in Container)
-                OnComponentAdded(c);
-            Container.ComponentAdded += OnComponentAdded;
-            Container.ComponentRemoved += OnComponentRemoved;
-//            AddFixedUpdate(Draw);
+            _bendyDynamicComponent = Entity.Components.Get<BendyComponent>();
+            _bendyDynamicComponent.EdgeSetupChanged += EdgeSetupChanged;
         }
 
-        private static readonly MyStringId _stringId = MyStringId.GetOrCompute("RailGradeClearShape");
+        private static readonly MyStringId _debugMaterialId = MyStringId.GetOrCompute("Square");
 
         public void DebugDraw()
         {
@@ -62,62 +39,35 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Shape
                 var m = MatrixD.CreateFromQuaternion(k.Orientation) * Entity.WorldMatrix;
                 var queryBox = box;
                 queryBox = queryBox.TransformFast(m);
-                if (Vector3D.DistanceSquared(queryBox.Center, MyCameraComponent.ActiveCamera.GetPosition()) > 100 * 100 ||
+                if (Vector3D.DistanceSquared(queryBox.Center, MyCameraComponent.ActiveCamera.GetPosition()) >
+                    100 * 100 ||
                     !MyCameraComponent.ActiveCamera.GetCameraFrustum().Intersects(queryBox))
                     continue;
-                var c = Color.Red;
-                MySimpleObjectDraw.DrawTransparentBox(ref m, ref box, ref c, MySimpleObjectRasterizer.SolidAndWireframe, 1, .01f, _stringId, _stringId);
+                var c = new Color(1, 0, 0, 0.25f);
+                MySimpleObjectDraw.DrawTransparentBox(ref m, ref box, ref c, MySimpleObjectRasterizer.Solid, 1, .01f,
+                    _debugMaterialId, _debugMaterialId);
+                var cWif = Color.White;
+                MySimpleObjectDraw.DrawTransparentBox(ref m, ref box, ref cWif, MySimpleObjectRasterizer.Wireframe, 1,
+                    .01f, _debugMaterialId, _debugMaterialId);
             }
         }
-        
-        private void OnComponentAdded(MyEntityComponent obj)
-        {
-            var changer = obj as IModelChanger;
-            if (changer != null)
-                changer.ModelChanged += ScheduleCalcShape;
-            var ctor = obj as ConstructableComponent;
-            if (ctor != null)
-                ctor.IntegrityChanged += CheckActiveSegments;
-        }
 
-        private void OnComponentRemoved(MyEntityComponent obj)
-        {
-            var changer = obj as IModelChanger;
-            if (changer != null)
-                changer.ModelChanged -= ScheduleCalcShape;
-            var ctor = obj as ConstructableComponent;
-            if (ctor != null)
-                ctor.IntegrityChanged -= CheckActiveSegments;
-        }
 
         public override void OnBeforeRemovedFromContainer()
         {
             base.OnBeforeRemovedFromContainer();
-            foreach (var c in Container)
-                OnComponentRemoved(c);
-            Container.ComponentAdded -= OnComponentAdded;
-            Container.ComponentRemoved -= OnComponentRemoved;
-            _bendyDynamicComponent.EdgeChanged -= OnEdgeChanged;
+            _bendyDynamicComponent.EdgeSetupChanged -= EdgeSetupChanged;
             _bendyDynamicComponent = null;
         }
 
-        private Edge _attachedEdge;
-
-        private void OnEdgeChanged()
+        private void EdgeSetupChanged(BendyComponent c)
         {
-            if (_attachedEdge == _bendyDynamicComponent?.Edge)
-                return;
-            if (_attachedEdge != null)
-                _attachedEdge.CurveUpdated -= ScheduleCalcShape;
-            _attachedEdge = _bendyDynamicComponent?.Edge;
-            if (_attachedEdge != null)
-                _attachedEdge.CurveUpdated += ScheduleCalcShape;
+            ScheduleCalcShape();
         }
 
         public override void OnAddedToScene()
         {
             base.OnAddedToScene();
-            CheckActiveSegments();
             ScheduleCalcShape();
         }
 
@@ -133,75 +83,59 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Shape
             _calcScheduled = true;
         }
 
-        private int DesiredActiveSegments
-        {
-            get
-            {
-                if (Entity != null && Entity.InScene)
-                    return Definition.ActiveSegments(Container?.Get<ConstructableComponent>()?.BuildPercent ?? 1f);
-                return 0;
-            }
-        }
-
-
-        private int _activeSegments;
-
-        private void CheckActiveSegments()
-        {
-            var segs = DesiredActiveSegments;
-            if (segs == _activeSegments)
-                return;
-            ScheduleCalcShape();
-        }
-
         private void CalcShape(long ticks)
         {
-            if (!_calcScheduled)
+            if (!_calcScheduled || _bendyDynamicComponent?.Edges == null)
                 return;
-            _activeSegments = DesiredActiveSegments;
             _calcScheduled = false;
-            var edge = _attachedEdge;
-            var curve = edge?.Curve;
-            if (curve == null || Definition.Segments == 0)
-                return;
-
-            int buildStart = 0;
-            BoundingBox buildingBox = default(BoundingBox);
-            Vector3 accumUp = Vector3.Zero, accumForward = Vector3.Zero;
-            Vector3? firstUp = null;
-            Vector3 firstForward = Vector3.Zero;
             _boxes.Clear();
-            for (var i = 0; i < _activeSegments; i++)
+            foreach (var edge in _bendyDynamicComponent.Edges)
             {
-                var t = (i + 0.5f) / Definition.Segments;
-                var pos = (Vector3) Vector3D.Transform(curve.Sample(t), Entity.PositionComp.WorldMatrixNormalizedInv);
-                var up = Vector3.TransformNormal(Vector3.Lerp((Vector3) edge.From.Up, (Vector3) edge.To.Up, t), Entity.PositionComp.WorldMatrixNormalizedInv);
-                var tan = Vector3.TransformNormal((Vector3) curve.SampleDerivative(t), Entity.PositionComp.WorldMatrixNormalizedInv);
+                var curve = edge?.Curve;
+                if (curve == null || Definition.Segments == 0)
+                    continue;
 
-                if (firstUp.HasValue)
+                var buildStart = 0;
+                var buildingBox = default(BoundingBox);
+                Vector3 accumUp = Vector3.Zero, accumForward = Vector3.Zero;
+                Vector3? firstUp = null;
+                var firstForward = Vector3.Zero;
+                for (var i = 0; i < Definition.Segments; i++)
                 {
-                    accumUp += up;
-                    accumForward += tan;
+                    var t = (i + 0.5f) / Definition.Segments;
+                    var pos = (Vector3) Vector3D.Transform(curve.Sample(t),
+                        Entity.PositionComp.WorldMatrixNormalizedInv);
+                    var up = Vector3.TransformNormal(Vector3.Lerp((Vector3) edge.From.Up, (Vector3) edge.To.Up, t),
+                        Entity.PositionComp.WorldMatrixNormalizedInv);
+                    var tan = Vector3.TransformNormal((Vector3) curve.SampleDerivative(t),
+                        Entity.PositionComp.WorldMatrixNormalizedInv);
 
-                    var last = i == _activeSegments - 1;
-                    buildingBox.Include(pos);
-                    if (last || (Math.Abs(buildingBox.HalfExtents.Dot(up)) > 0.075f || firstUp.Value.Dot(up) < 0.99 || Math.Abs(firstForward.Dot(tan)) < 0.75))
+                    if (firstUp.HasValue)
                     {
-                        accumForward.Normalize();
-                        accumUp.Normalize();
-                        var m = Matrix.CreateWorld(buildingBox.Center, accumForward, accumUp);
-                        if (!float.IsNaN(m.M11))
-                            _boxes.Add(CalculateRange(m, edge, buildStart, last ? i + 1 : i));
-                    }
-                    else
-                        continue;
-                }
+                        accumUp += up;
+                        accumForward += tan;
 
-                buildStart = i;
-                buildingBox = BoundingBox.CreateInvalid();
-                buildingBox.Include(pos);
-                firstForward = accumForward = tan;
-                firstUp = accumUp = up;
+                        var last = i == Definition.Segments - 1;
+                        buildingBox.Include(pos);
+                        if (last || (Math.Abs(buildingBox.HalfExtents.Dot(up)) > Definition.Height / 8 ||
+                                     firstUp.Value.Dot(up) < 0.99 || Math.Abs(firstForward.Dot(tan)) < 0.75))
+                        {
+                            accumForward.Normalize();
+                            accumUp.Normalize();
+                            var m = Matrix.CreateWorld(buildingBox.Center, accumForward, accumUp);
+                            if (!float.IsNaN(m.M11))
+                                _boxes.Add(CalculateRange(m, edge, buildStart, last ? i + 1 : i));
+                        }
+                        else
+                            continue;
+                    }
+
+                    buildStart = i;
+                    buildingBox = BoundingBox.CreateInvalid();
+                    buildingBox.Include(pos);
+                    firstForward = accumForward = tan;
+                    firstUp = accumUp = up;
+                }
             }
 
             BoxesUpdated(_boxes);
@@ -233,7 +167,8 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Shape
                 box.Include(pl - nl * Definition.HalfWidth + ul * Definition.Height);
             }
 
-            return new OrientedBoundingBox(box.Center + Vector3.TransformNormal(matrix.Translation, singleInv), box.HalfExtents, Quaternion.CreateFromRotationMatrix(matrix));
+            return new OrientedBoundingBox(box.Center + Vector3.TransformNormal(matrix.Translation, singleInv),
+                box.HalfExtents, Quaternion.CreateFromRotationMatrix(matrix));
         }
     }
 }

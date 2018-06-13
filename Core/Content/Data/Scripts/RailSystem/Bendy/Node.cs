@@ -13,7 +13,6 @@ namespace Equinox76561198048419394.RailSystem.Bendy
         public Vector3D UpBias { get; private set; }
         public Vector3D Up { get; private set; }
         private int _proxyId = -1;
-
         public int TangentPins { get; private set; }
 
         public Node(BendyLayer s, Vector3D pos, Vector3D up)
@@ -23,10 +22,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy
             Tangent = Vector3D.Normalize(Vector3D.Cross(UpBias, UpBias.Shifted()));
             Graph = s;
             TangentPins = 0;
-
-            Graph.NodeList.Add(this);
-            Graph.RaiseNodeCreated(this);
-            MarkDirty();
+            EnsureInScene();
         }
 
         public void Pin(MatrixD matrix)
@@ -211,6 +207,19 @@ namespace Equinox76561198048419394.RailSystem.Bendy
             return Vector3D.Normalize(_neighbors.First().Key.Position - Position);
         }
 
+        
+        public bool InScene { get; private set; }
+
+        public void EnsureInScene()
+        {
+            if (InScene)
+                return;
+            Graph.NodeList.Add(this);
+            Graph.RaiseNodeCreated(this);
+            MarkDirty();
+            InScene = true;
+        }
+        
         public void Close()
         {
             if (_neighbors.Count > 0)
@@ -225,6 +234,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy
 
             Graph.RaiseNodeRemoved(this);
             Graph.NodeList.Remove(this);
+            InScene = false;
         }
     }
 }

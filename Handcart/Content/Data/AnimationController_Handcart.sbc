@@ -1,0 +1,163 @@
+<?xml version="1.0"?>
+<Definitions xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Definition xsi:type="AnimationControllerDefinition" Enabled="true" Merge="Append">
+    <Id Type="MyObjectBuilder_AnimationControllerComponent" Subtype="EquiRailHandcartStdGauge_Skin" />
+    <CopyFrom xsi:nil="true" />
+    <Layers>
+      <Layer>
+        <Name>RollingStock</Name>
+        <Mode>Replace</Mode>
+        <StateMachine>RollingStock</StateMachine>
+        <InitialSMNode>Nothing</InitialSMNode>
+        <BoneMask>CrankShaft CrankShaft_Strut Handles Wheels.L Wheels.R</BoneMask>
+      </Layer>
+      <Layer>
+        <Name>Handbrake</Name>
+        <Mode>Replace</Mode>
+        <StateMachine>Handbrake</StateMachine>
+        <InitialSMNode>Applied</InitialSMNode>
+        <BoneMask>Brake_Applicator Brake_Connector.L Brake_Connector.R Brake_Pad.L Brake_Pad.R</BoneMask>
+      </Layer>
+    </Layers>
+    <StateMachines>
+      <StateMachine>
+        <Name>Handbrake</Name>
+        <Nodes>
+          <Node>
+            <Name>Released</Name>
+            <AnimationTree>
+              <EdPos>
+                <X>-118</X>
+                <Y>-44</Y>
+              </EdPos>
+              <Child xsi:type="MyObjectBuilder_AnimationTreeNodeTrack">
+                <EdPos>
+                  <X>208</X>
+                  <Y>-52</Y>
+                </EdPos>
+                <PathToModel>Models\Equinox\Handcart\Animation\Handcart_Brake_Released.mwm</PathToModel>
+                <AnimationName>AnimStack::Handcart_Armature|Handcart_ArmatureAction.001</AnimationName>
+                <Loop>false</Loop>
+                <Speed>1</Speed>
+                <Interpolate>true</Interpolate>
+              </Child>
+            </AnimationTree>
+            <EdPos>
+              <X>-834</X>
+              <Y>-80</Y>
+            </EdPos>
+            <Type>Normal</Type>
+          </Node>
+          <Node>
+            <Name>Applied</Name>
+            <AnimationTree>
+              <EdPos>
+                <X>-149</X>
+                <Y>-7</Y>
+              </EdPos>
+              <Child xsi:type="MyObjectBuilder_AnimationTreeNodeTrack">
+                <EdPos>
+                  <X>179</X>
+                  <Y>-22</Y>
+                </EdPos>
+                <PathToModel>Models\Equinox\Handcart\Animation\Handcart_Brake_Applied.mwm</PathToModel>
+                <AnimationName>AnimStack::Handcart_Armature|Handcart_ArmatureAction.001</AnimationName>
+                <Loop>false</Loop>
+                <Speed>1</Speed>
+                <Interpolate>true</Interpolate>
+              </Child>
+            </AnimationTree>
+            <EdPos>
+              <X>-555</X>
+              <Y>-85</Y>
+            </EdPos>
+            <Type>Normal</Type>
+          </Node>
+        </Nodes>
+        <Transitions>
+          <Transition From="Released" To="Applied" TimeInSec="0.3" Sync="Restart">
+            <Conditions>
+              <Conjunction>
+                <Condition Lhs="brake" Op="NotEqual" Rhs="0" />
+              </Conjunction>
+            </Conditions>
+            <Priority xsi:nil="true" />
+            <Curve>Smooth</Curve>
+          </Transition>
+          <Transition From="Applied" To="Released" TimeInSec="0.3" Sync="Restart">
+            <Conditions>
+              <Conjunction>
+                <Condition Lhs="brake" Op="Equal" Rhs="0" />
+              </Conjunction>
+            </Conditions>
+            <Priority xsi:nil="true" />
+            <Curve>Smooth</Curve>
+          </Transition>
+        </Transitions>
+      </StateMachine>
+      <StateMachine>
+        <Name>RollingStock</Name>
+        <Nodes>
+          <Node>
+            <Name>Nothing</Name>
+            <AnimationTree>
+              <EdPos>
+                <X>-158</X>
+                <Y>2</Y>
+              </EdPos>
+              <Child xsi:type="MyObjectBuilder_AnimationTreeNodeSpeedModifier">
+                <EdPos>
+                  <X>61</X>
+                  <Y>12</Y>
+                </EdPos>
+                <ParameterName>rail_speed_z</ParameterName>
+                <Child xsi:type="MyObjectBuilder_AnimationTreeNodeTrack">
+                  <EdPos>
+                    <X>241</X>
+                    <Y>-43</Y>
+                  </EdPos>
+                  <PathToModel>Models\Equinox\Handcart\Animation\Handcart_Driving.mwm</PathToModel>
+                  <AnimationName>AnimStack::Handcart_Armature|Posing_Action</AnimationName>
+                  <Loop>true</Loop>
+                  <Speed>1</Speed>
+                  <Interpolate>true</Interpolate>
+                </Child>
+                <SpeedMapping>
+                  <Param>-1000</Param>
+                  <Speed>-1000</Speed>
+                </SpeedMapping>
+                <SpeedMapping>
+                  <Param>1000</Param>
+                  <Speed>1000</Speed>
+                </SpeedMapping>
+              </Child>
+            </AnimationTree>
+            <EdPos>
+              <X>0</X>
+              <Y>0</Y>
+            </EdPos>
+            <Type>Normal</Type>
+          </Node>
+          <Node>
+            <Name>RestartAnim</Name>
+            <EdPos>
+              <X>151</X>
+              <Y>-112</Y>
+            </EdPos>
+            <Type>Normal</Type>
+          </Node>
+        </Nodes>
+        <Transitions>
+          <Transition Name="equi_rail_sync" From="Nothing" To="RestartAnim" TimeInSec="0" Sync="Restart">
+            <Priority xsi:nil="true" />
+            <Curve>Smooth</Curve>
+          </Transition>
+          <Transition From="RestartAnim" To="Nothing" TimeInSec="0" Sync="Restart">
+            <Priority xsi:nil="true" />
+            <Curve>Smooth</Curve>
+          </Transition>
+        </Transitions>
+      </StateMachine>
+    </StateMachines>
+  </Definition>
+</Definitions>

@@ -20,7 +20,7 @@
       <Z>0.3</Z>
     </Size>
     <Mass>1</Mass>
-    <Model>Models\Weapons\Hammer_OneHandSteel.mwm</Model>
+    <Model>Models\Equinox\Weapons\RailSledgehammer.mwm</Model>
     
     <PhysicalMaterial>Hammer</PhysicalMaterial>
 
@@ -111,7 +111,8 @@
 
   <Definition xsi:type="MyObjectBuilder_ConstructorBehaviorDefinition">
     <Id Type="MyObjectBuilder_ConstructorBehaviorDefinition" Subtype="EquiRailHammerSteel"/>
-    <Efficiency>3.0</Efficiency>
+    <!-- <Efficiency>3.0</Efficiency> -->
+    <Efficiency>1.5</Efficiency>
 	<ActionStaminaCost>2.5</ActionStaminaCost>
     
     <PrimaryEffect>
