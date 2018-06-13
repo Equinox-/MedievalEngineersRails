@@ -1,15 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Xml.Serialization;
 using Equinox76561198048419394.RailSystem.Util;
-using NLog.Targets;
 using Sandbox.Game.GameSystems;
-using VRage.Definitions.Inventory;
-using VRage.Game;
-using VRage.Game.Entity;
-using VRage.Library.Logging;
-using VRage.ObjectBuilders;
 using VRageMath;
 
 namespace Equinox76561198048419394.RailSystem.Bendy

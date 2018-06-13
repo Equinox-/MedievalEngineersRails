@@ -235,7 +235,12 @@
     <Compile Include="Content\Data\Scripts\RailSystem\Quest\Conditions\QuestConditionPlanBendy.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\RailConstants.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Util\Assert.cs" />
-    <Compile Include="Content\Data\Scripts\RailSystem\Util\Bezier.cs" />
+    <Compile Include="Content\Data\Scripts\RailSystem\Util\Curve\CubicCurve.cs" />
+    <Compile Include="Content\Data\Scripts\RailSystem\Util\Curve\CurveBlit.cs" />
+    <Compile Include="Content\Data\Scripts\RailSystem\Util\Curve\CurveExtensions.cs" />
+    <Compile Include="Content\Data\Scripts\RailSystem\Util\Curve\ICurve.cs" />
+    <Compile Include="Content\Data\Scripts\RailSystem\Util\Curve\LinearCurve.cs" />
+    <Compile Include="Content\Data\Scripts\RailSystem\Util\Curve\QuadraticCurve.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Util\DbvtExtensions.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Util\EnvironmentExtensions.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Util\IModelChanger.cs" />

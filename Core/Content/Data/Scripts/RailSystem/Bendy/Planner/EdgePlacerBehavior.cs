@@ -1,30 +1,25 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Xml.Serialization;
 using Equinox76561198048419394.RailSystem.Bendy.Shape;
-using Equinox76561198048419394.RailSystem.Construction;
 using Equinox76561198048419394.RailSystem.Util;
-using Equinox76561198048419394.RailSystem.Voxel;
+using Equinox76561198048419394.RailSystem.Util.Curve;
 using Medieval.Constants;
-using Medieval.GameSystems;
-using Microsoft.CodeAnalysis.CSharp;
 using Sandbox.Definitions.Equipment;
-using Sandbox.Game.Entities;
 using Sandbox.Game.EntityComponents.Character;
 using Sandbox.Game.GameSystems;
 using Sandbox.Game.Inventory;
 using Sandbox.ModAPI;
-using VRage;
 using VRage.Components.Entity.Camera;
 using VRage.Game;
 using VRage.Game.Definitions;
 using VRage.Game.Entity;
 using VRage.Game.ModAPI;
-using VRage.Game.ObjectBuilders.ComponentSystem;
 using VRage.GUI.Crosshair;
-using VRage.Library.Collections;
+using VRage.Input.Devices.Keyboard;
 using VRage.ObjectBuilders;
 using VRage.ObjectBuilders.Definitions.Equipment;
 using VRage.Session;
@@ -42,13 +37,11 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
             return true;
         }
 
-        public MyEntity Owner => Holder;
-
         private struct VertexData
         {
-            public readonly Vector3D Position;
-            public readonly Vector3D Up;
-            public readonly Node Node;
+            public Vector3D Position { get; private set; }
+            public Vector3D Up { get; private set; }
+            public Node Node { get; private set; }
 
             public VertexData(Vector3D pos, Vector3D up, Node node)
             {
@@ -107,20 +100,37 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
         {
             base.Activate();
             Graph = MySession.Static.Components.Get<BendyController>().GetOrCreateLayer(Layer);
+            Graph.NodeCreated += NodeCreated;
             _vertices.Clear();
             if (IsLocallyControlled)
                 MySession.Static.Components.Get<MyUpdateComponent>().AddFixedUpdate(Render);
+        }
+
+        private void NodeCreated(Node obj)
+        {
+            for (var i = 0; i < _vertices.Count; i++)
+            {
+                var v = _vertices[i];
+                var newNode = Graph.GetNode(v.Position);
+                if (newNode == v.Node) continue;
+                if (newNode != null)
+                    _vertices[i] = new VertexData(newNode.Position, newNode.Up, newNode);
+                else
+                    _vertices[i] = new VertexData(v.Position, v.Up, null);
+            }
         }
 
         public override void Deactivate()
         {
             base.Deactivate();
             _vertices.Clear();
+            Graph.NodeCreated -= NodeCreated;
             Graph = null;
             MySession.Static.Components.Get<MyUpdateComponent>().RemoveFixedUpdate(Render);
             _hintInfo?.Hide();
             _hintInfo = null;
         }
+
 
         #region Rendering
 
@@ -171,6 +181,17 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
             }
 
             {
+                foreach (var k in _vertices)
+                    if (Vector3D.DistanceSquared(cam.GetPosition(), k.Position) < 100 * 100)
+                    {
+                        var color = _nodeColor;
+                        var p1 = k.Position;
+                        var p2 = k.Position + _nodeMarkerSize * k.Up;
+                        MySimpleObjectDraw.DrawLine(p1, p2, _squareMaterial, ref color, _nodeWidth);
+                    }
+            }
+
+            {
                 var nextNode = _connectToPlayer && Holder != null
                     ? (VertexData?) CreateVertex(Holder.GetPosition())
                     : null;
@@ -180,15 +201,20 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
                 for (var i = 1; i < _vertices.Count; i++)
                 {
                     var nextVert = _vertices[i];
-                    var nextMatrix = ComputeVertexMatrix(nextVert, i);
-
                     var currentVert = _vertices[i - 1];
+                    if (Math.Min(Vector3D.DistanceSquared(cam.GetPosition(), nextVert.Position),
+                            Vector3D.DistanceSquared(cam.GetPosition(), currentVert.Position)) > 100 * 100)
+                        continue;
+
                     var prevPos = i >= 2
-                        ? (Vector3D?) _vertices[i - 2].Position
+                        ? _vertices[i - 2].Position
                         : currentVert.Node?.Opposition(nextVert.Position)?.Position;
+
+                    var nextMatrix = ComputeVertexMatrix(nextVert, i);
                     var currentMatrix = ComputeVertexMatrix(currentVert, i - 1);
 
-                    DrawBez(currentMatrix, nextMatrix,
+                    var curve = PrepareBez(currentMatrix, nextMatrix);
+                    DrawBez(currentMatrix.Up, nextMatrix.Up, curve,
                         PlacedDefinition == null || EdgePlacerSystem.VerifyJoint(PlacedDefinition, prevPos,
                             currentVert.Position, nextVert.Position, null)
                             ? _edgeColor
@@ -200,20 +226,41 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
             }
         }
 
-        private static void DrawBez(MatrixD prev, MatrixD next, Vector4 color)
+        private static CubicCurve PrepareBez(MatrixD m1, MatrixD m2)
+        {
+            var desiredFwd = m2.Translation - m1.Translation;
+            if (desiredFwd.Dot(m1.Forward) < 0)
+            {
+                m1.Forward *= -1f;
+                m1.Right *= -1f;
+            }
+
+            // ReSharper disable once InvertIf
+            if (desiredFwd.Dot(m2.Forward) < 0)
+            {
+                m2.Forward *= -1f;
+                m2.Right *= -1f;
+            }
+
+            return new CubicCurve(m1, m2);
+        }
+
+        private static void DrawBez<T>(Vector3D up1, Vector3D up2, CubicCurve bezCurve, Vector4 color)
+            where T : ICurve
         {
             var cam = MyCameraComponent.ActiveCamera;
             if (cam == null)
                 return;
-            var center = (prev.Translation + next.Translation) / 2;
-            var factor = Math.Sqrt(Vector3D.DistanceSquared(prev.Translation, next.Translation) /
+            var center = (bezCurve.P0 + bezCurve.P1 + bezCurve.P2 + bezCurve.P3) / 4;
+            var factor = Math.Sqrt(Vector3D.DistanceSquared(bezCurve.P0, bezCurve.P3) /
                                    (1 + Vector3D.DistanceSquared(cam.GetPosition(), center)));
             var count = MathHelper.Clamp(factor * 100, 1, 10);
             var lastPos = default(Vector3D);
             for (var t = 0; t <= count; t++)
             {
-                var pos = Bezier.BSpline(prev, next, t / 10f);
-                var pact = pos.Translation + pos.Up * _edgeMarkerVertOffset;
+                var time = t / (float) count;
+                var pos = bezCurve.Sample(time);
+                var pact = pos + Vector3D.Lerp(up1, up2, time) * _edgeMarkerVertOffset;
                 if (t > 0)
                     MySimpleObjectDraw.DrawLine(lastPos, pact, _squareMaterial, ref color, _edgeWidth);
                 lastPos = pact;
@@ -226,6 +273,8 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
 
         protected override bool Start(MyHandItemActionEnum action)
         {
+            if (!IsLocallyControlled)
+                return false;
             var player = MyAPIGateway.Players.GetPlayerControllingEntity(Holder);
             if (player == null)
                 return false;
@@ -243,6 +292,48 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
                             new Vector4(1, 0, 0, 1));
                     return false;
                 case MyHandItemActionEnum.Primary:
+                    if (_vertices.Count == 1 && MyAPIGateway.Input.IsKeyDown(MyKeys.Shift))
+                    {
+                        var lastVertex = CreateVertex(Target.Position);
+                        _vertices.Add(lastVertex);
+                        var jointData = EdgePlacerSystem.ComputeJointParameters(
+                            _vertices.Count > 1 ? (Vector3D?) _vertices[_vertices.Count - 2].Position : null,
+                            _vertices[_vertices.Count - 1].Position, Target.Position);
+                        {
+                            _tmpMessages.Clear();
+                            if (jointData.BendRadians.HasValue)
+                            {
+                                var angle = jointData.BendRadians.Value;
+                                if (angle > RailConstants.LongToleranceFactor * PlacedDefinition.MaxAngleRadians)
+                                    _tmpMessages.Add(
+                                        $"Too curvy {angle * 180 / Math.PI:F0}º > {RailConstants.LongToleranceFactor * PlacedDefinition.MaxAngleDegrees:F0}º");
+                            }
+
+                            // ReSharper disable once InvertIf
+                            if (jointData.Grade.HasValue)
+                            {
+                                var grade = jointData.Grade.Value;
+                                // ReSharper disable once InvertIf
+                                if (grade > RailConstants.LongToleranceFactor * PlacedDefinition.MaxGradeRatio)
+                                    _tmpMessages.Add(
+                                        $"Too steep {grade * 100:F0}% > {RailConstants.LongToleranceFactor * PlacedDefinition.MaxGradeRatio * 100:F0}%");
+                            }
+
+                            if (_tmpMessages.Count > 0)
+                            {
+                                player.ShowNotification(string.Join("\n", _tmpMessages), 2000, null,
+                                    new Vector4(1, 0, 0, 1));
+                                _tmpMessages.Clear();
+                                return false;
+                            }
+                        }
+                        ComputeLong(_vertices[0], _vertices[1]);
+                        player.ShowNotification($"Divided into {_vertices.Count - 1} segments");
+                        if (_vertices.Count > 0)
+                            _vertices.RemoveAt(_vertices.Count - 1);
+                        return false;
+                    }
+
                     _tmpMessages.Clear();
                     if (ValidatePlace(_tmpMessages, true))
                         return true;
@@ -346,6 +437,57 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
             }
         }
 
+        #region Long-Place
+
+        private void ComputeLong(VertexData first, VertexData last)
+        {
+            _vertices.Clear();
+            _vertices.Add(first);
+            _vertices.Add(last);
+            var m1 = ComputeVertexMatrix(first, 0);
+            var m2 = ComputeVertexMatrix(last, 1);
+            var bez = PrepareBez(m1, m2);
+
+            var length = 0d;
+            var prev = default(Vector3D);
+            for (var t = 0; t < 100; t++)
+            {
+                var curr = bez.Sample(t / 100f);
+                if (t > 0)
+                {
+                    length += Vector3D.Distance(prev, curr);
+                }
+
+                prev = curr;
+            }
+
+            var minCount = (int) Math.Ceiling(length / PlacedDefinition.Distance.Min);
+            var maxCount = (int) Math.Floor(length / PlacedDefinition.Distance.Max);
+            var count = (minCount + maxCount) / 2;
+            var lenPerCount = length / count;
+            _vertices.Clear();
+            _vertices.Add(first);
+            var time = 0f;
+            prev = bez.Sample(0);
+            var lengthElapsed = 0d;
+            for (var i = 1; i < count; i++)
+            {
+                while (lengthElapsed < lenPerCount * i)
+                {
+                    time += 0.01f;
+                    var curr = bez.Sample(time);
+                    lengthElapsed += Vector3D.Distance(prev, curr);
+                    prev = curr;
+                }
+
+                _vertices.Add(CreateVertex(prev));
+            }
+
+            _vertices.Add(last);
+        }
+
+        #endregion
+
         #region Validation
 
         private bool ValidatePlace(IList<string> errors, bool testPermissions)
@@ -397,14 +539,15 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
         private bool ValidateDeconstruct(out string err, bool testPermission)
         {
             err = null;
-            if (Target.Entity == null)
+            var entity = Target.Entity?.Components.Get<BendyShapeProxy>()?.Owner ?? Target.Entity;
+            if (entity == null || entity.Closed)
                 return false;
             var player = MyAPIGateway.Players.GetPlayerControllingEntity(Holder);
             if (player == null)
                 return false;
             if (!testPermission ||
-                player.HasPermission(Target.Entity.GetPosition(), MyPermissionsConstants.QuickDeconstruct))
-                return Target.Entity != null && EdgePlacerSystem.ValidateQuickRemove(player, Target.Entity, out err);
+                player.HasPermission(entity.GetPosition(), MyPermissionsConstants.QuickDeconstruct))
+                return EdgePlacerSystem.ValidateQuickRemove(player, entity, out err);
             err = "You cannot quick deconstruct here";
             return false;
         }
@@ -457,7 +600,9 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
             // ReSharper disable once InvertIf
             if (ValidateDeconstruct(out tmp, true))
             {
-                if (player.HasPermission(Target.Entity.GetPosition(), MyPermissionsConstants.QuickDeconstruct))
+                var entity = Target.Entity?.Components.Get<BendyShapeProxy>()?.Owner ?? Target.Entity;
+                if (entity != null &&
+                    player.HasPermission(entity.GetPosition(), MyPermissionsConstants.QuickDeconstruct))
                 {
                     if (Definition.CrosshairRemove.HasValue)
                         yield return Definition.CrosshairRemove.Value;

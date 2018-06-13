@@ -1,5 +1,6 @@
 ﻿using System;
 using Equinox76561198048419394.RailSystem.Util;
+using Equinox76561198048419394.RailSystem.Util.Curve;
 using VRageMath;
 
 namespace Equinox76561198048419394.RailSystem.Bendy
@@ -14,7 +15,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy
     {
         public readonly BendyLayer Graph;
         public readonly Node From, To;
-        public Bezier.IBezier Curve { get; private set; }
+        public ICurve Curve { get; private set; }
         public readonly CurveMode Mode;
         public readonly BendyComponent Owner;
 
@@ -67,10 +68,10 @@ namespace Equinox76561198048419394.RailSystem.Bendy
             switch (Mode)
             {
                 case CurveMode.Linear:
-                    Curve = new Bezier.LinearCurve(From.Position, To.Position);
+                    Curve = new LinearCurve(From.Position, To.Position);
                     break;
                 case CurveMode.CubicBez:
-                    Curve = new Bezier.CubicBezier(FromMatrix, ToMatrix);
+                    Curve = new CubicCurve(FromMatrix, ToMatrix);
                     break;
                 default:
                     throw new Exception($"Unsupported curve mode {Mode}");

@@ -1,22 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using Equinox76561198048419394.RailSystem.Bendy.Shape;
 using Equinox76561198048419394.RailSystem.Construction;
-using Equinox76561198048419394.RailSystem.Definition;
 using Equinox76561198048419394.RailSystem.Util;
 using Medieval.Constants;
 using Medieval.GameSystems;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-using NLog.Targets;
 using Sandbox.Definitions.Inventory;
-using Sandbox.Engine.Physics;
 using Sandbox.Game.Entities;
 using Sandbox.Game.Entities.Inventory;
-using Sandbox.Game.EntityComponents.Character;
-using Sandbox.Game.Players;
 using Sandbox.ModAPI;
-using SharpDX.DXGI;
 using VRage;
 using VRage.Definitions.Inventory;
 using VRage.Game;
@@ -97,7 +88,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
                 var elevationNext = Vector3D.Distance(next, center);
                 var deltaElevation = elevationNext - elevationHere;
                 var grade = deltaElevation / result.Length;
-                result.Grade = grade;
+                result.Grade = Math.Abs(grade);
             }
 
             return result;
@@ -174,9 +165,9 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
                 return false;
             }
 
-            if (nodes.Length >= 10)
+            if (nodes.Length >= RailConstants.MaxNodesPlaced)
             {
-                errors?.Add("Can't place more than 10 nodes at once");
+                errors?.Add($"Can't place more than {RailConstants.MaxNodesPlaced} nodes at once");
                 return false;
             }
 

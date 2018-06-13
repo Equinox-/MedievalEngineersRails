@@ -5,6 +5,7 @@ using Equinox76561198048419394.RailSystem.Bendy;
 using Equinox76561198048419394.RailSystem.Construction;
 using Equinox76561198048419394.RailSystem.Definition;
 using Equinox76561198048419394.RailSystem.Util;
+using Equinox76561198048419394.RailSystem.Util.Curve;
 using Sandbox.Engine.Physics;
 using Sandbox.Game.Entities;
 using Sandbox.Game.EntityComponents.Character;
@@ -141,7 +142,7 @@ namespace Equinox76561198048419394.RailSystem.Physics
                     if (edgeSegment != null && !edgeCaps.HasValue)
                         continue; // no capabilities at this stage
                     float t0 = 0, t1 = 1;
-                    Bezier.BSplineNearest(edge.Curve, pivotWorld, 16, ref t0, ref t1);
+                    CurveExtensions.NearestPoint(edge.Curve, pivotWorld, 16, ref t0, ref t1);
                     var p0 = edge.Curve.Sample(t0);
                     var p1 = edge.Curve.Sample(t1);
                     var dir = p1 - p0;

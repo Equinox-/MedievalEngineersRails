@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using Equinox76561198048419394.RailSystem.Util;
+using Equinox76561198048419394.RailSystem.Util.Curve;
 using VRage.Components.Entity.Camera;
 using VRage.Game;
 using VRage.Utils;
@@ -12,7 +13,7 @@ namespace Equinox76561198048419394.RailSystem.Voxel
     public class RailGradeShape
     {
         private readonly EdgeBlit _edge;
-        private readonly Bezier.IBezier _curve;
+        private readonly ICurve _curve;
         private readonly float _width;
         private readonly float _relaxAngle;
 
