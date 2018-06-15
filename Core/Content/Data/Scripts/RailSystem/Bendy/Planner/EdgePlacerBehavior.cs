@@ -102,6 +102,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
             base.Activate();
             Graph = MySession.Static.Components.Get<BendyController>().GetOrCreateLayer(Layer);
             Graph.NodeCreated += NodeCreated;
+            Graph.NodeMoved += NodeCreated;
             _vertices.Clear();
             if (IsLocallyControlled)
                 MySession.Static.Components.Get<MyUpdateComponent>().AddFixedUpdate(Render);
@@ -126,6 +127,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
             base.Deactivate();
             _vertices.Clear();
             Graph.NodeCreated -= NodeCreated;
+            Graph.NodeMoved -= NodeCreated;
             Graph = null;
             MySession.Static.Components.Get<MyUpdateComponent>().RemoveFixedUpdate(Render);
             _hintInfo?.Hide();
@@ -319,8 +321,11 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
                         var lastVertex = CreateVertex(Target.Position);
                         _vertices.Add(lastVertex);
                         var jointData = EdgePlacerSystem.ComputeJointParameters(
-                            _vertices.Count > 1 ? (Vector3D?) _vertices[_vertices.Count - 2].Position : null,
-                            _vertices[_vertices.Count - 1].Position, Target.Position);
+                            _vertices.Count >= 3
+                                ? _vertices[_vertices.Count - 3].Position
+                                : _vertices[0].Node?.Opposition(lastVertex.Position)?.Position,
+                            _vertices[_vertices.Count - 2].Position,
+                            lastVertex.Position);
                         {
                             _tmpMessages.Clear();
                             if (jointData.BendRadians.HasValue)
@@ -370,7 +375,21 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
             }
         }
 
-        private bool TargetIsStatic => Target.Entity?.Physics?.IsStatic ?? true;
+        private bool TargetIsStatic
+        {
+            get
+            {
+                var e = Target.Entity;
+                while (e != null)
+                {
+                    if (e.Physics != null)
+                        return e.Physics.IsStatic;
+                    e = e.Parent;
+                }
+
+                return true;
+            }
+        }
 
         private bool IsLocallyControlled => MySession.Static.PlayerEntity == Holder;
 
@@ -396,7 +415,9 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
                     else
                     {
                         var jointData = EdgePlacerSystem.ComputeJointParameters(
-                            _vertices.Count > 1 ? (Vector3D?) _vertices[_vertices.Count - 2].Position : null,
+                            _vertices.Count > 1
+                                ? _vertices[_vertices.Count - 2].Position
+                                : _vertices[0].Node?.Opposition(Target.Position)?.Position,
                             _vertices[_vertices.Count - 1].Position, Target.Position);
                         sb.Append($"Length {jointData.Length:F1} m");
                         if (PlacedDefinition != null && jointData.Length > PlacedDefinition.Distance.Max)
@@ -444,13 +465,14 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
                 {
                     _vertices.Add(CreateVertex(Target.Position));
                     if (_vertices.Count < 2) return;
+                    var pts = _vertices.Select(x => x.Position).ToArray();
+                    _vertices.RemoveRange(0, _vertices.Count - 1);
                     EdgePlacerSystem.RaisePlaceEdge(new EdgePlacerSystem.EdgePlacerConfig()
                         {
                             EntityPlacing = Holder.EntityId,
                             Placed = Definition.Placed
-                        },
-                        _vertices.Select(x => x.Position).ToArray());
-                    _vertices.RemoveRange(0, _vertices.Count - 1);
+                        }, pts
+                    );
                     return;
                 }
                 case MyHandItemActionEnum.None:
@@ -674,12 +696,12 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
                     TErrorSeverity.Error);
             CrosshairPrefix = ob.CrosshairPrefix;
 
-            CrosshairPlace = Create("_Place", MyCrosshairIconInfo.IconPosition.TopLeftCorner);
-            CrosshairPlaceNoPermission = Create("_Place_NoPermission", MyCrosshairIconInfo.IconPosition.TopLeftCorner);
-            CrosshairQuestion = Create("_Question", MyCrosshairIconInfo.IconPosition.Center);
-            CrosshairRemove = Create("_Remove", MyCrosshairIconInfo.IconPosition.TopRightCorner);
+            CrosshairPlace = Create("Place", MyCrosshairIconInfo.IconPosition.TopLeftCorner);
+            CrosshairPlaceNoPermission = Create("PlaceNoPerm", MyCrosshairIconInfo.IconPosition.TopLeftCorner);
+            CrosshairQuestion = Create("Question", MyCrosshairIconInfo.IconPosition.Center);
+            CrosshairRemove = Create("Remove", MyCrosshairIconInfo.IconPosition.TopRightCorner);
             CrosshairRemoveNoPermission =
-                Create("_Remove_NoPermission", MyCrosshairIconInfo.IconPosition.TopRightCorner);
+                Create("RemoveNoPerm", MyCrosshairIconInfo.IconPosition.TopRightCorner);
         }
     }
 

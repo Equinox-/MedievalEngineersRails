@@ -27,7 +27,7 @@ namespace Equinox76561198048419394.RailSystem.Construction
     [MyComponent(typeof(MyObjectBuilder_ConstructableComponent))]
     [MyDefinitionRequired]
     [ReplicatedComponent(typeof(ConstructableComponentReplicable))]
-    public class ConstructableComponent : MyEntityComponent, IModelChanger, IMyEventProxy
+    public class ConstructableComponent : MyEntityComponent, IMyEventProxy
     {
         public ConstructableComponentDefinition Definition { get; private set; }
 
@@ -165,14 +165,15 @@ namespace Equinox76561198048419394.RailSystem.Construction
         private void CheckModel()
         {
             var stage = Definition.BuildModelFor(BuildIntegrity / Definition.MaxIntegrity);
-            if (stage.Model == _currentModel) return;
-            Entity.RefreshModels(stage.Model, null);
+            if (stage.ModelFile == _currentModel) return;
+            Entity.RefreshModels(stage.ModelFile, null);
             if (Entity.Render != null && Entity.Render.GetRenderObjectID() != uint.MaxValue)
             {
                 Entity.Render.RemoveRenderObjects();
                 Entity.Render.AddRenderObjects();
             }
-            _currentModel = stage.Model;
+
+            _currentModel = stage.ModelFile;
             ModelChanged?.Invoke();
         }
 
@@ -614,11 +615,13 @@ namespace Equinox76561198048419394.RailSystem.Construction
         /// <summary>
         /// Base64 packed stockpile data
         /// </summary>
-        [XmlAttribute] public string SPacked;
+        [XmlAttribute]
+        public string SPacked;
 
         /// <summary>
         /// Build integrity
         /// </summary>
-        [XmlAttribute] public float BInteg;
+        [XmlAttribute]
+        public float BInteg;
     }
 }

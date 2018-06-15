@@ -247,7 +247,6 @@ namespace Equinox76561198048419394.RailSystem.Bendy
                     _edges[i].Close();
                     _edges[i] = null;
                 }
-            EdgeSetupChanged?.Invoke(this);
 
             // ReSharper disable once InvertIf
             if (_nodes != null)
@@ -258,6 +257,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy
                         _nodes[i]?.UnpinTangent();
                     _nodes[i] = null;
                 }
+            EdgeSetupChanged?.Invoke(this);
         }
     }
 

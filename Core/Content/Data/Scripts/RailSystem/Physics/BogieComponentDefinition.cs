@@ -13,6 +13,7 @@ namespace Equinox76561198048419394.RailSystem.Physics
         public float MaxVelocity { get; private set; }
         public float MaxForce { get; private set; }
         public float CoefficientOfFriction { get; private set; }
+        public float BrakingCoefficientOfFriction { get; private set; }
         private float _detachDistance;
 
         public float DetachDistance
@@ -34,6 +35,7 @@ namespace Equinox76561198048419394.RailSystem.Physics
             VerticalOffset = ob.VerticalOffset;
             Layer = ob.Layer;
             MaxVelocity = ob.MaxVelocity;
+            BrakingCoefficientOfFriction = ob.BrakingCoefficientOfFriction;
             MaxForce = ob.MaxForce;
             DetachDistance = ob.DetachDistance;
             CoefficientOfFriction = ob.CoefficientOfFriction;
@@ -49,6 +51,7 @@ namespace Equinox76561198048419394.RailSystem.Physics
         
         // For this bogie on new steel rails.  Other rail types use a multiplier.
         public float CoefficientOfFriction;
+        public float BrakingCoefficientOfFriction;
         
         public float MaxVelocity, MaxForce;
         public float DetachDistance;

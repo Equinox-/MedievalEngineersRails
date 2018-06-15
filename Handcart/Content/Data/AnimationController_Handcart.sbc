@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
-<Definitions xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<Definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <Definition xsi:type="AnimationControllerDefinition" Enabled="true" Merge="Append">
-    <Id Type="MyObjectBuilder_AnimationControllerComponent" Subtype="EquiRailHandcartStdGauge_Skin" />
+    <Id Type="MyObjectBuilder_AnimationControllerComponent" Subtype="HandcartRailSkin" />
     <CopyFrom xsi:nil="true" />
     <Layers>
       <Layer>

@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <Definition xsi:type="MyObjectBuilder_ContainerDefinition" Copy="Append">
+        <Id Type="EntityBase" Subtype="RailSteelBendy" />
+
+        <Component Type="ModelComponent" Subtype="RailSteelBendy" />
+        <Component Type="SkeletonComponent" />
+        <Component Type="RenderComponentRigged" />
+        <Component Type="BendyComponent" Subtype="RailSteelBendy" />
+        <Component Type="ConstructableComponent" Subtype="RailSteelBendy" />
+        <Component Type="MultiplayerComponent" />
+        <Component Type="BendyPhysicsComponent" Subtype="RailSteelBendy" />
+        <Component Type="RailGradeComponent" Subtype="RailSteel" />
+        <Component Type="RailSegmentComponent" Subtype="RailSteel" />
+    </Definition>
+
+    <Definition xsi:type="MyObjectBuilder_ModelComponentDefinition">
+        <Id Type="MyObjectBuilder_ModelComponent" Subtype="RailSteelBendy" />
+        <Model>Models\Equinox\RailsGaugeStandard\Steel\Bendy_10m.mwm</Model>
+    </Definition>
+
+    <Definition xsi:type="MyObjectBuilder_BendyComponentDefinition">
+        <Id Type="MyObjectBuilder_BendyComponent" Subtype="RailSteelBendy" />
+        <Layer>TrainRailGaugeStandard</Layer>
+        <Nodes>
+            <Node Movable="true">
+                <Position x="-5" y="-1.25" z="0" />
+                <Forward x="1" y="0" z="0" />
+                <Up x="0" y="1" z="0" />
+            </Node>
+            <Node Movable="true">
+                <Position x="5" y="-1.25" z="0" />
+                <Forward x="1" y="0" z="0" />
+                <Up x="0" y="1" z="0" />
+            </Node>
+        </Nodes>
+        <Edges>
+            <Edge From="0" To="1" Mode="CubicBez">
+                <Bones>RailBone_000 RailBone_001 RailBone_002 RailBone_003 RailBone_004 RailBone_005 RailBone_006 RailBone_007 RailBone_008 RailBone_009
+                    RailBone_010 RailBone_011 RailBone_012 RailBone_013 RailBone_014 RailBone_015
+                </Bones>
+            </Edge>
+        </Edges>
+
+        <Distance Min="7" Max="15" />
+        <MaxGradeRatio>0.1</MaxGradeRatio>
+        <MaxAngleDegrees>15</MaxAngleDegrees>
+    </Definition>
+
+    <Definition xsi:type="MyObjectBuilder_BendyPhysicsComponentDefinition">
+        <Id Type="MyObjectBuilder_BendyPhysicsComponent" Subtype="RailSteelBendy" />
+
+        <Width>2.5</Width>
+        <Height>0.15</Height>
+        <Segments>12</Segments>
+        <DestroyEnvItems>true</DestroyEnvItems>
+        <Material>Wood</Material>
+    </Definition>
+
+    <Definition xsi:type="MyObjectBuilder_ConstructableComponentDefinition">
+        <Id Type="MyObjectBuilder_ConstructableComponent" Subtype="RailSteelBendy" />
+
+        <Components>
+            <Component Tag="Timber" Count="15" /> <!-- ref value is 15 sleepers -->
+            <Component Tag="Ingot" Count="5" /> <!-- ref value is 20m of rail @ 10kg/m, 40kg/ingot-->
+            <Component Type="InventoryItem" Subtype="PartsMetal" Count="5" /> <!-- ref value 60 spikes @ 100g/spike, 1kg/part-->
+        </Components>
+
+        <BuildProgressModels>
+            <Model BuildPercentUpperBound="0.075" File="Models\Equinox\RailsGaugeStandard\Steel\Bendy_10m_Build1.mwm" /> <!-- planning stakes -->
+            <Model BuildPercentUpperBound="0.225" File="Models\Equinox\RailsGaugeStandard\Steel\Bendy_10m_Build2.mwm" /> <!-- sleepers 1 -->
+            <Model BuildPercentUpperBound="0.375" File="Models\Equinox\RailsGaugeStandard\Steel\Bendy_10m_Build3.mwm" /> <!-- sleepers 2 -->
+            <Model BuildPercentUpperBound="0.525" File="Models\Equinox\RailsGaugeStandard\Steel\Bendy_10m_Build4.mwm" /> <!-- sleepers 3 -->
+            <Model BuildPercentUpperBound="0.7" File="Models\Equinox\RailsGaugeStandard\Steel\Bendy_10m_Build5.mwm" /> <!-- sleepers 4 -->
+            <Model BuildPercentUpperBound="0.9" File="Models\Equinox\RailsGaugeStandard\Steel\Bendy_10m_Build6.mwm" /> <!-- rails -->
+            <Model BuildPercentUpperBound="1.1" File="Models\Equinox\RailsGaugeStandard\Steel\Bendy_10m.mwm" /> <!-- spikes -->
+        </BuildProgressModels>
+
+        <BuildTime Seconds="20" />
+        <MaxIntegrity>5000</MaxIntegrity>
+    </Definition>
+</Definitions>

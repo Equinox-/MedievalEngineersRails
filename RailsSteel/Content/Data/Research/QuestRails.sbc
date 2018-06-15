@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <Definition xsi:type="MyObjectBuilder_ResearchNodeDefinition">
+        <Id Type="ResearchNodeDefinition" Subtype="RailSteel"/>
+        <DisplayName>Steel Railroading</DisplayName>
+        <Description>Basic skills to lay a low friction steel railway</Description>
+        <Icon>Textures\GUI\Icons\Equinox\RailBlockStraightGauge2Wood.dds</Icon>
+        <Parent Type="ResearchNodeDefinition" Subtype="ToolsRail"/>
+        <Quest Type="QuestDefinition" Subtype="RailSteel"/>
+        <Research Type="ResearchDefinition" Subtype="RailSteel"/>
+    </Definition>
+    
+    <Definition xsi:type="MyObjectBuilder_QuestDefinition">
+        <Id Type="QuestDefinition" Subtype="RailSteel"/>
+
+        <DisplayName>Steel Railroading</DisplayName>
+        <Description>Basic skills to lay a low friction steel railway</Description>
+        <Icon>Textures\GUI\Book\QuestBook_Quest_Thumbnail.png</Icon>
+        <Tag>Research</Tag>
+
+        <IsAbandonable>true</IsAbandonable>
+        <IsRepeatable>false</IsRepeatable>
+
+        <!-- blocks -->
+        <FailAction xsi:type="Quest.Actions.LockResearch" Type="CubeBlock" Subtype="RailSteelStraight"/>
+        <FailAction xsi:type="Quest.Actions.LockResearch" Type="HandItem" Subtype="RailSteelPlanner"/>
+
+        <FailAction xsi:type="Quest.Actions.ShowNotification" Text="Description_ResearchQuest_Failed" SoundCueId="QuestCompleted"/>
+
+        <SuccessCondition xsi:type="Quest.Conditions.ResearchUnlocked" Type="ResearchDefinition" Subtype="RailSteel"/>
+
+        <SuccessAction xsi:type="Quest.Actions.ShowNotification" Text="Description_ResearchQuest_Completed" SoundCueId="QuestCompleted"/>
+        <SuccessAction xsi:type="Quest.Actions.UnlockResearch" Type="ResearchDefinition" Subtype="RailSteel"/>
+
+        <Step>
+            <FullDescription>Every rail network starts with a single station. Gather the resources to build one 10m segment.</FullDescription>
+            <Condition xsi:type="Quest.Conditions.Composite" Operator="AND">
+                <Condition xsi:type="Quest.Conditions.Gather" Tag="Timber" Amount="15" AreaInventory="Included"/>
+                <Condition xsi:type="Quest.Conditions.Gather" Tag="Ingot" Amount="5" AreaInventory="Included"/>
+                <Condition xsi:type="Quest.Conditions.Gather" Type="InventoryItem" Subtype="PartsMetal" Amount="5" AreaInventory="Included"/>
+            </Condition>
+            <Action xsi:type="Quest.Actions.UnlockResearch" Type="CubeBlock" Subtype="RailSteelStraight"/>
+            <Action xsi:type="Quest.Actions.ShowNotification" Text="Straight rail segments unlocked!" SoundCueId="QuestStepCompleted" SoundDelay="300"/>
+        </Step>
+        <Step>
+            <FullDescription>Place the first endpoint of your new rail network.</FullDescription>
+            <Condition xsi:type="Quest.Conditions.PlaceBlock" Type="CubeBlock" Subtype="RailSteelStraight" Amount="1"/>
+        </Step>
+        <Step>
+            <FullDescription>While a straight railway works, in most cases you'll need curves. Gather the resources for the rail planning tool.</FullDescription>
+            <Condition xsi:type="Quest.Conditions.Composite" Operator="AND">
+                <Condition xsi:type="Quest.Conditions.Gather" Tag="Timber" Amount="1" AreaInventory="Included"/>
+                <Condition xsi:type="Quest.Conditions.Gather" Type="InventoryItem" Subtype="StringLinen" Amount="10" AreaInventory="Included"/>
+            </Condition>
+            <Action xsi:type="Quest.Actions.UnlockResearch" Type="CraftingRecipeDefinition" Subtype="RailSteelPlanner"/>
+            <Action xsi:type="Quest.Actions.ShowNotification" Text="You've unlocked the rail planner!" SoundCueId="QuestStepCompleted" SoundDelay="300"/>
+        </Step>
+        <Step>
+            <FullDescription>Craft your rail planning tool at a spinning wheel.</FullDescription>
+            <Condition xsi:type="Quest.Conditions.Craft" Type="HandItem" Subtype="RailSteelPlanner" Amount="1"/>
+        </Step>
+        <Step>
+            <FullDescription>Now plan a few segments of track. Left click to add a node, middle click for info, right click for remove planned segment.</FullDescription>
+            <Condition xsi:type="MyObjectBuilder_QuestConditionPlanBendyDefinition" Amount="2">
+                <Include Type="EntityBase" Subtype="RailSteelBendy"/>
+            </Condition>
+        </Step>
+        <Step>
+            <FullDescription>Before you can start laying sleepers you'll need to level the terrain. Equip a rail grader and terraform your new curved segments.</FullDescription>
+            <Condition xsi:type="Quest.Conditions.Composite" Operator="AND">
+                <Condition xsi:type="Quest.Conditions.Gather" Tag="GraderRail" Amount="1"/>
+                <Condition xsi:type="MyObjectBuilder_QuestConditionGradingDefinition" VolumeAdded="100" VolumeRemoved="100">
+                    <Include Type="EntityBase" Subtype="RailSteelBendy"/>
+                </Condition>
+            </Condition>
+        </Step>
+        <Step>
+            <FullDescription>You're finally ready to construct your railway. Equip a rail sledgehammer and construct your new curved segments.</FullDescription>
+            <Condition xsi:type="Quest.Conditions.Composite" Operator="AND">
+                <Condition xsi:type="Quest.Conditions.Gather" Tag="HammerRail" Amount="1"/>
+                <Condition xsi:type="MyObjectBuilder_QuestConditionConstructableDefinition" Amount="2" BuildLevel="0.9">
+                    <Include Type="EntityBase" Subtype="RailSteelBendy"/>
+                </Condition>
+            </Condition>
+        </Step>
+    </Definition>
+</Definitions>

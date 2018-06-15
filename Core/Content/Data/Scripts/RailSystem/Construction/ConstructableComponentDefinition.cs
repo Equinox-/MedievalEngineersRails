@@ -31,12 +31,12 @@ namespace Equinox76561198048419394.RailSystem.Construction
         public struct CcBuildModel
         {
             public readonly float BuildPercentUpperBound;
-            public readonly string Model;
+            public readonly string ModelFile;
 
             public CcBuildModel(MyObjectBuilder_ConstructableComponentDefinition.CcObBuildModel ob)
             {
                 BuildPercentUpperBound = ob.BuildPercentUpperBound;
-                Model = ob.Model;
+                ModelFile = ob.File;
             }
         }
 
@@ -52,7 +52,7 @@ namespace Equinox76561198048419394.RailSystem.Construction
             base.Init(builder);
             var def = (MyObjectBuilder_ConstructableComponentDefinition) builder;
             Components = new ReadOnlyList<CcComponent>(def.Components.Select(x => new CcComponent(x)).ToList());
-            var models = def.BuildStages.Select(x => new CcBuildModel(x)).ToList();
+            var models = def.BuildProgressModels.Select(x => new CcBuildModel(x)).ToList();
             models.Sort((a, b) => a.BuildPercentUpperBound.CompareTo(b.BuildPercentUpperBound));
             TotalComponents = Components.Sum(x => x.Count);
             BuildModels = new ReadOnlyList<CcBuildModel>(models);
@@ -112,14 +112,14 @@ namespace Equinox76561198048419394.RailSystem.Construction
             public float BuildPercentUpperBound;
 
             [XmlAttribute]
-            public string Model;
+            public string File;
         }
 
         [XmlArrayItem("Component")]
         public CcObComponent[] Components;
 
-        [XmlArrayItem("Stage")]
-        public CcObBuildModel[] BuildStages;
+        [XmlArrayItem("Model")]
+        public CcObBuildModel[] BuildProgressModels;
 
         [XmlElement("BuildTime")]
         public TimeDefinition BuildTime;

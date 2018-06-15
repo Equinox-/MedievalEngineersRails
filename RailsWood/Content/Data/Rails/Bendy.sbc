@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <Definition xsi:type="MyObjectBuilder_ContainerDefinition" Copy="Append">
+        <Id Type="EntityBase" Subtype="RailWoodBendy" />
+
+        <Component Type="ModelComponent" Subtype="RailWoodBendy" />
+        <Component Type="SkeletonComponent" />
+        <Component Type="RenderComponentRigged" />
+        <Component Type="BendyComponent" Subtype="RailWoodBendy" />
+        <Component Type="ConstructableComponent" Subtype="RailWoodBendy" />
+        <Component Type="MultiplayerComponent" />
+        <Component Type="BendyPhysicsComponent" Subtype="RailWoodBendy" />
+        <Component Type="RailGradeComponent" Subtype="RailWood" />
+        <Component Type="RailSegmentComponent" Subtype="RailWood" />
+    </Definition>
+
+    <Definition xsi:type="MyObjectBuilder_ModelComponentDefinition">
+        <Id Type="MyObjectBuilder_ModelComponent" Subtype="RailWoodBendy" />
+        <DisplayName>BendableRailModel</DisplayName>
+        <Model>Models\Equinox\RailsGaugeStandard\Wood\Bendy_10m.mwm</Model>
+    </Definition>
+
+    <Definition xsi:type="MyObjectBuilder_BendyComponentDefinition">
+        <Id Type="MyObjectBuilder_BendyComponent" Subtype="RailWoodBendy" />
+        <Layer>TrainRailGaugeStandard</Layer>
+        <Nodes>
+            <Node Movable="true">
+                <Position x="-5" y="-1.25" z="0" />
+                <Up x="0" y="1" z="0" />
+                <Forward x="1" y="0" z="0" />
+            </Node>
+            <Node Movable="true">
+                <Position x="5" y="-1.25" z="0" />
+                <Up x="0" y="1" z="0" />
+                <Forward x="1" y="0" z="0" />
+            </Node>
+        </Nodes>
+        <Edges>
+            <Edge From="0" To="1" Mode="CubicBez">
+                <Bones>RailBone_000 RailBone_001 RailBone_002 RailBone_003 RailBone_004 RailBone_005 RailBone_006 RailBone_007 RailBone_008 RailBone_009
+                    RailBone_010 RailBone_011 RailBone_012 RailBone_013 RailBone_014 RailBone_015
+                </Bones>
+            </Edge>
+        </Edges>
+
+        <Distance Min="7" Max="15" />
+        <MaxGradeRatio>0.1</MaxGradeRatio>
+        <MaxAngleDegrees>15</MaxAngleDegrees>
+    </Definition>
+
+    <Definition xsi:type="MyObjectBuilder_BendyPhysicsComponentDefinition">
+        <Id Type="MyObjectBuilder_BendyPhysicsComponent" Subtype="RailWoodBendy" />
+
+        <Width>2.5</Width>
+        <Height>0.15</Height>
+        <Segments>12</Segments>
+        <DestroyEnvItems>true</DestroyEnvItems>
+    </Definition>
+
+    <Definition xsi:type="MyObjectBuilder_ConstructableComponentDefinition">
+        <Id Type="MyObjectBuilder_ConstructableComponent" Subtype="RailWoodBendy" />
+
+        <Components>
+            <Component Tag="Timber" Count="23" /> <!-- ref value is 15 2.5m sleepers, 20m of rail-->
+            <Component Tag="ScrapWood" Count="7" /> <!-- ref value 32 stakes -->
+        </Components>
+
+        <BuildProgressModels>
+            <Model BuildPercentUpperBound="0.0625" File="Models\Equinox\RailsGaugeStandard\Wood\Bendy_10m_Build1.mwm" /> <!-- planning stakes -->
+            <Model BuildPercentUpperBound="0.1875" File="Models\Equinox\RailsGaugeStandard\Wood\Bendy_10m_Build2.mwm" /> <!-- sleepers 1 -->
+            <Model BuildPercentUpperBound="0.3125" File="Models\Equinox\RailsGaugeStandard\Wood\Bendy_10m_Build3.mwm" /> <!-- sleepers 2 -->
+            <Model BuildPercentUpperBound="0.4375" File="Models\Equinox\RailsGaugeStandard\Wood\Bendy_10m_Build4.mwm" /> <!-- sleepers 3 -->
+            <Model BuildPercentUpperBound="0.6333" File="Models\Equinox\RailsGaugeStandard\Wood\Bendy_10m_Build5.mwm" /> <!-- sleepers 4 -->
+            <Model BuildPercentUpperBound="0.8833" File="Models\Equinox\RailsGaugeStandard\Wood\Bendy_10m_Build6.mwm" /> <!-- rails -->
+            <Model BuildPercentUpperBound="1.10" File="Models\Equinox\RailsGaugeStandard\Wood\Bendy_10m.mwm" /> <!-- spikes -->
+        </BuildProgressModels>
+
+        <MaxIntegrity>1600</MaxIntegrity>
+        <BuildTime Seconds="12" />
+    </Definition>
+</Definitions>

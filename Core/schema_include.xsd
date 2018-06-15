@@ -1,0 +1,413 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xs:schema xmlns="http://keenswh.com/schema/medieval"
+           elementFormDefault="qualified" targetNamespace="http://keenswh.com/schema/medieval"
+           xmlns:xs="http://www.w3.org/2001/XMLSchema">
+    <xs:include schemaLocation="file://C:/KeenAssets/MedievalEngineers/Schema/schema.xsd" />
+
+    <xs:element name="MyObjectBuilder_EquiPlayerAttachmentComponent" nillable="true" type="MyObjectBuilder_EquiPlayerAttachmentComponent" />
+    <xs:complexType name="MyObjectBuilder_EquiPlayerAttachmentComponent">
+        <xs:complexContent mixed="false">
+            <xs:extension base="MyObjectBuilder_MultiComponent">
+                <xs:sequence>
+                    <xs:element minOccurs="1" maxOccurs="1" name="Entity" type="xs:long" />
+                    <xs:element minOccurs="0" maxOccurs="1" name="Relative" type="MyPositionAndOrientation" />
+                    <xs:element minOccurs="1" maxOccurs="1" name="AnimationId" type="xs:int" />
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+    <xs:element name="MyObjectBuilder_EquiPlayerAttachmentComponentDefinition" nillable="true" type="MyObjectBuilder_EquiPlayerAttachmentComponentDefinition" />
+    <xs:complexType name="MyObjectBuilder_EquiPlayerAttachmentComponentDefinition">
+        <xs:complexContent mixed="false">
+            <xs:extension base="MyObjectBuilder_EntityComponentDefinition">
+                <xs:sequence>
+                    <xs:element minOccurs="0" maxOccurs="unbounded" name="DummyName" type="xs:string" />
+                    <xs:element minOccurs="1" maxOccurs="1" name="Anchor" type="MyPositionAndOrientation" />
+                    <xs:element minOccurs="0" maxOccurs="1" name="Animations" type="ArrayOfAnimationDesc" />
+                    <xs:element minOccurs="0" maxOccurs="1" default="CharacterUse" name="ExitControl" type="xs:string" />
+                    <xs:element minOccurs="1" maxOccurs="1" name="EmptyAction" type="ActionDesc" />
+                    <xs:element minOccurs="1" maxOccurs="1" name="OccupiedAction" type="ActionDesc" />
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+    <xs:complexType name="ArrayOfAnimationDesc">
+        <xs:sequence>
+            <xs:element minOccurs="0" maxOccurs="unbounded" name="AnimationDesc" type="AnimationDesc" />
+        </xs:sequence>
+    </xs:complexType>
+    <xs:complexType name="AnimationDesc">
+        <xs:sequence>
+            <xs:element minOccurs="0" maxOccurs="1" name="CharacterFilter" type="ArrayOfSerializableDefinitionId" />
+        </xs:sequence>
+        <xs:attribute name="Start" type="xs:string" />
+        <xs:attribute name="Stop" type="xs:string" />
+        <xs:attribute default="1" name="Weight" type="xs:float" />
+        <xs:attribute name="Whitelist" type="xs:boolean" use="required" />
+    </xs:complexType>
+    <xs:complexType name="ArrayOfSerializableDefinitionId">
+        <xs:sequence>
+            <xs:element minOccurs="0" maxOccurs="unbounded" name="SerializableDefinitionId" type="SerializableDefinitionId" />
+        </xs:sequence>
+    </xs:complexType>
+    <xs:complexType name="ActionDesc">
+        <xs:attribute name="Text" type="xs:string" />
+        <xs:attribute name="Icon" type="xs:string" />
+    </xs:complexType>
+    <xs:element name="MyObjectBuilder_RailGradeComponent" nillable="true" type="MyObjectBuilder_RailGradeComponent" />
+    <xs:complexType name="MyObjectBuilder_RailGradeComponent">
+        <xs:complexContent mixed="false">
+            <xs:extension base="MyObjectBuilder_EntityComponent" />
+        </xs:complexContent>
+    </xs:complexType>
+    <xs:element name="MyObjectBuilder_RailGradeComponentDefinition" nillable="true" type="MyObjectBuilder_RailGradeComponentDefinition" />
+    <xs:complexType name="MyObjectBuilder_RailGradeComponentDefinition">
+        <xs:complexContent mixed="false">
+            <xs:extension base="MyObjectBuilder_EntityComponentDefinition">
+                <xs:sequence>
+                    <xs:element minOccurs="1" maxOccurs="1" name="Support" nillable="true" type="MyObjectBuilder_RailGradeComponentDefinitionShape" />
+                    <xs:element minOccurs="1" maxOccurs="1" name="Excavate" nillable="true" type="MyObjectBuilder_RailGradeComponentDefinitionShape" />
+                    <xs:element minOccurs="1" maxOccurs="1" name="RequiredSupport" nillable="true" type="MyObjectBuilder_RailGradeComponentDefinitionShape" />
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+    <xs:complexType name="MyObjectBuilder_RailGradeComponentDefinitionShape">
+        <xs:sequence>
+            <xs:element minOccurs="1" maxOccurs="1" name="VerticalOffset" type="xs:float" />
+        </xs:sequence>
+        <xs:attribute name="Width" type="xs:float" use="required" />
+        <xs:attribute default="6" name="Segments" type="xs:int" />
+        <xs:attribute name="Height" type="xs:float" use="required" />
+        <xs:attribute name="RelaxAngleDegrees" type="xs:float" use="required" />
+    </xs:complexType>
+    <xs:element name="MyObjectBuilder_BogieComponentDefinition" nillable="true" type="MyObjectBuilder_BogieComponentDefinition" />
+    <xs:complexType name="MyObjectBuilder_BogieComponentDefinition">
+        <xs:complexContent mixed="false">
+            <xs:extension base="MyObjectBuilder_EntityComponentDefinition">
+                <xs:sequence>
+                    <xs:element minOccurs="0" maxOccurs="1" name="Layer" type="xs:string" />
+                    <xs:element minOccurs="0" maxOccurs="1" name="VerticalOffset" type="xs:float" />
+                    <xs:element minOccurs="0" maxOccurs="1" name="CoefficientOfFriction" type="xs:float" />
+                    <xs:element minOccurs="0" maxOccurs="1" name="BrakingCoefficientOfFriction" type="xs:float" />
+                    <xs:element minOccurs="0" maxOccurs="1" name="MaxVelocity" type="xs:float" />
+                    <xs:element minOccurs="0" maxOccurs="1" name="MaxForce" type="xs:float" />
+                    <xs:element minOccurs="0" maxOccurs="1" name="DetachDistance" type="xs:float" />
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+    <xs:element name="MyObjectBuilder_RailGraderBehaviorDefinition" nillable="true" type="MyObjectBuilder_RailGraderBehaviorDefinition" />
+    <xs:complexType name="MyObjectBuilder_RailGraderBehaviorDefinition">
+        <xs:complexContent mixed="false">
+            <xs:extension base="MyObjectBuilder_ToolBehaviorDefinition">
+                <xs:sequence>
+                    <xs:element minOccurs="1" maxOccurs="1" name="ExcavateDefinition" type="SerializableDefinitionId" />
+                    <xs:element minOccurs="1" maxOccurs="1" name="ExcavateRadius" type="xs:float" />
+                    <xs:element minOccurs="1" maxOccurs="1" name="ExcavateVolume" type="xs:unsignedInt" />
+                    <xs:element minOccurs="0" maxOccurs="1" name="FillMaterial" type="MyObjectBuilder_VoxelMiningDefinition_MiningDef" />
+                    <xs:element minOccurs="1" maxOccurs="1" name="FillRadius" type="xs:float" />
+                    <xs:element minOccurs="1" maxOccurs="1" name="FillVolume" type="xs:unsignedInt" />
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+    <xs:complexType name="SerializableActionCost">
+        <xs:attribute name="Stat" type="xs:string" />
+        <xs:attribute name="Cost" type="xs:float" use="required" />
+    </xs:complexType>
+    <xs:complexType name="MyObjectBuilder_VoxelMiningDefinition_MiningDef">
+        <xs:sequence>
+            <xs:element minOccurs="0" maxOccurs="unbounded" name="MinedItem" type="MyObjectBuilder_VoxelMiningDefinition_MinedItem" />
+        </xs:sequence>
+        <xs:attribute name="VoxelMaterial" type="xs:string" />
+        <xs:attribute name="Volume" type="xs:int" use="required" />
+    </xs:complexType>
+    <xs:complexType name="MyObjectBuilder_VoxelMiningDefinition_MinedItem">
+        <xs:attribute name="Type" type="xs:string" />
+        <xs:attribute name="Subtype" type="xs:string" />
+        <xs:attribute name="Amount" type="xs:int" use="required" />
+    </xs:complexType>
+    <xs:element name="MyObjectBuilder_VoxelMiningDefinition_MiningDef" nillable="true" type="MyObjectBuilder_VoxelMiningDefinition_MiningDef" />
+    <xs:element name="MyObjectBuilder_QuestConditionConstructable" nillable="true" type="MyObjectBuilder_QuestConditionConstructable" />
+    <xs:complexType name="MyObjectBuilder_QuestConditionConstructable">
+        <xs:complexContent mixed="false">
+            <xs:extension base="MyObjectBuilder_QuestConditionBase">
+                <xs:sequence>
+                    <xs:element minOccurs="1" maxOccurs="1" name="AmountConstructed" type="xs:int" />
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+    <xs:element name="MyObjectBuilder_QuestConditionConstructableDefinition" nillable="true" type="MyObjectBuilder_QuestConditionConstructableDefinition" />
+    <xs:complexType name="MyObjectBuilder_QuestConditionConstructableDefinition">
+        <xs:complexContent mixed="false">
+            <xs:extension base="MyObjectBuilder_QuestConditionBaseDefinition">
+                <xs:sequence>
+                    <xs:element minOccurs="0" maxOccurs="unbounded" name="Include" type="SerializableDefinitionId" />
+                </xs:sequence>
+                <xs:attribute name="Amount" type="xs:int" use="required" />
+                <xs:attribute name="BuildLevel" type="xs:float" use="required" />
+                <xs:attribute name="Deconstruct" type="xs:boolean" use="required" />
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+    <xs:element name="MyObjectBuilder_QuestConditionGrading" nillable="true" type="MyObjectBuilder_QuestConditionGrading" />
+    <xs:complexType name="MyObjectBuilder_QuestConditionGrading">
+        <xs:complexContent mixed="false">
+            <xs:extension base="MyObjectBuilder_QuestConditionBase">
+                <xs:sequence>
+                    <xs:element minOccurs="1" maxOccurs="1" name="VolumeAdded" type="xs:float" />
+                    <xs:element minOccurs="1" maxOccurs="1" name="VolumeRemoved" type="xs:float" />
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+    <xs:element name="MyObjectBuilder_QuestConditionGradingDefinition" nillable="true" type="MyObjectBuilder_QuestConditionGradingDefinition" />
+    <xs:complexType name="MyObjectBuilder_QuestConditionGradingDefinition">
+        <xs:complexContent mixed="false">
+            <xs:extension base="MyObjectBuilder_QuestConditionBaseDefinition">
+                <xs:sequence>
+                    <xs:element minOccurs="0" maxOccurs="unbounded" name="Include" type="SerializableDefinitionId" />
+                </xs:sequence>
+                <xs:attribute name="VolumeRemoved" type="xs:float" use="required" />
+                <xs:attribute name="VolumeAdded" type="xs:float" use="required" />
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+    <xs:element name="MyObjectBuilder_QuestConditionPlanBendy" nillable="true" type="MyObjectBuilder_QuestConditionPlanBendy" />
+    <xs:complexType name="MyObjectBuilder_QuestConditionPlanBendy">
+        <xs:complexContent mixed="false">
+            <xs:extension base="MyObjectBuilder_QuestConditionBase">
+                <xs:sequence>
+                    <xs:element minOccurs="1" maxOccurs="1" name="AmountPlanned" type="xs:int" />
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+    <xs:element name="MyObjectBuilder_QuestConditionPlanBendyDefinition" nillable="true" type="MyObjectBuilder_QuestConditionPlanBendyDefinition" />
+    <xs:complexType name="MyObjectBuilder_QuestConditionPlanBendyDefinition">
+        <xs:complexContent mixed="false">
+            <xs:extension base="MyObjectBuilder_QuestConditionBaseDefinition">
+                <xs:sequence>
+                    <xs:element minOccurs="0" maxOccurs="unbounded" name="Include" type="SerializableDefinitionId" />
+                </xs:sequence>
+                <xs:attribute name="Amount" type="xs:int" use="required" />
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+    <xs:element name="MyObjectBuilder_RailSegmentComponent" nillable="true" type="MyObjectBuilder_RailSegmentComponent" />
+    <xs:complexType name="MyObjectBuilder_RailSegmentComponent">
+        <xs:complexContent mixed="false">
+            <xs:extension base="MyObjectBuilder_EntityComponent" />
+        </xs:complexContent>
+    </xs:complexType>
+    <xs:element name="MyObjectBuilder_RailSegmentDefinition" nillable="true" type="MyObjectBuilder_RailSegmentDefinition" />
+    <xs:complexType name="MyObjectBuilder_RailSegmentDefinition">
+        <xs:complexContent mixed="false">
+            <xs:extension base="MyObjectBuilder_EntityComponentDefinition">
+                <xs:sequence>
+                    <xs:element minOccurs="0" maxOccurs="1" name="Capabilities" type="ArrayOfRsObRailSegmentCaps" />
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+    <xs:complexType name="ArrayOfRsObRailSegmentCaps">
+        <xs:sequence>
+            <xs:element minOccurs="0" maxOccurs="unbounded" name="Capability" nillable="true" type="RsObRailSegmentCaps" />
+        </xs:sequence>
+    </xs:complexType>
+    <xs:complexType name="RsObRailSegmentCaps">
+        <xs:attribute default="0.95" name="ActivationLevel" type="xs:float" />
+        <xs:attribute default="1" name="Friction" type="xs:float" />
+        <xs:attribute default="INF" name="MaxSpeed" type="xs:float" />
+    </xs:complexType>
+    <xs:element name="MyObjectBuilder_ConstructableComponent" nillable="true" type="MyObjectBuilder_ConstructableComponent" />
+    <xs:complexType name="MyObjectBuilder_ConstructableComponent">
+        <xs:complexContent mixed="false">
+            <xs:extension base="MyObjectBuilder_EntityComponent">
+                <xs:attribute name="SPacked" type="xs:string" />
+                <xs:attribute name="BInteg" type="xs:float" use="required" />
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+    <xs:element name="MyObjectBuilder_ConstructableComponentDefinition" nillable="true" type="MyObjectBuilder_ConstructableComponentDefinition" />
+    <xs:complexType name="MyObjectBuilder_ConstructableComponentDefinition">
+        <xs:complexContent mixed="false">
+            <xs:extension base="MyObjectBuilder_EntityComponentDefinition">
+                <xs:sequence>
+                    <xs:element minOccurs="0" maxOccurs="1" name="Components" type="ArrayOfCcObComponent" />
+                    <xs:element minOccurs="0" maxOccurs="1" name="BuildProgressModels" type="ArrayOfCcObBuildModel" />
+                    <xs:element minOccurs="1" maxOccurs="1" name="BuildTime" type="TimeDefinition" />
+                    <xs:element minOccurs="1" maxOccurs="1" name="MaxIntegrity" type="xs:float" />
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+    <xs:complexType name="ArrayOfCcObComponent">
+        <xs:sequence>
+            <xs:element minOccurs="0" maxOccurs="unbounded" name="Component" nillable="true" type="CcObComponent" />
+        </xs:sequence>
+    </xs:complexType>
+    <xs:complexType name="CcObComponent">
+        <xs:sequence>
+            <xs:element minOccurs="0" maxOccurs="1" name="ReturnedItem" nillable="true" type="DefinitionTagId" />
+        </xs:sequence>
+        <xs:attribute name="Count" type="xs:unsignedShort" use="required" />
+        <xs:attribute name="Type" type="xs:string" />
+        <xs:attribute name="Subtype" type="xs:string" />
+        <xs:attribute name="Tag" type="xs:string" />
+    </xs:complexType>
+    <xs:complexType name="DefinitionTagId">
+        <xs:attribute name="Type" type="xs:string" />
+        <xs:attribute name="Subtype" type="xs:string" />
+        <xs:attribute name="Tag" type="xs:string" />
+    </xs:complexType>
+    <xs:complexType name="ArrayOfCcObBuildModel">
+        <xs:sequence>
+            <xs:element minOccurs="0" maxOccurs="unbounded" name="Model" nillable="true" type="CcObBuildModel" />
+        </xs:sequence>
+    </xs:complexType>
+    <xs:complexType name="CcObBuildModel">
+        <xs:attribute name="BuildPercentUpperBound" type="xs:float" use="required" />
+        <xs:attribute name="File" type="xs:string" />
+    </xs:complexType>
+    <xs:element name="MyObjectBuilder_ConstructableController" nillable="true" type="MyObjectBuilder_ConstructableController" />
+    <xs:complexType name="MyObjectBuilder_ConstructableController">
+        <xs:complexContent mixed="false">
+            <xs:extension base="MyObjectBuilder_SessionComponent">
+                <xs:sequence>
+                    <xs:element minOccurs="0" maxOccurs="1" name="Palette" type="ArrayOfSerializableDefinitionId" />
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+    <xs:element name="MyObjectBuilder_ConstructorBehaviorDefinition" nillable="true" type="MyObjectBuilder_ConstructorBehaviorDefinition" />
+    <xs:complexType name="MyObjectBuilder_ConstructorBehaviorDefinition">
+        <xs:complexContent mixed="false">
+            <xs:extension base="MyObjectBuilder_ToolBehaviorDefinition" />
+        </xs:complexContent>
+    </xs:complexType>
+    <xs:element name="MyObjectBuilder_BendyComponent" nillable="true" type="MyObjectBuilder_BendyComponent" />
+    <xs:complexType name="MyObjectBuilder_BendyComponent">
+        <xs:complexContent mixed="false">
+            <xs:extension base="MyObjectBuilder_EntityComponent">
+                <xs:sequence>
+                    <xs:element minOccurs="0" maxOccurs="unbounded" name="Node" type="NodePose" />
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+    <xs:complexType name="NodePose">
+        <xs:sequence>
+            <xs:element minOccurs="1" maxOccurs="1" name="Position" type="SerializableVector3" />
+            <xs:element minOccurs="1" maxOccurs="1" name="Up" type="SerializableVector3" />
+        </xs:sequence>
+        <xs:attribute name="Index" type="xs:unsignedInt" use="required" />
+    </xs:complexType>
+    <xs:element name="MyObjectBuilder_BendyComponentDefinition" nillable="true" type="MyObjectBuilder_BendyComponentDefinition" />
+    <xs:complexType name="MyObjectBuilder_BendyComponentDefinition">
+        <xs:complexContent mixed="false">
+            <xs:extension base="MyObjectBuilder_EntityComponentDefinition">
+                <xs:sequence>
+                    <xs:element minOccurs="0" maxOccurs="1" name="Layer" type="xs:string" />
+                    <xs:element minOccurs="0" maxOccurs="1" name="Nodes" type="ArrayOfNode" />
+                    <xs:element minOccurs="0" maxOccurs="1" name="Edges" type="ArrayOfEdge" />
+                    <xs:element minOccurs="1" maxOccurs="1" name="Distance" nillable="true" type="MutableRangeOfSingle" />
+                    <xs:element minOccurs="1" maxOccurs="1" name="MaxGradeRatio" nillable="true" type="xs:float" />
+                    <xs:element minOccurs="1" maxOccurs="1" name="MaxAngleDegrees" nillable="true" type="xs:float" />
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+    <xs:complexType name="ArrayOfNode">
+        <xs:sequence>
+            <xs:element minOccurs="0" maxOccurs="unbounded" name="Node" type="Node" />
+        </xs:sequence>
+    </xs:complexType>
+    <xs:complexType name="Node">
+        <xs:sequence>
+            <xs:element minOccurs="1" maxOccurs="1" name="Position" type="SerializableVector3" />
+            <xs:element minOccurs="1" maxOccurs="1" name="Forward" type="SerializableVector3" />
+            <xs:element minOccurs="1" maxOccurs="1" name="Up" type="SerializableVector3" />
+        </xs:sequence>
+        <xs:attribute name="Movable" type="xs:boolean" default="false" />
+    </xs:complexType>
+    <xs:complexType name="ArrayOfEdge">
+        <xs:sequence>
+            <xs:element minOccurs="0" maxOccurs="unbounded" name="Edge" type="Edge" />
+        </xs:sequence>
+    </xs:complexType>
+    <xs:complexType name="Edge">
+        <xs:sequence>
+            <xs:element minOccurs="0" maxOccurs="1" name="Bones" type="xs:string" />
+        </xs:sequence>
+        <xs:attribute name="From" type="xs:unsignedInt" use="required" />
+        <xs:attribute name="To" type="xs:unsignedInt" use="required" />
+        <xs:attribute default="Linear" name="Mode" type="CurveMode" />
+    </xs:complexType>
+    <xs:simpleType name="CurveMode">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="Linear" />
+            <xs:enumeration value="CubicBez" />
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:complexType name="MutableRangeOfSingle">
+        <xs:attribute name="Min" type="xs:float" use="required" />
+        <xs:attribute name="Max" type="xs:float" use="required" />
+    </xs:complexType>
+    <xs:element name="MyObjectBuilder_BendyController" nillable="true" type="MyObjectBuilder_BendyController" />
+    <xs:complexType name="MyObjectBuilder_BendyController">
+        <xs:complexContent mixed="false">
+            <xs:extension base="MyObjectBuilder_SessionComponent" />
+        </xs:complexContent>
+    </xs:complexType>
+    <xs:element name="MyObjectBuilder_BendyDetectorComponent" nillable="true" type="MyObjectBuilder_BendyDetectorComponent" />
+    <xs:complexType name="MyObjectBuilder_BendyDetectorComponent">
+        <xs:complexContent mixed="false">
+            <xs:extension base="MyObjectBuilder_EntityComponent" />
+        </xs:complexContent>
+    </xs:complexType>
+    <xs:element name="MyObjectBuilder_BendyDetectorComponentDefinition" nillable="true" type="MyObjectBuilder_BendyDetectorComponentDefinition" />
+    <xs:complexType name="MyObjectBuilder_BendyDetectorComponentDefinition">
+        <xs:complexContent mixed="false">
+            <xs:extension base="MyObjectBuilder_BendyShapeComponentDefinition" />
+        </xs:complexContent>
+    </xs:complexType>
+    <xs:complexType name="MyObjectBuilder_BendyShapeComponentDefinition">
+        <xs:complexContent mixed="false">
+            <xs:extension base="MyObjectBuilder_EntityComponentDefinition">
+                <xs:sequence>
+                    <xs:element minOccurs="1" maxOccurs="1" name="Width" type="xs:float" />
+                    <xs:element minOccurs="1" maxOccurs="1" name="Height" type="xs:float" />
+                    <xs:element minOccurs="1" maxOccurs="1" name="Segments" type="xs:int" />
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+    <xs:element name="MyObjectBuilder_BendyShapeComponentDefinition" nillable="true" type="MyObjectBuilder_BendyShapeComponentDefinition" />
+    <xs:element name="MyObjectBuilder_EdgePlacerBehaviorDefinition" nillable="true" type="MyObjectBuilder_EdgePlacerBehaviorDefinition" />
+    <xs:complexType name="MyObjectBuilder_EdgePlacerBehaviorDefinition">
+        <xs:complexContent mixed="false">
+            <xs:extension base="MyObjectBuilder_ToolBehaviorDefinition">
+                <xs:sequence>
+                    <xs:element minOccurs="0" maxOccurs="1" name="Layer" type="xs:string" />
+                    <xs:element minOccurs="0" maxOccurs="1" name="CrosshairPrefix" type="xs:string" />
+                    <xs:element minOccurs="1" maxOccurs="1" name="Placed" type="SerializableDefinitionId" />
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+
+    <xs:element name="MyObjectBuilder_BendyPhysicsComponentDefinition" nillable="true" type="MyObjectBuilder_BendyPhysicsComponentDefinition" />
+    <xs:complexType name="MyObjectBuilder_BendyPhysicsComponentDefinition">
+        <xs:complexContent mixed="false">
+            <xs:extension base="MyObjectBuilder_BendyShapeComponentDefinition">
+                <xs:sequence>                    
+                    <xs:element minOccurs="0" maxOccurs="1" name="DestroyEnvItems" type="xs:boolean" default="false" />
+                    <xs:element minOccurs="1" maxOccurs="1" name="Material" type="xs:string" />
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+</xs:schema>

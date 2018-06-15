@@ -146,14 +146,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy
                             $"{nameof(BendyComponentDefinition)} {builder.GetId()} edge {i} refers to an invalid to",
                             TErrorSeverity.Error);
 
-                    var bones = e.Bones?.Split(' ');
-                    if (bones != null)
-                        foreach (var k in bones)
-                            if (string.IsNullOrWhiteSpace(k))
-                                MyDefinitionErrors.Add(def.ModContext,
-                                    $"{nameof(BendyComponentDefinition)} {builder.GetId()} edge {i} refers to an invalid bone",
-                                    TErrorSeverity.Error);
-
+                    var bones = e.Bones?.Split(null).Where(x => !string.IsNullOrWhiteSpace(x)).ToArray();
                     edges[i] = new ImmutableEdge((uint) n0, (uint) n1, e.Mode,
                         bones != null ? new ReadOnlyList<string>(bones) : null);
                 }
@@ -197,6 +190,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy
             #endregion
 
             #region Constraints
+
             Distance = def.Distance?.Immutable() ??
                        new ImmutableRange<float>(RailConstants.DefaultMinLength, RailConstants.DefaultMaxLength);
             if (Distance.Min > Distance.Max)
@@ -213,6 +207,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy
                 MyDefinitionErrors.Add(def.ModContext,
                     $"{nameof(BendyComponentDefinition)} {builder.GetId()} max grade ratio is less than zero",
                     TErrorSeverity.Error);
+
             #endregion
         }
     }

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <Definition xsi:type="MyObjectBuilder_RailSegmentDefinition">
+        <Id Type="MyObjectBuilder_RailSegmentComponent" Subtype="RailSteel" />
+        <Capabilities>
+            <Capability ActivationLevel="0.95" Friction="1" MaxSpeed="30" />
+        </Capabilities>
+    </Definition>
+
+    <Definition xsi:type="MyObjectBuilder_RailGradeComponentDefinition">
+        <Id Type="MyObjectBuilder_RailGradeComponent" Subtype="RailSteel" />
+
+        <Support Width="4" VerticalOffset="0.2" Height="10" RelaxAngleDegrees="60" />
+        <Excavate Width="4" VerticalOffset="0.225" Height="5" RelaxAngleDegrees="75" />
+
+        <RequiredSupport Width="0.25" VerticalOffset="0" />
+    </Definition>
+</Definitions>

@@ -1,6 +1,7 @@
 ﻿using System;
 using Equinox76561198048419394.RailSystem.Util;
 using Equinox76561198048419394.RailSystem.Util.Curve;
+using VRage.Library.Logging;
 using VRageMath;
 
 namespace Equinox76561198048419394.RailSystem.Bendy
@@ -31,6 +32,8 @@ namespace Equinox76561198048419394.RailSystem.Bendy
 
         public void MarkDirty()
         {
+            if (!InScene)
+                MyLog.Default.Warning($"Edge not in scene marked dirty");
             lock (this)
             {
                 if (_dirty)
@@ -92,6 +95,9 @@ namespace Equinox76561198048419394.RailSystem.Bendy
         {
             if (InScene)
                 return;
+            InScene = true;
+            From.EnsureInScene();
+            To.EnsureInScene();
             Node.AddConnection(this);
             Graph.EdgeList.Add(this);
             From.MarkDirty();

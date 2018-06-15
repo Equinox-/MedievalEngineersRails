@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <Definition xsi:type="MyObjectBuilder_ResearchNodeDefinition" Merge="Append">
+        <Id Type="ResearchNodeDefinition" Subtype="ToolsRail"/>
+        <!--<Parent Type="ResearchNodeDefinition" Subtype="CivilianSteelTools"/>-->
+    </Definition>
+    <Definition xsi:type="MyObjectBuilder_ResearchNodeDefinition" Merge="Append">
+        <Id Type="ResearchNodeDefinition" Subtype="RailWood"/>
+        <!--<Parent Type="ResearchNodeDefinition" Subtype="ToolsRail"/>-->
+    </Definition>
+    <Definition xsi:type="MyObjectBuilder_ResearchNodeDefinition" Merge="Append">
+        <Id Type="ResearchNodeDefinition" Subtype="RailSteel"/>
+        <Parent Type="ResearchNodeDefinition" Subtype="RailWood"/>
+    </Definition>
+    <Definition xsi:type="MyObjectBuilder_ResearchNodeDefinition" Merge="Append">
+        <Id Type="ResearchNodeDefinition" Subtype="Bogie"/>
+        <Parent Type="ResearchNodeDefinition" Subtype="RailWood"/>
+    </Definition>
+    <Definition xsi:type="MyObjectBuilder_ResearchNodeDefinition" Merge="Append">
+        <Id Type="ResearchNodeDefinition" Subtype="HandcartRail"/>
+        <!--<Parent Type="ResearchNodeDefinition" Subtype="Bogie"/>-->
+    </Definition>
+</Definitions>

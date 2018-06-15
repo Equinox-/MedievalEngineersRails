@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <Definition xsi:type="ResearchDefinition">
+        <Id Type="ResearchDefinition" Subtype="Bogie"/>
+        <DisplayName>Basic Bogie (Standard Gauge)</DisplayName>
+        
+        <Entry Type="CubeBlock" Subtype="Bogie"/>
+
+        <Entry Type="CraftingRecipeDefinition" Subtype="SchematicBogie"/>
+    </Definition>
+
+    <Definition xsi:type="MyObjectBuilder_CraftingRecipeDefinition" Copy="Append">
+        <Id Type="MyObjectBuilder_CraftingRecipeDefinition" Subtype="SchematicBogie"/>
+        <CopyFrom Type="MyObjectBuilder_CraftingRecipeDefinition" Subtype="SchematicBase"/>
+        <DisplayName>Schematic: Basic Bogie (Standard Gauge)</DisplayName>
+        <Description>A document describing all the details of building basic bogies for a standard gauge railway</Description>
+        <Icon>Textures\GUI\Icons\Schematics\ScrollBackground_1.dds</Icon>
+        <Icon>Textures\GUI\Icons\Cubes\RailStdGaugeBogieBasic.dds</Icon>
+        <Icon>Textures\GUI\Icons\Schematics\ScrollBackground_2.dds</Icon>
+        <Icon>Textures\GUI\Icons\Schematics\OverlayScrollCivil.dds</Icon>
+        <Results>
+            <Item Amount="1" Type="SchematicItem" Subtype="SchematicBogie"/>
+        </Results>
+        <CraftingTime Seconds="1" />
+    </Definition>
+
+    <Definition xsi:type="MyObjectBuilder_SchematicItemDefinition" Copy="Append">
+        <Id Type="SchematicItem" Subtype="SchematicBogie"/>
+        <CopyFrom Type="SchematicItem" Subtype="SchematicBase"/>
+        <DisplayName>Schematic: Basic Bogie (Standard Gauge)</DisplayName>
+        <Description>A document describing all the details of building basic bogies for a standard gauge railway</Description>
+        <Icon>Textures\GUI\Icons\Schematics\ScrollBackground_1.dds</Icon>
+        <Icon>Textures\GUI\Icons\Cubes\RailStdGaugeBogieBasic.dds</Icon>
+        <Icon>Textures\GUI\Icons\Schematics\ScrollBackground_2.dds</Icon>
+        <Icon>Textures\GUI\Icons\Schematics\OverlayScrollCivil.dds</Icon>
+        <Research Type="ResearchDefinition" Subtype="Bogie"/>
+    </Definition>
+</Definitions>

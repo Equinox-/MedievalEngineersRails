@@ -71,7 +71,7 @@ namespace Equinox76561198048419394.RailSystem.Definition
         {
             // Build ratio at which this is activated.
             [XmlAttribute]
-            [DefaultValue(0.95)]
+            [DefaultValue(0.95f)]
             public float ActivationLevel = 0.95f;
 
             // Multiplier applied on the base (new steel rail) friction.

@@ -394,7 +394,29 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
 
             #endregion
 
-            removeEntity.Close();
+            var block = removeEntity as MyCubeBlock;
+            if (block != null)
+            {
+                var compound =
+                    ((IMySlimBlock) block.CubeGrid.GetCubeBlock(block.Position))?.FatBlock as MyCompoundCubeBlock;
+                if (compound != null && compound != block)
+                {
+                    var id = compound.GetBlockId(block.SlimBlock);
+                    if (id.HasValue)
+                        block.CubeGrid.RazeBlockInCompoundBlock(
+                            new List<MyTuple<Vector3I, ushort>>
+                            {
+                                new MyTuple<Vector3I, ushort>(compound.Position, id.Value)
+                            });
+                }
+                else
+                    block.CubeGrid.RazeBlock(block.Position);
+            }
+            else
+            {
+                removeEntity.Close();
+            }
+
             EntityRemoved?.Invoke(holderEntity, holderPlayer, removeEntity);
         }
 
@@ -407,14 +429,22 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
                 return false;
             }
 
-            var constructionCon = removeEntity.Components.Get<ConstructableComponent>();
-            // ReSharper disable once InvertIf
-            if (constructionCon != null &&
-                (constructionCon.BuildIntegrity > 0 || !constructionCon.StockpileEmpty) &&
-                !MyAPIGateway.Session.IsCreative())
+            if (!MyAPIGateway.Session.IsCreative())
             {
-                errMessage = "You cannot quick deconstruct built segments";
-                return false;
+                var constructionCon = removeEntity.Components.Get<ConstructableComponent>();
+                // ReSharper disable once InvertIf
+                if (constructionCon != null && (constructionCon.BuildIntegrity > 0 || !constructionCon.StockpileEmpty))
+                {
+                    errMessage = "You cannot quick deconstruct built segments";
+                    return false;
+                }
+
+                var block = (IMySlimBlock) (removeEntity as MyCubeBlock)?.SlimBlock;
+                if (block != null && (!block.StockpileEmpty || block.BuildIntegrity > 0))
+                {
+                    errMessage = "You cannot quick deconstruct built segments";
+                    return false;
+                }
             }
 
             errMessage = null;

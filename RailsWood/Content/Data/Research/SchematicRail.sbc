@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <Definition xsi:type="ResearchDefinition">
+        <Id Type="ResearchDefinition" Subtype="RailWood"/>
+        <DisplayName>Wooden Rails (Standard Gauge)</DisplayName>
+        
+        <Entry Type="CubeBlock" Subtype="RailWoodStraight"/>
+
+        <Entry Type="HandItem" Subtype="RailWoodPlanner"/>
+        <Entry Type="CraftingRecipeDefinition" Subtype="RailWoodPlanner"/>
+        
+        <Entry Type="CraftingRecipeDefinition" Subtype="SchematicRailWood"/>
+    </Definition>
+
+    <Definition xsi:type="MyObjectBuilder_CraftingRecipeDefinition" Copy="Append">
+        <Id Type="MyObjectBuilder_CraftingRecipeDefinition" Subtype="SchematicRailWood"/>
+        <CopyFrom Type="MyObjectBuilder_CraftingRecipeDefinition" Subtype="SchematicBase"/>
+        <DisplayName>Schematic: Wooden Rails (Standard Gauge)</DisplayName>
+        <Description>A document describing all the details of building standard gauge wooden rails.</Description>
+        <Icon>Textures\GUI\Icons\Schematics\ScrollBackground_1.dds</Icon>
+        <Icon>Textures\GUI\Icons\Equinox\RailPlannerGauge2Wood.dds</Icon>
+        <Icon>Textures\GUI\Icons\Schematics\ScrollBackground_2.dds</Icon>
+        <Icon>Textures\GUI\Icons\Schematics\OverlayScrollCivil.dds</Icon>
+        <Results>
+            <Item Amount="1" Type="SchematicItem" Subtype="SchematicRailWood"/>
+        </Results>
+    </Definition>
+
+    <Definition xsi:type="MyObjectBuilder_SchematicItemDefinition" Copy="Append">
+        <Id Type="SchematicItem" Subtype="SchematicRailWood"/>
+        <CopyFrom Type="SchematicItem" Subtype="SchematicBase"/>
+        <DisplayName>Schematic: Wooden Rails (Standard Gauge)</DisplayName>
+        <Description>A document describing all the details of building standard gauge wooden rails.</Description>
+        <Icon>Textures\GUI\Icons\Schematics\ScrollBackground_1.dds</Icon>
+        <Icon>Textures\GUI\Icons\Equinox\RailPlannerGauge2Wood.dds</Icon>
+        <Icon>Textures\GUI\Icons\Schematics\ScrollBackground_2.dds</Icon>
+        <Icon>Textures\GUI\Icons\Schematics\OverlayScrollCivil.dds</Icon>
+        <Research Type="ResearchDefinition" Subtype="RailWood"/>
+    </Definition>
+</Definitions>

@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <Definition xsi:type="MyObjectBuilder_CubeBlockDefinition">
+        <Id Type="CubeBlock" Subtype="RailWoodStraight" />
+        <DisplayName>Straight Rail Segment (Standard Gauge, Wood)</DisplayName>
+        <Public>true</Public>
+        <Icon>Textures\GUI\Icons\Equinox\RailBlockStraightGauge2Wood.dds</Icon>
+        <CubeSize>Large</CubeSize>
+        <BlockTopology>TriangleMesh</BlockTopology>
+        <Size x="4" y="1" z="1" />
+        <Center x="0" y="0" z="0" />
+        <Model>Models\Equinox\RailsGaugeStandard\Wood\Bendy_10m.mwm</Model>
+
+        <Direction>Horizontal</Direction>
+        <Rotation>Vertical</Rotation>
+        <BuildType>Cube</BuildType>
+        <PhysicalMaterial>Wood</PhysicalMaterial>
+        <NavigationDefinition>Default</NavigationDefinition>
+        <CompoundEnabled>false</CompoundEnabled>
+        <MountPoints>
+            <MountPoint Side="Bottom" StartX="0" StartY="0" EndX="1" EndY="1" />
+        </MountPoints>
+
+        <Components>
+            <Component Tag="Timber" Count="23" /> <!-- ref value is 15 2.5m sleepers, 20m of rail-->
+            <Component Tag="ScrapWood" Count="7" /> <!-- ref value 32 stakes -->
+        </Components>
+
+        <BuildProgressModels>
+            <Model BuildPercentUpperBound="0.0625" File="Models\Equinox\RailsGaugeStandard\Wood\Bendy_10m_Build1.mwm" /> <!-- planning stakes -->
+            <Model BuildPercentUpperBound="0.1875" File="Models\Equinox\RailsGaugeStandard\Wood\Bendy_10m_Build2.mwm" /> <!-- sleepers 1 -->
+            <Model BuildPercentUpperBound="0.3125" File="Models\Equinox\RailsGaugeStandard\Wood\Bendy_10m_Build3.mwm" /> <!-- sleepers 2 -->
+            <Model BuildPercentUpperBound="0.4375" File="Models\Equinox\RailsGaugeStandard\Wood\Bendy_10m_Build4.mwm" /> <!-- sleepers 3 -->
+            <Model BuildPercentUpperBound="0.6333" File="Models\Equinox\RailsGaugeStandard\Wood\Bendy_10m_Build5.mwm" /> <!-- sleepers 4 -->
+            <Model BuildPercentUpperBound="0.8833" File="Models\Equinox\RailsGaugeStandard\Wood\Bendy_10m_Build6.mwm" /> <!-- rails -->
+            <Model BuildPercentUpperBound="1.10" File="Models\Equinox\RailsGaugeStandard\Wood\Bendy_10m.mwm" /> <!-- spikes -->
+        </BuildProgressModels>
+        <CriticalComponent Tag="ScrapWood" Index="0" />
+
+        <BuildTimeSeconds>12</BuildTimeSeconds>
+        <MaxIntegrity>1600</MaxIntegrity>
+    </Definition>
+
+    <Definition xsi:type="MyObjectBuilder_BendyComponentDefinition">
+        <Id Type="MyObjectBuilder_BendyComponent" Subtype="RailWoodStraight" />
+        <Layer>TrainRailGaugeStandard</Layer>
+        <Nodes>
+            <Node>
+                <Position x="-5" y="-1.25" z="0" />
+                <Up x="0" y="1" z="0" />
+                <Forward x="1" y="0" z="0" />
+            </Node>
+            <Node>
+                <Position x="5" y="-1.25" z="0" />
+                <Up x="0" y="1" z="0" />
+                <Forward x="1" y="0" z="0" />
+            </Node>
+        </Nodes>
+        <Edges>
+            <Edge From="0" To="1" />
+        </Edges>
+
+        <Distance Min="7" Max="15" />
+        <MaxGradeRatio>0.1</MaxGradeRatio>
+        <MaxAngleDegrees>15</MaxAngleDegrees>
+    </Definition>
+
+    <Definition xsi:type="MyObjectBuilder_ContainerDefinition">
+        <Id Type="CubeBlock" Subtype="RailWoodStraight" />
+        <Component Type="BendyComponent" Subtype="RailWoodStraight" />
+        <Component Type="RailGradeComponent" Subtype="RailWood"/>
+        <Component Type="RailSegmentComponent" Subtype="RailWood" />
+    </Definition>
+</Definitions>

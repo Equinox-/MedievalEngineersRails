@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <Definition xsi:type="MyObjectBuilder_CrosshairDefinition">
+        <Id Type="MyObjectBuilder_CrosshairDefinition" Subtype="RailPlace" />
+        <ContentPath>Textures\HUD\Rail_Construct.png</ContentPath>
+        <Size x="48" y="48" />
+        <Color R="237" G="216" B="171" A="255" />
+    </Definition>
+    <Definition xsi:type="MyObjectBuilder_CrosshairDefinition">
+        <Id Type="MyObjectBuilder_CrosshairDefinition" Subtype="RailPlaceNoPerm" />
+        <ContentPath>Textures\HUD\Rail_Prohibited.png</ContentPath>
+        <Size x="48" y="48" />
+        <Color R="195" G="20" B="20" A="255" />
+    </Definition>
+    <Definition xsi:type="MyObjectBuilder_CrosshairDefinition">
+        <Id Type="MyObjectBuilder_CrosshairDefinition" Subtype="RailPlaceInvalid" />
+        <ContentPath>Textures\HUD\Rail_Construct.png</ContentPath>
+        <Size x="48" y="48" />
+        <Color R="195" G="20" B="20" A="255" />
+    </Definition>
+    <Definition xsi:type="MyObjectBuilder_CrosshairDefinition">
+        <Id Type="MyObjectBuilder_CrosshairDefinition" Subtype="RailRemove" />
+        <ContentPath>Textures\HUD\Rail_Deconstruct.png</ContentPath>
+        <Size x="48" y="48" />
+        <Color R="237" G="216" B="171" A="255" />
+    </Definition>
+    <Definition xsi:type="MyObjectBuilder_CrosshairDefinition">
+        <Id Type="MyObjectBuilder_CrosshairDefinition" Subtype="RailRemoveNoPerm" />
+        <ContentPath>Textures\HUD\Rail_Prohibited.png</ContentPath>
+        <Size x="48" y="48" />
+        <Color R="195" G="20" B="20" A="255" />
+    </Definition>
+    <Definition xsi:type="MyObjectBuilder_CrosshairDefinition">
+        <Id Type="MyObjectBuilder_CrosshairDefinition" Subtype="RailQuestion" />
+        <ContentPath>Textures\HUD\Rail_Question.png</ContentPath>
+        <Size x="48" y="48" />
+        <Color R="237" G="216" B="171" A="255" />
+    </Definition>
+</Definitions>

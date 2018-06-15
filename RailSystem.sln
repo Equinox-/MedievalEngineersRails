@@ -2,9 +2,55 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Core", "Core\Core.csproj", "{C071F54D-FA03-463F-AB16-79FD984A7FF4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tools", "Tools\Tools.csproj", "{BA1521B9-90E8-4F27-B8B3-1B6392E7F19A}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Handcart", "Handcart", "{AA5705EF-365C-4ED2-89EE-0F389BF2454C}"
+ProjectSection(SolutionItems) = preProject
+	Handcart\Content\Data\AnimationController_Bogie.sbc = Handcart\Content\Data\AnimationController_Bogie.sbc
+	Handcart\Content\Data\AnimationController_Female.sbc = Handcart\Content\Data\AnimationController_Female.sbc
+	Handcart\Content\Data\AnimationController_Handcart.sbc = Handcart\Content\Data\AnimationController_Handcart.sbc
+	Handcart\Content\Data\AnimationController_Male.sbc = Handcart\Content\Data\AnimationController_Male.sbc
+	Handcart\Content\Data\Bogie.sbc = Handcart\Content\Data\Bogie.sbc
+	Handcart\Content\Data\Handcart.sbc = Handcart\Content\Data\Handcart.sbc
+	Handcart\Content\Data\Research\QuestBogie.sbc = Handcart\Content\Data\Research\QuestBogie.sbc
+	Handcart\Content\Data\Research\QuestHandcart.sbc = Handcart\Content\Data\Research\QuestHandcart.sbc
+	Handcart\Content\Data\Research\SchematicBogie.sbc = Handcart\Content\Data\Research\SchematicBogie.sbc
+	Handcart\Content\Data\Research\SchematicHandcart.sbc = Handcart\Content\Data\Research\SchematicHandcart.sbc
+EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gauge2Wood", "Gauge2Wood\Gauge2Wood.csproj", "{67B9474C-D385-40AD-8753-36D19927CD71}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "RailsSteel", "RailsSteel", "{942E6E1B-9581-4406-BF51-08D434DD24EF}"
+ProjectSection(SolutionItems) = preProject
+	RailsSteel\Content\Data\PlanningTape.sbc = RailsSteel\Content\Data\PlanningTape.sbc
+	RailsSteel\Content\Data\Rails\Bendy.sbc = RailsSteel\Content\Data\Rails\Bendy.sbc
+	RailsSteel\Content\Data\Rails\BlockStraight.sbc = RailsSteel\Content\Data\Rails\BlockStraight.sbc
+	RailsSteel\Content\Data\Rails\Common.sbc = RailsSteel\Content\Data\Rails\Common.sbc
+	RailsSteel\Content\Data\Research\QuestRails.sbc = RailsSteel\Content\Data\Research\QuestRails.sbc
+	RailsSteel\Content\Data\Research\SchematicRail.sbc = RailsSteel\Content\Data\Research\SchematicRail.sbc
+EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "RailsWood", "RailsWood", "{AF45395A-F1FD-43A9-9D35-00B782C80D05}"
+ProjectSection(SolutionItems) = preProject
+	RailsWood\Content\Data\PlanningTape.sbc = RailsWood\Content\Data\PlanningTape.sbc
+	RailsWood\Content\Data\Rails\Bendy.sbc = RailsWood\Content\Data\Rails\Bendy.sbc
+	RailsWood\Content\Data\Rails\BlockStraight.sbc = RailsWood\Content\Data\Rails\BlockStraight.sbc
+	RailsWood\Content\Data\Rails\Common.sbc = RailsWood\Content\Data\Rails\Common.sbc
+	RailsWood\Content\Data\Research\QuestRails.sbc = RailsWood\Content\Data\Research\QuestRails.sbc
+	RailsWood\Content\Data\Research\SchematicRail.sbc = RailsWood\Content\Data\Research\SchematicRail.sbc
+EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SharedAssets", "SharedAssets", "{E7259ADB-1772-41D8-B7DA-FB5F2AAEE5F7}"
+ProjectSection(SolutionItems) = preProject
+	SharedAssets\Content\Data\CrosshairDefinitions.sbc = SharedAssets\Content\Data\CrosshairDefinitions.sbc
+	SharedAssets\Content\Data\QuestTools.sbc = SharedAssets\Content\Data\QuestTools.sbc
+	SharedAssets\Content\Data\RailGraderCreative.sbc = SharedAssets\Content\Data\RailGraderCreative.sbc
+	SharedAssets\Content\Data\RailGraderSteel.sbc = SharedAssets\Content\Data\RailGraderSteel.sbc
+	SharedAssets\Content\Data\SchematicTools.sbc = SharedAssets\Content\Data\SchematicTools.sbc
+	SharedAssets\Content\Data\TransparentMaterials.sbc = SharedAssets\Content\Data\TransparentMaterials.sbc
+	SharedAssets\Content\Data\RailHammer.sbc = SharedAssets\Content\Data\RailHammer.sbc
+EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ModPack", "ModPack", "{03F85D0C-B1B9-41FA-AC4A-68A8CB9B0EDD}"
+ProjectSection(SolutionItems) = preProject
+	ModPack\Content\Data\QuestUnify.sbc = ModPack\Content\Data\QuestUnify.sbc
+EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -13,9 +59,5 @@ Global
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{C071F54D-FA03-463F-AB16-79FD984A7FF4}.Debug|x64.ActiveCfg = Debug|x64
 		{C071F54D-FA03-463F-AB16-79FD984A7FF4}.Debug|x64.Build.0 = Debug|x64
-		{BA1521B9-90E8-4F27-B8B3-1B6392E7F19A}.Debug|x64.ActiveCfg = Debug|x64
-		{BA1521B9-90E8-4F27-B8B3-1B6392E7F19A}.Debug|x64.Build.0 = Debug|x64
-		{67B9474C-D385-40AD-8753-36D19927CD71}.Debug|x64.ActiveCfg = Debug|x64
-		{67B9474C-D385-40AD-8753-36D19927CD71}.Debug|x64.Build.0 = Debug|x64
 	EndGlobalSection
 EndGlobal

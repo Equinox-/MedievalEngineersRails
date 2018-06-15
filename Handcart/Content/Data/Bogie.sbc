@@ -1,75 +1,75 @@
 <?xml version="1.0"?>
-<Definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <Definition xsi:type="MyObjectBuilder_CubeBlockDefinition">
-    <Id Type="MyObjectBuilder_CubeBlock" Subtype="EquiRailBogieStdGauge" />
-    <DisplayName>Bogie (Standard Gauge)</DisplayName>
-    <Icon>Textures\GUI\Icons\Cubes\WoodenGate.dds</Icon>
-    <PhysicalMaterial>Wood</PhysicalMaterial>
-    <Mass>500</Mass>
-    <Public>true</Public>
-    <CubeSize>Small</CubeSize>
-    <BlockTopology>TriangleMesh</BlockTopology>
-    <Size x="6" y="3" z="8" />
-    <ModelOffset x="0" y="0" z="0" />
-    <Model>Models\Equinox\Bogie\Bogie.mwm</Model>
-    <CriticalComponent Type="InventoryItem" Subtype="StoneLarge" Index="0" />
-    <Components>
-      <Component Tag="ScrapWood" Count="1" />
-      <Component Tag="Plank" Count="30" />
-      <Component Type="InventoryItem" Subtype="StoneLarge" Count="5" />
-      <Component Type="InventoryItem" Subtype="PartsMetal" Count="32" />
-    </Components>
-    <BuildTimeSeconds>6</BuildTimeSeconds>
-    <MaxIntegrity>27500</MaxIntegrity>
-    <AvailableInSurvival>true</AvailableInSurvival>
-    <VoxelPlacement>
-      <StaticMode>
-        <PlacementMode>None</PlacementMode>
-      </StaticMode>
-      <DynamicMode>
-        <PlacementMode>OutsideVoxel</PlacementMode>
-      </DynamicMode>
-    </VoxelPlacement>
-  </Definition>
+<Definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <Definition xsi:type="MyObjectBuilder_CubeBlockDefinition">
+        <Id Type="MyObjectBuilder_CubeBlock" Subtype="Bogie" />
+        <DisplayName>Basic Bogie (Standard Gauge)</DisplayName>
+        <Icon>Textures\GUI\Icons\Cubes\RailStdGaugeBogieBasic.dds</Icon>
+        <Public>true</Public>
+        <Model>Models\Equinox\Bogie\Bogie.mwm</Model>
+        <PhysicalMaterial>Wood</PhysicalMaterial>
+        <Mass>500</Mass>
 
-  <Definition xsi:type="MyObjectBuilder_BogieComponentDefinition">
-    <Id Type="MyObjectBuilder_BogieComponent" Subtype="EquiRailBogieStdGauge" />
+        <CubeSize>Small</CubeSize>
+        <BlockTopology>TriangleMesh</BlockTopology>
+        <Size x="6" y="3" z="8" />
+        <ModelOffset x="0" y="0" z="0" />
+        <Components>
+            <Component Tag="Timber" Count="6" />
+            <Component Tag="Ingot" Count="5" />
+            <Component Type="InventoryItem" Subtype="PartsMetal" Count="24" />
+        </Components>
+        <CriticalComponent Type="InventoryItem" Subtype="PartsMetal" Index="0" />
+        <BuildTimeSeconds>6</BuildTimeSeconds>
+        <MaxIntegrity>27500</MaxIntegrity>
+        <VoxelPlacement>
+            <StaticMode>
+                <PlacementMode>None</PlacementMode>
+            </StaticMode>
+            <DynamicMode>
+                <PlacementMode>OutsideVoxel</PlacementMode>
+            </DynamicMode>
+        </VoxelPlacement>
+    </Definition>
 
-    <VerticalOffset>0.325</VerticalOffset>
-    <Layer>TrainRailGaugeStandard</Layer>
-    <DetachDistance>1.5</DetachDistance>
-    <CoefficientOfFriction>.01</CoefficientOfFriction>
-  </Definition>
+    <Definition xsi:type="MyObjectBuilder_BogieComponentDefinition">
+        <Id Type="MyObjectBuilder_BogieComponent" Subtype="Bogie" />
 
-  <Definition xsi:type="MyObjectBuilder_ModelAttachmentComponentDefinition">
-    <Id Type="ModelAttachmentComponent" Subtype="EquiRailBogieStdGauge" />
-    <Attachment Name="Skin">
-      <Offset x="0" y="0" z="0" />
-      <Rotation x="0" y="0" z="0" />
-      <DefaultEntity Type="EntityBase" Subtype="EquiRailBogieStdGauge_Skin" />
-    </Attachment>
-  </Definition>
+        <Layer>TrainRailGaugeStandard</Layer>
+        <VerticalOffset>0.325</VerticalOffset>
+        <CoefficientOfFriction>.01</CoefficientOfFriction>
+        <BrakingCoefficientOfFriction>.75</BrakingCoefficientOfFriction>
+        <DetachDistance>1.5</DetachDistance>
+    </Definition>
 
-  <Definition xsi:type="MyObjectBuilder_ContainerDefinition" Copy="Append">
-    <Id Type="MyObjectBuilder_CubeBlock" Subtype="EquiRailBogieStdGauge" />
+    <Definition xsi:type="MyObjectBuilder_ModelAttachmentComponentDefinition">
+        <Id Type="ModelAttachmentComponent" Subtype="Bogie" />
+        <Attachment Name="Skin">
+            <Offset x="0" y="0" z="0" />
+            <Rotation x="0" y="0" z="0" />
+            <DefaultEntity Type="EntityBase" Subtype="BogieSkin" />
+        </Attachment>
+    </Definition>
 
-    <Component Type="BogieComponent" Subtype="EquiRailBogieStdGauge" />
-    <Component Type="ModelAttachmentComponent" Subtype="EquiRailBogieStdGauge" />
-  </Definition>
+    <Definition xsi:type="MyObjectBuilder_ContainerDefinition" Copy="Append">
+        <Id Type="MyObjectBuilder_CubeBlock" Subtype="Bogie" />
 
-  <!-- the skin host -->
-  <Definition xsi:type="MyObjectBuilder_ContainerDefinition" Copy="Append">
-    <Id Type="MyObjectBuilder_EntityBase" Subtype="EquiRailBogieStdGauge_Skin" />
+        <Component Type="BogieComponent" Subtype="Bogie" />
+        <Component Type="ModelAttachmentComponent" Subtype="Bogie" />
+    </Definition>
 
-    <Component Type="ModelComponent" Subtype="EquiRailBogieStdGauge_Skin" />
-    <Component Type="SkeletonComponent" />
-    <Component Type="RenderComponentRigged" />
-    <Component Type="MyObjectBuilder_AnimationControllerComponent" Subtype="EquiRailBogieStdGauge_Skin" />
-  </Definition>
+    <!-- the skin host -->
+    <Definition xsi:type="MyObjectBuilder_ContainerDefinition" Copy="Append">
+        <Id Type="MyObjectBuilder_EntityBase" Subtype="BogieSkin" />
 
-  <Definition xsi:type="MyObjectBuilder_ModelComponentDefinition">
-    <Id Type="ModelComponent" Subtype="EquiRailBogieStdGauge_Skin" />
-    <Model>Models\Equinox\Bogie\Bogie_Skin.mwm</Model>
-    <PhysicalMaterial>Wood</PhysicalMaterial>
-  </Definition>
+        <Component Type="ModelComponent" Subtype="BogieSkin" />
+        <Component Type="SkeletonComponent" />
+        <Component Type="RenderComponentRigged" />
+        <Component Type="MyObjectBuilder_AnimationControllerComponent" Subtype="BogieSkin" />
+    </Definition>
+
+    <Definition xsi:type="MyObjectBuilder_ModelComponentDefinition">
+        <Id Type="ModelComponent" Subtype="BogieSkin" />
+        <Model>Models\Equinox\Bogie\BogieSkin.mwm</Model>
+        <PhysicalMaterial>Wood</PhysicalMaterial>
+    </Definition>
 </Definitions>

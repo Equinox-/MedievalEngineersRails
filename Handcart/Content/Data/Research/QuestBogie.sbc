@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <Definition xsi:type="MyObjectBuilder_ResearchNodeDefinition">
+        <Id Type="ResearchNodeDefinition" Subtype="Bogie"/>
+        <DisplayName>Basic Bogies</DisplayName>
+        <Description>The skills to build basic bogies for a standard gauge railway</Description>
+        <Icon>Textures\GUI\Icons\Cubes\RailStdGaugeBogieBasic.dds</Icon>
+
+        <Parent Type="ResearchNodeDefinition" Subtype="ToolsRail"/>
+        <Quest Type="QuestDefinition" Subtype="Bogie"/>
+        <Research Type="ResearchDefinition" Subtype="Bogie"/>
+    </Definition>
+
+    <Definition xsi:type="MyObjectBuilder_QuestDefinition">
+        <Id Type="QuestDefinition" Subtype="Bogie"/>
+        <DisplayName>Basic Bogies</DisplayName>
+        <Description>The skills to build basic bogies for a standard gauge railway</Description>
+
+        <Icon>Textures\GUI\Book\QuestBook_Quest_Thumbnail.png</Icon>
+        <Tag>Research</Tag>
+
+        <IsAbandonable>true</IsAbandonable>
+        <IsRepeatable>false</IsRepeatable>
+
+        <FailAction xsi:type="Quest.Actions.LockResearch" Type="CubeBlock" Subtype="Bogie"/>
+
+        <FailAction xsi:type="Quest.Actions.ShowNotification" Text="Description_ResearchQuest_Failed" SoundCueId="QuestCompleted"/>
+
+        <SuccessCondition xsi:type="Quest.Conditions.ResearchUnlocked" Type="ResearchDefinition" Subtype="Bogie"/>
+
+        <SuccessAction xsi:type="Quest.Actions.ShowNotification" Text="Description_ResearchQuest_Completed" SoundCueId="QuestCompleted"/>
+        <SuccessAction xsi:type="Quest.Actions.UnlockResearch" Type="ResearchDefinition" Subtype="Bogie"/>
+
+        <Step>
+            <FullDescription>Gather the components for a bogie.</FullDescription>
+            <Condition xsi:type="Quest.Conditions.Composite" Operator="AND">
+                <Condition xsi:type="Quest.Conditions.Gather" Tag="Timber" Amount="6" AreaInventory="Included"/>
+                <Condition xsi:type="Quest.Conditions.Gather" Tag="Ingot" Amount="5" AreaInventory="Included"/>
+                <Condition xsi:type="Quest.Conditions.Gather" Type="InventoryItem" Subtype="PartsMetal" Amount="24" AreaInventory="Included"/>
+            </Condition>
+            <Action xsi:type="Quest.Actions.UnlockResearch" Type="CubeBlock" Subtype="Bogie"/>
+            <Action xsi:type="Quest.Actions.ShowNotification" Text="Basic bogie unlocked!" SoundCueId="QuestStepCompleted" SoundDelay="300"/>
+        </Step>
+        <Step>
+            <FullDescription>Craft your new bogie.</FullDescription>
+            <Condition xsi:type="Quest.Conditions.Craft" Type="CubeBlock" Subtype="Bogie" Amount="1"/>
+        </Step>
+        <Step>
+            <FullDescription>Place your bogie above a standard gauge railway</FullDescription>
+            <Condition xsi:type="Quest.Conditions.PlaceBlock" Type="CubeBlock" Subtype="Bogie" Amount="1"/>
+        </Step>
+    </Definition>
+</Definitions>

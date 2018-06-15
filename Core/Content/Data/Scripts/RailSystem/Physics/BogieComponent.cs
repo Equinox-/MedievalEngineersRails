@@ -7,7 +7,6 @@ using Equinox76561198048419394.RailSystem.Definition;
 using Equinox76561198048419394.RailSystem.Util;
 using Equinox76561198048419394.RailSystem.Util.Curve;
 using Sandbox.Engine.Physics;
-using Sandbox.Game.Entities;
 using Sandbox.Game.EntityComponents.Character;
 using Sandbox.Game.GameSystems;
 using Sandbox.ModAPI;
@@ -120,6 +119,26 @@ namespace Equinox76561198048419394.RailSystem.Physics
                     FindAttachedAnimControllers(child.Entity);
         }
 
+        private void FindControllerEntity(Vector3D ctlPos, MyEntity e, ref MyCharacterMovementComponent controller,
+            ref double bestDistanceSq)
+        {
+            MyCharacterMovementComponent cmp;
+            foreach (var k in e.Components.GetComponents<EquiPlayerAttachmentComponent>())
+                if (k.AttachedCharacter != null && k.AttachedCharacter.Components.TryGet(out cmp))
+                {
+                    var d = Vector3D.DistanceSquared(k.AttachedCharacter.GetPosition(), ctlPos);
+                    if (d < bestDistanceSq)
+                    {
+                        bestDistanceSq = d;
+                        controller = cmp;
+                    }
+                }
+
+            if (e.Hierarchy != null)
+                foreach (var child in e.Hierarchy.Children)
+                    FindControllerEntity(ctlPos, child.Entity, ref controller, ref bestDistanceSq);
+        }
+
         private void Simulate()
         {
             var pivotWorld = Entity.PositionComp.WorldMatrix.Translation;
@@ -195,8 +214,8 @@ namespace Equinox76561198048419394.RailSystem.Physics
             var inertiaTensor = CreateInertiaTensor(root);
 
             // preemptive up force to counteract gravity.
-            impulse += Vector3.Dot(MyGravityProviderSystem.CalculateTotalGravityInPoint(pivotWorld), up) * up *
-                       physics.Mass * MyEngineConstants.UPDATE_STEP_SIZE_IN_SECONDS;
+            var gravityHere = MyGravityProviderSystem.CalculateTotalGravityInPoint(pivotWorld);
+            impulse += Vector3.Dot(gravityHere, up) * up * physics.Mass * MyEngineConstants.UPDATE_STEP_SIZE_IN_SECONDS;
 
             impulse += SolveImpulse(err, normal, physics.LinearVelocity, effectiveMass);
 
@@ -218,16 +237,62 @@ namespace Equinox76561198048419394.RailSystem.Physics
 
             var com = physics.GetCenterOfMassWorld();
 
+            var braking = false;
+            if (Definition.MaxVelocity > 0)
+            {
+                // get nearest character
+                MyCharacterMovementComponent component = null;
+                var controllerDistance = double.MaxValue;
+                FindControllerEntity(root.GetPosition(), root, ref component, ref controllerDistance);
+                if (component != null)
+                {
+                    var control = component.MoveIndicator.Dot(Vector3.Forward);
+                    var cvel = physics.LinearVelocity.Dot(tangent);
+                    braking = Math.Sign(cvel) != Math.Sign(control) && Math.Abs(cvel) > 0.01 &&
+                              Math.Abs(control) > 0.01;
+                    SetAnimVar(BrakingVar, braking ? 1 : 0);
+                    _powerFactor = MathHelper.Clamp(_powerFactor * (1 - _powerSmooth) + control * _powerSmooth, -1, 1);
+                    if (Math.Abs(control) < .01f)
+                        _powerFactor = 0;
+
+                    var velocityLimit = Definition.MaxVelocity;
+                    if (bestEdgeCaps.HasValue)
+                        velocityLimit = Math.Min(velocityLimit, bestEdgeCaps.Value.MaxSpeed);
+
+                    var forceFactorBase = MathHelper.Clamp(1 - Math.Abs(cvel) / velocityLimit, 0, 1);
+                    var forceFactorControl = Math.Abs(_powerFactor);
+                    var dir = Math.Sign(_powerFactor);
+                    if (dir != Math.Sign(cvel))
+                        forceFactorBase = 1;
+
+                    var force = Definition.MaxForce * forceFactorControl * forceFactorBase * dir * tangent *
+                                MyEngineConstants.UPDATE_STEP_SIZE_IN_SECONDS;
+                    if (component.Entity == MyAPIGateway.Session.ControlledObject &&
+                        !MyAPIGateway.Utilities.IsDedicated && _debugDraw)
+                    {
+                        var colorAngImpulse = new Vector4(0, 1, 0, 1);
+                        MySimpleObjectDraw.DrawLine(com, com + force, DebugMtl, ref colorAngImpulse, .01f);
+                    }
+
+                    physics.AddForce(MyPhysicsForceType.APPLY_WORLD_IMPULSE_AND_WORLD_ANGULAR_IMPULSE, force, com,
+                        Vector3.Zero);
+                }
+            }
+
+
             var frictiveNormalForce = Math.Max(0, impulse.Dot(up) / MyEngineConstants.UPDATE_STEP_SIZE_IN_SECONDS);
-            var frictiveForce = Definition.CoefficientOfFriction * (bestEdgeCaps?.Friction ?? 1) * frictiveNormalForce;
+            var frictiveForce =
+                Math.Max(Definition.CoefficientOfFriction, braking ? Definition.BrakingCoefficientOfFriction : 0) *
+                (bestEdgeCaps?.Friction ?? 1) * frictiveNormalForce;
             // clamp frictive impulse to at-max stopping.
-            var tangentMomentumAfterUpdate = (physics.LinearVelocity + impulse).Dot(tangent);
+            var tangentMomentumAfterUpdate =
+                (physics.Mass * (physics.LinearVelocity + gravityHere * MyEngineConstants.UPDATE_STEP_SIZE_IN_SECONDS) + impulse).Dot(tangent);
             var frictiveImpulse = -Math.Sign(tangentMomentumAfterUpdate) *
                                   Math.Min(frictiveForce * MyEngineConstants.UPDATE_STEP_SIZE_IN_SECONDS,
                                       Math.Abs(tangentMomentumAfterUpdate)) * tangent;
             impulse += frictiveImpulse;
 
-            if (_debugDraw)
+            if (!MyAPIGateway.Utilities.IsDedicated && _debugDraw)
             {
                 var drawPivot = pivotWorld + 4 * up;
                 var colorTarget = Vector4.One;
@@ -250,80 +315,6 @@ namespace Equinox76561198048419394.RailSystem.Physics
 
             physics.AddForce(MyPhysicsForceType.APPLY_WORLD_IMPULSE_AND_WORLD_ANGULAR_IMPULSE, impulse, com,
                 angularImpulse);
-
-            if (Definition.MaxVelocity > 0)
-            {
-                // get nearest character
-                var sphere = root.PositionComp.WorldVolume;
-                MyCharacterMovementComponent component = null;
-                var controllerDistance = double.MaxValue;
-                foreach (var e in MyEntities.GetTopMostEntitiesInSphere(ref sphere))
-                {
-                    var ctx = e.Components.Get<MyCharacterMovementComponent>();
-                    if (ctx == null) continue;
-                    var dd = Vector3D.DistanceSquared(sphere.Center, e.PositionComp.WorldVolume.Center);
-                    if (component == null || dd < controllerDistance)
-                    {
-                        component = ctx;
-                        controllerDistance = dd;
-                    }
-                }
-
-                if (component != null)
-                {
-                    var control = component.MoveIndicator.Dot(Vector3.Forward);
-
-                    {
-                        bool backwards = component.MoveIndicator.Z < -0.5;
-                        bool forward = component.MoveIndicator.Z > 0.5;
-                        bool strafeLeft = component.MoveIndicator.X < -0.5;
-                        bool strafeRight = component.MoveIndicator.X > 0.5;
-                        float max = (!component.IsSprinting
-                                        ? (!component.IsRunning
-                                            ? (!component.IsWalking
-                                                ? (!component.IsCrouching
-                                                    ? 3.8f
-                                                    : (!backwards || strafeLeft || strafeRight
-                                                        ? 0.9f
-                                                        : 1.3f))
-                                                : 1.8f)
-                                            : (!backwards || strafeLeft || strafeRight
-                                                ? (!forward ? 3.3f : 3.1f)
-                                                : 3.8f))
-                                        : 7) * component.MovementSpeedMultiplier;
-                        control *= max;
-                    }
-
-
-                    var cvel = physics.LinearVelocity.Dot(tangent);
-                    bool braking = Math.Sign(cvel) != Math.Sign(control) && Math.Abs(cvel) > 0.01 &&
-                                   Math.Abs(control) > 0.01;
-                    SetAnimVar(BrakingVar, braking ? 1 : 0);
-                    _powerFactor = MathHelper.Clamp(_powerFactor * (1 - _powerSmooth) + control * _powerSmooth, -1, 1);
-                    if (Math.Abs(control) < .01f)
-                        _powerFactor = 0;
-
-                    var velocityLimit = Definition.MaxVelocity;
-                    if (bestEdgeCaps.HasValue)
-                        velocityLimit = Math.Min(velocityLimit, bestEdgeCaps.Value.MaxSpeed);
-
-                    var forceFactorBase = MathHelper.Clamp(1 - Math.Abs(cvel) / velocityLimit, 0, 1);
-                    var forceFactorControl = Math.Abs(_powerFactor);
-                    var dir = Math.Sign(_powerFactor);
-                    if (dir != Math.Sign(cvel))
-                        forceFactorBase = 1;
-
-                    var force = Definition.MaxForce * forceFactorControl * forceFactorBase * dir * tangent *
-                                MyEngineConstants.UPDATE_STEP_SIZE_IN_SECONDS;
-                    var colorAngImpulse = new Vector4(0, 1, 0, 1);
-                    if (component.Entity == MyAPIGateway.Session.ControlledObject &&
-                        !MyAPIGateway.Utilities.IsDedicated)
-                        MySimpleObjectDraw.DrawLine(com, com + force, MyStringId.GetOrCompute("Square"),
-                            ref colorAngImpulse, .01f);
-                    physics.AddForce(MyPhysicsForceType.APPLY_WORLD_IMPULSE_AND_WORLD_ANGULAR_IMPULSE, force, com,
-                        Vector3.Zero);
-                }
-            }
         }
 
         private const float _powerSmooth = .0005f;

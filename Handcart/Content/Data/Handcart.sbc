@@ -1,188 +1,189 @@
 <?xml version="1.0"?>
-<Definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
-  <Definition xsi:type="MyObjectBuilder_CubeBlockDefinition">
-    <Id Type="MyObjectBuilder_CubeBlock" Subtype="EquiRailHandcartStdGauge" />
-    <DisplayName>Handcart (Standard Gauge)</DisplayName>
-    <Icon>Textures\GUI\Icons\Cubes\WoodenGate.dds</Icon>
-    <PhysicalMaterial>Wood</PhysicalMaterial>
-    <Mass>500</Mass>
-    <Public>true</Public>
-    <CubeSize>Small</CubeSize>
-    <BlockTopology>TriangleMesh</BlockTopology>
-    <Size x="6" y="3" z="8" />
-    <ModelOffset x="0" y="0" z="0" />
-    <Model>Models\Equinox\Handcart\Handcart.mwm</Model>
-    <CriticalComponent Type="InventoryItem" Subtype="StoneLarge" Index="0" />
-    <Components>
-      <Component Tag="ScrapWood" Count="1" />
-      <Component Tag="Plank" Count="30" />
-      <Component Type="InventoryItem" Subtype="StoneLarge" Count="5" />
-      <Component Type="InventoryItem" Subtype="PartsMetal" Count="32" />
-    </Components>
-    <BuildTimeSeconds>6</BuildTimeSeconds>
-    <MaxIntegrity>27500</MaxIntegrity>
-    <AvailableInSurvival>true</AvailableInSurvival>
-    <VoxelPlacement>
-      <StaticMode>
-        <PlacementMode>None</PlacementMode>
-      </StaticMode>
-      <DynamicMode>
-        <PlacementMode>OutsideVoxel</PlacementMode>
-      </DynamicMode>
-    </VoxelPlacement>
-  </Definition>
+<Definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <Definition xsi:type="MyObjectBuilder_CubeBlockDefinition">
+        <Id Type="MyObjectBuilder_CubeBlock" Subtype="HandcartRail"/>
+        <DisplayName>Handcart (Standard Gauge)</DisplayName>
+        <Icon>Textures\GUI\Icons\Cubes\RailStdGaugeHandcart.dds</Icon>
+        <PhysicalMaterial>Wood</PhysicalMaterial>
+        <Mass>500</Mass>
+        <Public>true</Public>
+        <CubeSize>Small</CubeSize>
+        <BlockTopology>TriangleMesh</BlockTopology>
+        <Size x="6" y="3" z="8"/>
+        <ModelOffset x="0" y="0" z="0"/>
+        <Model>Models\Equinox\Handcart\Handcart.mwm</Model>
+        <CriticalComponent Type="InventoryItem" Subtype="PartsMetal" Index="0"/>
+        <Components>
+            <Component Tag="Timber" Count="10"/>
+            <Component Tag="Plank" Count="8"/>
+            <Component Tag="Ingot" Count="10"/>
+            <Component Type="InventoryItem" Subtype="PartsMetal" Count="48"/>
+        </Components>
+        <BuildTimeSeconds>6</BuildTimeSeconds>
+        <MaxIntegrity>27500</MaxIntegrity>
+        <AvailableInSurvival>true</AvailableInSurvival>
+        <VoxelPlacement>
+            <StaticMode>
+                <PlacementMode>None</PlacementMode>
+            </StaticMode>
+            <DynamicMode>
+                <PlacementMode>OutsideVoxel</PlacementMode>
+            </DynamicMode>
+        </VoxelPlacement>
+    </Definition>
 
-  <Definition xsi:type="MyObjectBuilder_BogieComponentDefinition">
-    <Id Type="MyObjectBuilder_BogieComponent" Subtype="EquiRailHandcartStdGauge" />
+    <Definition xsi:type="MyObjectBuilder_BogieComponentDefinition">
+        <Id Type="MyObjectBuilder_BogieComponent" Subtype="HandcartRail"/>
 
-    <VerticalOffset>0.325</VerticalOffset>
-    <Layer>TrainRailGaugeStandard</Layer>
-    <MaxVelocity>7</MaxVelocity>
-    <MaxForce>500</MaxForce>
-    <DetachDistance>1.5</DetachDistance>
-    <CoefficientOfFriction>.01</CoefficientOfFriction>
-  </Definition>
+        <VerticalOffset>0.325</VerticalOffset>
+        <Layer>TrainRailGaugeStandard</Layer>
+        <MaxVelocity>7</MaxVelocity>
+        <MaxForce>500</MaxForce>
+        <DetachDistance>1.5</DetachDistance>
+        <CoefficientOfFriction>.01</CoefficientOfFriction>
+        <BrakingCoefficientOfFriction>.75</BrakingCoefficientOfFriction>
+    </Definition>
 
-  <Definition xsi:type="MyObjectBuilder_ModelAttachmentComponentDefinition">
-    <Id Type="ModelAttachmentComponent" Subtype="EquiRailHandcartStdGauge" />
-    <Attachment Name="Skin">
-      <Offset x="0" y="0" z="0" />
-      <Rotation x="0" y="0" z="0" />
-      <DefaultEntity Type="EntityBase" Subtype="EquiRailHandcartStdGauge_Skin" />
-    </Attachment>
-    <Attachment Name="Detector_Left">
-      <Offset x="0" y="0" z="0" />
-      <Rotation x="0" y="0" z="0" />
-      <DefaultEntity Type="EntityBase" Subtype="EquiRailHandcartStdGauge_Detector_Left" />
-    </Attachment>
-    <Attachment Name="Detector_Right">
-      <Offset x="0" y="0" z="0" />
-      <Rotation x="0" y="0" z="0" />
-      <DefaultEntity Type="EntityBase" Subtype="EquiRailHandcartStdGauge_Detector_Right" />
-    </Attachment>
-  </Definition>
+    <Definition xsi:type="MyObjectBuilder_ModelAttachmentComponentDefinition">
+        <Id Type="ModelAttachmentComponent" Subtype="HandcartRail"/>
+        <Attachment Name="Skin">
+            <Offset x="0" y="0" z="0"/>
+            <Rotation x="0" y="0" z="0"/>
+            <DefaultEntity Type="EntityBase" Subtype="HandcartRailSkin"/>
+        </Attachment>
+        <Attachment Name="Detector_Left">
+            <Offset x="0" y="0" z="0"/>
+            <Rotation x="0" y="0" z="0"/>
+            <DefaultEntity Type="EntityBase" Subtype="HandcartRailDetectLeft"/>
+        </Attachment>
+        <Attachment Name="Detector_Right">
+            <Offset x="0" y="0" z="0"/>
+            <Rotation x="0" y="0" z="0"/>
+            <DefaultEntity Type="EntityBase" Subtype="HandcartRailDetectRight"/>
+        </Attachment>
+    </Definition>
 
-  <Definition xsi:type="MyObjectBuilder_UseObjectsComponentDefinition">
-    <Id Type="UseObjectsComponent" Subtype="EquiRailHandcartStdGauge"/>
-    <LoadFromModel>false</LoadFromModel>
-    <CustomUseObject Dummy="detector_generic_board" Name="generic"/>
-  </Definition>
+    <Definition xsi:type="MyObjectBuilder_UseObjectsComponentDefinition">
+        <Id Type="UseObjectsComponent" Subtype="HandcartRail"/>
+        <LoadFromModel>false</LoadFromModel>
+        <CustomUseObject Dummy="detector_generic_board" Name="generic"/>
+    </Definition>
 
-  <Definition xsi:type="MyObjectBuilder_EquiPlayerAttachmentComponentDefinition">
-    <Id Type="EquiPlayerAttachmentComponent" Subtype="EquiRailHandcartStdGauge"/>
-    <Anchor>
-      <Position x="0" y=".43326" z=".94345" />
-      <Forward x="0" y="0" z="-1" />
-      <Up x="0" y="1" z="0" />
-    </Anchor>
-    <Animations>
-      <AnimationDesc Start="equi_rail_handcart_std_gauge_forward" Stop="equi_attach_end" Weight="1" />
-    </Animations>
-    <EmptyAction Text="Board Handcart" />
-    <OccupiedAction Text="Occupied" />
-  </Definition>
+    <Definition xsi:type="MyObjectBuilder_EquiPlayerAttachmentComponentDefinition">
+        <Id Type="EquiPlayerAttachmentComponent" Subtype="HandcartRail"/>
+        <Anchor>
+            <Position x="0" y=".43326" z=".94345"/>
+            <Forward x="0" y="0" z="-1"/>
+            <Up x="0" y="1" z="0"/>
+        </Anchor>
+        <Animations>
+            <AnimationDesc Start="equi_handcart_rail_forward" Stop="equi_attach_end" Weight="1"/>
+        </Animations>
+        <EmptyAction Text="Board Handcart"/>
+        <OccupiedAction Text="Occupied"/>
+    </Definition>
 
-  <Definition xsi:type="MyObjectBuilder_ContainerDefinition" Copy="Append">
-    <Id Type="MyObjectBuilder_CubeBlock" Subtype="EquiRailHandcartStdGauge" />
+    <Definition xsi:type="MyObjectBuilder_ContainerDefinition" Copy="Append">
+        <Id Type="MyObjectBuilder_CubeBlock" Subtype="HandcartRail"/>
 
-    <Component Type="BogieComponent" Subtype="EquiRailHandcartStdGauge" />
-    <Component Type="ModelAttachmentComponent" Subtype="EquiRailHandcartStdGauge" />
-    <Component Type="UseObjectsComponent" Subtype="EquiRailHandcartStdGauge"/>
-    <Component Type="EquiPlayerAttachmentComponent" Subtype="EquiRailHandcartStdGauge"/>
-  </Definition>
+        <Component Type="BogieComponent" Subtype="HandcartRail"/>
+        <Component Type="ModelAttachmentComponent" Subtype="HandcartRail"/>
+        <Component Type="UseObjectsComponent" Subtype="HandcartRail"/>
+        <Component Type="EquiPlayerAttachmentComponent" Subtype="HandcartRail"/>
+    </Definition>
 
-  <!-- the skin host -->
-  <Definition xsi:type="MyObjectBuilder_ContainerDefinition" Copy="Append">
-    <Id Type="MyObjectBuilder_EntityBase" Subtype="EquiRailHandcartStdGauge_Skin" />
+    <!-- the skin host -->
+    <Definition xsi:type="MyObjectBuilder_ContainerDefinition" Copy="Append">
+        <Id Type="MyObjectBuilder_EntityBase" Subtype="HandcartRailSkin"/>
 
-    <Component Type="ModelComponent" Subtype="EquiRailHandcartStdGauge_Skin" />
-    <Component Type="SkeletonComponent" />
-    <Component Type="RenderComponentRigged" />
-    <Component Type="MyObjectBuilder_AnimationControllerComponent" Subtype="EquiRailHandcartStdGauge_Skin" />
-  </Definition>
+        <Component Type="ModelComponent" Subtype="HandcartRailSkin"/>
+        <Component Type="SkeletonComponent"/>
+        <Component Type="RenderComponentRigged"/>
+        <Component Type="MyObjectBuilder_AnimationControllerComponent" Subtype="HandcartRailSkin"/>
+    </Definition>
 
-  <Definition xsi:type="MyObjectBuilder_ModelComponentDefinition">
-    <Id Type="ModelComponent" Subtype="EquiRailHandcartStdGauge_Skin" />
-    <Model>Models\Equinox\Handcart\Handcart_Skin.mwm</Model>
-    <PhysicalMaterial>Wood</PhysicalMaterial>
-  </Definition>
+    <Definition xsi:type="MyObjectBuilder_ModelComponentDefinition">
+        <Id Type="ModelComponent" Subtype="HandcartRailSkin"/>
+        <Model>Models\Equinox\Handcart\Handcart_Skin.mwm</Model>
+        <PhysicalMaterial>Wood</PhysicalMaterial>
+    </Definition>
 
-  <!-- the detectors -->
-  <Definition xsi:type="MyObjectBuilder_ContainerDefinition" Copy="Append">
-    <Id Type="MyObjectBuilder_EntityBase" Subtype="EquiRailHandcartStdGauge_Detector_Left" />
+    <!-- the detectors -->
+    <Definition xsi:type="MyObjectBuilder_ContainerDefinition" Copy="Append">
+        <Id Type="MyObjectBuilder_EntityBase" Subtype="HandcartRailDetectLeft"/>
 
-    <Component Type="ModelComponent" Subtype="EquiRailHandcartStdGauge_Detector_Left" />
-    <Component Type="RenderComponent" />
-<!--     <Component Type="UseObjectsComponent" Subtype="EquiRailHandcartStdGauge_Detector_Left"/>
-    <Component Type="EquiPlayerAttachmentComponent" Subtype="EquiRailHandcartStdGauge_Detector_Left"/> -->
-  </Definition>
+        <Component Type="ModelComponent" Subtype="HandcartRailDetectLeft"/>
+        <Component Type="RenderComponent"/>
+        <!--     <Component Type="UseObjectsComponent" Subtype="HandcartRailDetectLeft"/>
+            <Component Type="EquiPlayerAttachmentComponent" Subtype="HandcartRailDetectLeft"/> -->
+    </Definition>
 
-  <Definition xsi:type="MyObjectBuilder_ModelComponentDefinition">
-    <Id Type="ModelComponent" Subtype="EquiRailHandcartStdGauge_Detector_Left" />
-    <Model>Models\Equinox\Handcart\Handcart_Detector_Left.mwm</Model>
-    <PhysicalMaterial>Wood</PhysicalMaterial>
-  </Definition>
+    <Definition xsi:type="MyObjectBuilder_ModelComponentDefinition">
+        <Id Type="ModelComponent" Subtype="HandcartRailDetectLeft"/>
+        <Model>Models\Equinox\Handcart\Handcart_Detector_Left.mwm</Model>
+        <PhysicalMaterial>Wood</PhysicalMaterial>
+    </Definition>
 
-<!--   <Definition xsi:type="MyObjectBuilder_UseObjectsComponentDefinition">
-    <Id Type="UseObjectsComponent" Subtype="EquiRailHandcartStdGauge_Detector_Left"/>
+    <!--   <Definition xsi:type="MyObjectBuilder_UseObjectsComponentDefinition">
+        <Id Type="UseObjectsComponent" Subtype="HandcartRailDetectLeft"/>
+    
+        <LoadFromModel>false</LoadFromModel>
+        <UseObjects>
+          <UseObject Dummy="detector_generic_left" Name="generic" />
+        </UseObjects>
+      </Definition>
+    
+      <Definition xsi:type="MyObjectBuilder_EquiPlayerAttachmentComponentDefinition">
+        <Id Type="EquiPlayerAttachmentComponent" Subtype="HandcartRailDetectLeft"/>
+        <Anchor>
+          <Position x="0" y=".43326" z="-.94345" />
+          <Forward x="0" y="0" z="1" />
+          <Up x="0" y="1" z="0" />
+        </Anchor>
+        <Animations>
+          <AnimationDesc Start="equi_sit_standard" Stop="equi_attach_end" Weight="1" />
+        </Animations>
+        <EmptyAction Text="Board Handcart" />
+        <OccupiedAction Text="Occupied" />
+      </Definition>
+     -->
 
-    <LoadFromModel>false</LoadFromModel>
-    <UseObjects>
-      <UseObject Dummy="detector_generic_left" Name="generic" />
-    </UseObjects>
-  </Definition>
 
-  <Definition xsi:type="MyObjectBuilder_EquiPlayerAttachmentComponentDefinition">
-    <Id Type="EquiPlayerAttachmentComponent" Subtype="EquiRailHandcartStdGauge_Detector_Left"/>
-    <Anchor>
-      <Position x="0" y=".43326" z="-.94345" />
-      <Forward x="0" y="0" z="1" />
-      <Up x="0" y="1" z="0" />
-    </Anchor>
-    <Animations>
-      <AnimationDesc Start="equi_sit_standard" Stop="equi_attach_end" Weight="1" />
-    </Animations>
-    <EmptyAction Text="Board Handcart" />
-    <OccupiedAction Text="Occupied" />
-  </Definition>
- -->
+    <Definition xsi:type="MyObjectBuilder_ContainerDefinition" Copy="Append">
+        <Id Type="MyObjectBuilder_EntityBase" Subtype="HandcartRailDetectRight"/>
 
+        <Component Type="ModelComponent" Subtype="HandcartRailDetectRight"/>
+        <Component Type="RenderComponent"/>
+        <!--     <Component Type="UseObjectsComponent" Subtype="HandcartRailDetectRight"/>
+            <Component Type="EquiPlayerAttachmentComponent" Subtype="HandcartRailDetectRight"/> -->
+    </Definition>
 
-  <Definition xsi:type="MyObjectBuilder_ContainerDefinition" Copy="Append">
-    <Id Type="MyObjectBuilder_EntityBase" Subtype="EquiRailHandcartStdGauge_Detector_Right" />
+    <Definition xsi:type="MyObjectBuilder_ModelComponentDefinition">
+        <Id Type="ModelComponent" Subtype="HandcartRailDetectRight"/>
+        <Model>Models\Equinox\Handcart\Handcart_Detector_Right.mwm</Model>
+        <PhysicalMaterial>Wood</PhysicalMaterial>
+    </Definition>
 
-    <Component Type="ModelComponent" Subtype="EquiRailHandcartStdGauge_Detector_Right" />
-    <Component Type="RenderComponent" />
-<!--     <Component Type="UseObjectsComponent" Subtype="EquiRailHandcartStdGauge_Detector_Right"/>
-    <Component Type="EquiPlayerAttachmentComponent" Subtype="EquiRailHandcartStdGauge_Detector_Right"/> -->
-  </Definition>
-
-  <Definition xsi:type="MyObjectBuilder_ModelComponentDefinition">
-    <Id Type="ModelComponent" Subtype="EquiRailHandcartStdGauge_Detector_Right" />
-    <Model>Models\Equinox\Handcart\Handcart_Detector_Right.mwm</Model>
-    <PhysicalMaterial>Wood</PhysicalMaterial>
-  </Definition>
-  
-<!--   <Definition xsi:type="MyObjectBuilder_UseObjectsComponentDefinition">
-    <Id Type="UseObjectsComponent" Subtype="EquiRailHandcartStdGauge_Detector_Right"/>
-
-    <LoadFromModel>false</LoadFromModel>
-    <UseObjects>
-      <UseObject Dummy="detector_generic_right" Name="generic" />
-    </UseObjects>
-  </Definition>
-
-  <Definition xsi:type="MyObjectBuilder_EquiPlayerAttachmentComponentDefinition">
-    <Id Type="EquiPlayerAttachmentComponent" Subtype="EquiRailHandcartStdGauge_Detector_Right"/>
-    <Anchor>
-      <Position x="0" y=".43326" z=".94345" />
-      <Forward x="0" y="0" z="-1" />
-      <Up x="0" y="1" z="0" />
-    </Anchor>
-    <Animations>
-      <AnimationDesc Start="equi_sit_standard" Stop="equi_attach_end" Weight="1" />
-    </Animations>
-    <EmptyAction Text="Board Handcart" />
-    <OccupiedAction Text="Occupied" />
-  </Definition> -->
+    <!--   <Definition xsi:type="MyObjectBuilder_UseObjectsComponentDefinition">
+        <Id Type="UseObjectsComponent" Subtype="HandcartRailDetectRight"/>
+    
+        <LoadFromModel>false</LoadFromModel>
+        <UseObjects>
+          <UseObject Dummy="detector_generic_right" Name="generic" />
+        </UseObjects>
+      </Definition>
+    
+      <Definition xsi:type="MyObjectBuilder_EquiPlayerAttachmentComponentDefinition">
+        <Id Type="EquiPlayerAttachmentComponent" Subtype="HandcartRailDetectRight"/>
+        <Anchor>
+          <Position x="0" y=".43326" z=".94345" />
+          <Forward x="0" y="0" z="-1" />
+          <Up x="0" y="1" z="0" />
+        </Anchor>
+        <Animations>
+          <AnimationDesc Start="equi_sit_standard" Stop="equi_attach_end" Weight="1" />
+        </Animations>
+        <EmptyAction Text="Board Handcart" />
+        <OccupiedAction Text="Occupied" />
+      </Definition> -->
 </Definitions>

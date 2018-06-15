@@ -1,81 +1,81 @@
 <?xml version="1.0"?>
-<Definitions xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-  <Definition xsi:type="AnimationControllerDefinition" Enabled="true" Merge="Append">
-    <Id Type="MyObjectBuilder_AnimationControllerComponent" Subtype="EquiRailBogieStdGauge_Skin" />
-    <CopyFrom xsi:nil="true" />
-    <Layers>
-      <Layer>
-        <Name>RollingStock</Name>
-        <Mode>Replace</Mode>
-        <StateMachine>RollingStock</StateMachine>
-        <InitialSMNode>Nothing</InitialSMNode>
-        <BoneMask>Wheels.L Wheels.R</BoneMask>
-      </Layer>
-    </Layers>
-    <StateMachines>
-      <StateMachine>
-        <Name>RollingStock</Name>
-        <Nodes>
-          <Node>
-            <Name>Nothing</Name>
-            <AnimationTree>
-              <EdPos>
-                <X>-158</X>
-                <Y>2</Y>
-              </EdPos>
-              <Child xsi:type="MyObjectBuilder_AnimationTreeNodeSpeedModifier">
-                <EdPos>
-                  <X>61</X>
-                  <Y>12</Y>
-                </EdPos>
-                <ParameterName>rail_speed_z</ParameterName>
-                <Child xsi:type="MyObjectBuilder_AnimationTreeNodeTrack">
-                  <EdPos>
-                    <X>241</X>
-                    <Y>-43</Y>
-                  </EdPos>
-                  <PathToModel>Models\Equinox\Bogie\Animation\Bogie_Driving.mwm</PathToModel>
-                  <AnimationName>AnimStack::Handcart_Armature|Posing_Action</AnimationName>
-                  <Loop>true</Loop>
-                  <Speed>1</Speed>
-                  <Interpolate>true</Interpolate>
-                </Child>
-                <SpeedMapping>
-                  <Param>-1000</Param>
-                  <Speed>-1000</Speed>
-                </SpeedMapping>
-                <SpeedMapping>
-                  <Param>1000</Param>
-                  <Speed>1000</Speed>
-                </SpeedMapping>
-              </Child>
-            </AnimationTree>
-            <EdPos>
-              <X>0</X>
-              <Y>0</Y>
-            </EdPos>
-            <Type>Normal</Type>
-          </Node>
-          <Node>
-            <Name>RestartAnim</Name>
-            <EdPos>
-              <X>151</X>
-              <Y>-112</Y>
-            </EdPos>
-            <Type>Normal</Type>
-          </Node>
-        </Nodes>
-        <Transitions>
-          <Transition Name="equi_rail_sync" From="Nothing" To="RestartAnim" TimeInSec="0" Sync="Restart">
-            <Priority xsi:nil="true" />
-            <Curve>Smooth</Curve>
-          </Transition>
-          <Transition From="RestartAnim" To="Nothing" TimeInSec="0" Sync="Restart">
-            <Priority xsi:nil="true" />
-            <Curve>Smooth</Curve>
-          </Transition>
-        </Transitions>
-      </StateMachine>
-    </StateMachines>
-  </Definition>
+<Definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <Definition xsi:type="AnimationControllerDefinition" Enabled="true" Merge="Append">
+        <Id Type="MyObjectBuilder_AnimationControllerComponent" Subtype="BogieSkin"/>
+        <CopyFrom xsi:nil="true"/>
+        <Layers>
+            <Layer>
+                <Name>RollingStock</Name>
+                <Mode>Replace</Mode>
+                <StateMachine>RollingStock</StateMachine>
+                <InitialSMNode>Nothing</InitialSMNode>
+                <BoneMask>Wheels.L Wheels.R</BoneMask>
+            </Layer>
+        </Layers>
+        <StateMachines>
+            <StateMachine>
+                <Name>RollingStock</Name>
+                <Nodes>
+                    <Node>
+                        <Name>Nothing</Name>
+                        <AnimationTree>
+                            <EdPos>
+                                <X>-158</X>
+                                <Y>2</Y>
+                            </EdPos>
+                            <Child xsi:type="MyObjectBuilder_AnimationTreeNodeSpeedModifier">
+                                <EdPos>
+                                    <X>61</X>
+                                    <Y>12</Y>
+                                </EdPos>
+                                <ParameterName>rail_speed_z</ParameterName>
+                                <Child xsi:type="MyObjectBuilder_AnimationTreeNodeTrack">
+                                    <EdPos>
+                                        <X>241</X>
+                                        <Y>-43</Y>
+                                    </EdPos>
+                                    <PathToModel>Models\Equinox\Bogie\Animation\Bogie_Driving.mwm</PathToModel>
+                                    <AnimationName>AnimStack::Handcart_Armature|Posing_Action</AnimationName>
+                                    <Loop>true</Loop>
+                                    <Speed>1</Speed>
+                                    <Interpolate>true</Interpolate>
+                                </Child>
+                                <SpeedMapping>
+                                    <Param>-1000</Param>
+                                    <Speed>-1000</Speed>
+                                </SpeedMapping>
+                                <SpeedMapping>
+                                    <Param>1000</Param>
+                                    <Speed>1000</Speed>
+                                </SpeedMapping>
+                            </Child>
+                        </AnimationTree>
+                        <EdPos>
+                            <X>0</X>
+                            <Y>0</Y>
+                        </EdPos>
+                        <Type>Normal</Type>
+                    </Node>
+                    <Node>
+                        <Name>RestartAnim</Name>
+                        <EdPos>
+                            <X>151</X>
+                            <Y>-112</Y>
+                        </EdPos>
+                        <Type>Normal</Type>
+                    </Node>
+                </Nodes>
+                <Transitions>
+                    <Transition Name="equi_rail_sync" From="Nothing" To="RestartAnim" TimeInSec="0" Sync="Restart">
+                        <Priority xsi:nil="true"/>
+                        <Curve>Smooth</Curve>
+                    </Transition>
+                    <Transition From="RestartAnim" To="Nothing" TimeInSec="0" Sync="Restart">
+                        <Priority xsi:nil="true"/>
+                        <Curve>Smooth</Curve>
+                    </Transition>
+                </Transitions>
+            </StateMachine>
+        </StateMachines>
+    </Definition>
 </Definitions>

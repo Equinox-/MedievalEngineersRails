@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <Definition xsi:type="MyObjectBuilder_CubeBlockDefinition">
+        <Id Type="CubeBlock" Subtype="RailSteelStraight" />
+        <DisplayName>Straight Rail Segment (Standard Gauge, Steel)</DisplayName>
+        <Icon>Textures\GUI\Icons\Equinox\RailBlockStraightGauge2Wood.dds</Icon>
+        <Public>true</Public>
+        
+        <Model>Models\Equinox\RailsGaugeStandard\Steel\Bendy_10m.mwm</Model>
+        <Mass>500</Mass>
+        
+        <CubeSize>Large</CubeSize>
+        <BlockTopology>TriangleMesh</BlockTopology>
+        <Size x="4" y="1" z="1" />
+        <Center x="0" y="0" z="0" />
+
+        <Direction>Horizontal</Direction>
+        <Rotation>Vertical</Rotation>
+        <BuildType>Cube</BuildType>
+        <PhysicalMaterial>Wood</PhysicalMaterial>
+        <NavigationDefinition>Default</NavigationDefinition>
+        <CompoundEnabled>false</CompoundEnabled>
+        <MountPoints>
+            <MountPoint Side="Bottom" StartX="0" StartY="0" EndX="1" EndY="1" />
+        </MountPoints>
+
+        <Components>
+            <Component Tag="Timber" Count="15" /> <!-- ref value is 15 sleepers -->
+            <Component Tag="Ingot" Count="5"/> <!-- ref value is 20m of rail @ 10kg/m, 40kg/ingot-->
+            <Component Type="InventoryItem" Subtype="PartsMetal" Count="5" /> <!-- ref value 60 spikes @ 100g/spike, 1kg/part-->
+        </Components>
+
+        <BuildProgressModels>
+            <Model BuildPercentUpperBound="0.075" File="Models\Equinox\RailsGaugeStandard\Steel\Bendy_10m_Build1.mwm" /> <!-- planning stakes -->
+            <Model BuildPercentUpperBound="0.225" File="Models\Equinox\RailsGaugeStandard\Steel\Bendy_10m_Build2.mwm" /> <!-- sleepers 1 -->
+            <Model BuildPercentUpperBound="0.375" File="Models\Equinox\RailsGaugeStandard\Steel\Bendy_10m_Build3.mwm" /> <!-- sleepers 2 -->
+            <Model BuildPercentUpperBound="0.525" File="Models\Equinox\RailsGaugeStandard\Steel\Bendy_10m_Build4.mwm" /> <!-- sleepers 3 -->
+            <Model BuildPercentUpperBound="0.7" File="Models\Equinox\RailsGaugeStandard\Steel\Bendy_10m_Build5.mwm" /> <!-- sleepers 4 -->
+            <Model BuildPercentUpperBound="0.9" File="Models\Equinox\RailsGaugeStandard\Steel\Bendy_10m_Build6.mwm" /> <!-- rails -->
+            <Model BuildPercentUpperBound="1.1" File="Models\Equinox\RailsGaugeStandard\Steel\Bendy_10m.mwm" /> <!-- spikes -->
+        </BuildProgressModels>
+        <CriticalComponent Type="InventoryItem" Subtype="PartsMetal" Index="0" />
+
+        <BuildTimeSeconds>20</BuildTimeSeconds>
+        <MaxIntegrity>5000</MaxIntegrity>
+    </Definition>
+
+    <Definition xsi:type="MyObjectBuilder_BendyComponentDefinition">
+        <Id Type="MyObjectBuilder_BendyComponent" Subtype="RailSteelStraight" />
+        <Layer>TrainRailGaugeStandard</Layer>
+        <Nodes>
+            <Node>
+                <Position x="-5" y="-1.25" z="0" />
+                <Forward x="1" y="0" z="0" />
+                <Up x="0" y="1" z="0" />
+            </Node>
+            <Node>
+                <Position x="5" y="-1.25" z="0" />
+                <Forward x="1" y="0" z="0" />
+                <Up x="0" y="1" z="0" />
+            </Node>
+        </Nodes>
+        <Edges>
+            <Edge From="0" To="1" />
+        </Edges>
+
+        <Distance Min="7" Max="15" />
+        <MaxGradeRatio>0.1</MaxGradeRatio>
+        <MaxAngleDegrees>15</MaxAngleDegrees>
+    </Definition>
+
+    <Definition xsi:type="MyObjectBuilder_ContainerDefinition">
+        <Id Type="CubeBlock" Subtype="RailSteelStraight" />
+        <Component Type="BendyComponent" Subtype="RailSteelStraight" />
+        <Component Type="RailSegmentComponent" Subtype="RailSteel" />
+        <Component Type="RailGradeComponent" Subtype="RailSteel"/>
+    </Definition>
+</Definitions>

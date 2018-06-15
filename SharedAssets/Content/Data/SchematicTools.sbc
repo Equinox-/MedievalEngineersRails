@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <Definition xsi:type="ResearchDefinition">
+        <Id Type="ResearchDefinition" Subtype="ToolsRail" />
+        <DisplayName>Railroader's Tools</DisplayName>
+        
+        <Entry Type="CraftingRecipeDefinition" Subtype="GraderRail" />
+        <Entry Type="HandItem" Subtype="GraderRail" />
+        <Entry Type="CraftingRecipeDefinition" Subtype="MeltGraderRail" />
+        
+        <Entry Type="CraftingRecipeDefinition" Subtype="HammerRail" />
+        <Entry Type="HandItem" Subtype="HammerRail" />
+        <Entry Type="CraftingRecipeDefinition" Subtype="MeltHammerRail" />
+        
+        <Entry Type="CraftingRecipeDefinition" Subtype="SchematicToolsRail" />
+    </Definition>
+
+    <Definition xsi:type="MyObjectBuilder_CraftingRecipeDefinition" Copy="Append">
+        <Id Type="MyObjectBuilder_CraftingRecipeDefinition" Subtype="SchematicToolsRail"/>
+        <CopyFrom Type="MyObjectBuilder_CraftingRecipeDefinition" Subtype="SchematicBase" />
+        <DisplayName>Schematic: Railroader's Tools</DisplayName>
+        <Description>A document describing all the details of making railroad building tools out of steel.</Description>
+        <Icon>Textures\GUI\Icons\Schematics\ScrollBackground_1.dds</Icon>
+        <Icon>Textures\GUI\Icons\Schematics\SteelTools.dds</Icon>
+        <Icon>Textures\GUI\Icons\Schematics\ScrollBackground_2.dds</Icon>
+        <Icon>Textures\GUI\Icons\Schematics\OverlayScrollCivil.dds</Icon>
+        <Results>
+            <Item Amount="1" Type="SchematicItem" Subtype="SchematicToolsRail" />
+        </Results>
+    </Definition>
+
+    <Definition xsi:type="MyObjectBuilder_SchematicItemDefinition" Copy="Append">
+        <Id Type="SchematicItem" Subtype="SchematicToolsRail" />
+        <CopyFrom Type="SchematicItem" Subtype="SchematicBase" />
+        <DisplayName>Schematic: Railroader's Tools</DisplayName>
+        <Description>A document describing all the details of making railroad building tools out of steel.</Description>
+        <Icon>Textures\GUI\Icons\Schematics\ScrollBackground_1.dds</Icon>
+        <Icon>Textures\GUI\Icons\Schematics\SteelTools.dds</Icon>
+        <Icon>Textures\GUI\Icons\Schematics\ScrollBackground_2.dds</Icon>
+        <Icon>Textures\GUI\Icons\Schematics\OverlayScrollCivil.dds</Icon>
+        <Research Type="ResearchDefinition" Subtype="ToolsRail" />
+    </Definition>
+</Definitions>

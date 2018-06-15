@@ -134,9 +134,9 @@ namespace Equinox76561198048419394.RailSystem.Quest.Conditions
             List<string> description = base.GetCompletedDescription();
             var def = this;
             if (def.AllowedEntities.Count == 1)
-                description.Add($"Planed {def.Amount} {QuestConditionPlanBendy.DescContainer(def.AllowedEntities.First())} segments");
+                description.Add($"Planned {def.Amount} {QuestConditionPlanBendy.DescContainer(def.AllowedEntities.First())} segments");
             else if (def.AllowedEntities.Count > 1)
-                description.Add($"Planed {def.Amount} segments from this list: {string.Join(", ", def.AllowedEntities.Select(QuestConditionPlanBendy.DescContainer))}");
+                description.Add($"Planned {def.Amount} segments from this list: {string.Join(", ", def.AllowedEntities.Select(QuestConditionPlanBendy.DescContainer))}");
             else
                 description.Add($"Plan {def.Amount} segments");
 

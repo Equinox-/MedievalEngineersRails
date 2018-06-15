@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Equinox76561198048419394.RailSystem.Util;
 using VRage.Library.Logging;
@@ -128,6 +129,8 @@ namespace Equinox76561198048419394.RailSystem.Bendy
 
         public void MarkDirty()
         {
+            if (!InScene)
+                MyLog.Default.Warning($"Node not in scene marked dirty");
             lock (this)
             {
                 if (_dirty)
@@ -214,10 +217,10 @@ namespace Equinox76561198048419394.RailSystem.Bendy
         {
             if (InScene)
                 return;
+            InScene = true;
             Graph.NodeList.Add(this);
             Graph.RaiseNodeCreated(this);
             MarkDirty();
-            InScene = true;
         }
         
         public void Close()

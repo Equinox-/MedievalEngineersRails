@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <Definition xsi:type="MyObjectBuilder_HandItemDefinition">
+        <Id Type="HandItem" Subtype="GraderRailCreative" />
+        <DisplayName>Railroader's Creative Grader</DisplayName>
+        <Description>The creative rail grader is the magic tool for leveling your railroad</Description>
+        <Icon>Textures\GUI\Icons\ToolsAndWeapons\ShovelSteel.dds</Icon>
+        <Tag>GraderRail</Tag>
+        <Size x="1.2" y="0.6" z="0.3" />
+        <Model>Models\Equinox\Weapons\RailMattock.mwm</Model>
+        <Mass>10</Mass>
+
+        <PhysicalMaterial>PickAxe</PhysicalMaterial>
+
+        <DummyMapping Name="shovel_dumb_left" AnimationVariable="#shovelleft" />
+        <DummyMapping Name="shovel_dumb_left_female" AnimationVariable="#shovelleftfemale" />
+        <MaxStackAmount>1</MaxStackAmount>
+
+        <MaxDurability>12000000</MaxDurability>
+
+        <Position>
+            <Slot>MainHand</Slot>
+            <Slot>OffHand</Slot>
+        </Position>
+
+        <!-- extra transform on IK dummy in 1st person -->
+        <EquippedTransform>
+            <!-- tool rotation offset from hand -->
+            <Position x="0" y="0" z="0" />
+            <Orientation>
+                <X>0</X>
+                <Y>0</Y>
+                <Z>0</Z>
+                <W>1</W>
+            </Orientation>
+        </EquippedTransform>
+        <EquippedTransformFps>
+            <!-- hand IK target offset -->
+            <Position x="0.464" y="-1.0" z="-0.455" />
+            <Orientation>
+                <X>0.5215536</X>
+                <Y>0.4426106</Y>
+                <Z>-0.4053448</Z>
+                <W>0.6064432</W>
+            </Orientation>
+        </EquippedTransformFps>
+        <EquippedTransformFpsCrouch>
+            <!-- hand IK target offset -->
+            <Position x="0.285" y="-0.334" z="-0.131" />
+            <Orientation>
+                <X>0.5215536</X>
+                <Y>0.4426106</Y>
+                <Z>-0.4053448</Z>
+                <W>0.6064432</W>
+            </Orientation>
+        </EquippedTransformFpsCrouch>
+
+        <!-- Behavior -->
+        <StanceToBehavior>
+            <StanceName>NormalMode</StanceName>
+            <BehaviorId Type="MyObjectBuilder_RailGraderBehaviorDefinition" Subtype="GraderRailCreative" />
+        </StanceToBehavior>
+        <StanceToBehavior>
+            <StanceName>CombatMode</StanceName>
+            <BehaviorId Type="MeleeWeaponBehaviorDefinition" Subtype="GenericToolCombatBehavior" />
+        </StanceToBehavior>
+    </Definition>
+
+    <Definition xsi:type="MyObjectBuilder_RailGraderBehaviorDefinition">
+        <Id Type="RailGraderBehaviorDefinition" Subtype="GraderRailCreative" />
+
+        <ExcavateDefinition Type="MyObjectBuilder_VoxelMiningDefinition" Subtype="Pickaxe" />
+        <ExcavateRadius>10</ExcavateRadius>
+        <ExcavateVolume>102400</ExcavateVolume>
+
+        <FillMaterial VoxelMaterial="Rocks_moss" Volume="256" />
+        <FillRadius>10</FillRadius>
+        <FillVolume>102400</FillVolume>
+
+        <PrimaryEffect>
+            <HitTime>.5</HitTime>
+            <AnimationTime>0.9</AnimationTime>
+            <SwingSound>ToolSwish</SwingSound>
+            <Animation>Mining</Animation>
+        </PrimaryEffect>
+
+        <SecondaryEffect>
+            <HitTime>.5</HitTime>
+            <AnimationTime>1.4</AnimationTime>
+            <SwingSound>ToolSwish</SwingSound>
+            <Animation>Plowing</Animation>
+        </SecondaryEffect>
+    </Definition>
+</Definitions>

@@ -187,3 +187,5 @@ PublishScripts/
 **/[Pp]ackages/*
 # except build/, which is used as an MSBuild target.
 
+Core/schema.xsd
+.idea/
