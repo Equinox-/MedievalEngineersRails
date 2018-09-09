@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.ComponentModel;
 using System.Xml.Serialization;
+using Medieval.Entities.Components.Quests.Conditions;
 using Medieval.GameSystems;
 using Sandbox.ModAPI;
 using VRage.Game;
@@ -19,9 +20,14 @@ namespace Equinox76561198048419394.RailSystem.Util
             return vdef != null ? vdef.DisplayNameText : def.Id.SubtypeName;
         }
 
-        public static bool IsCreative(this IMySession session)
+        public static bool IsCreative(this IMyPlayer player)
         {
-            return session.EnableCopyPaste;
+            return MyAPIGateway.Session.CreativeMode ||  MyAPIGateway.Session.IsAdminModeEnabled(player.IdentityId);
+        }
+
+        public static IMyPlayer Player(this MyQuestConditionBase quest)
+        {
+            return MyAPIGateway.Players.GetPlayerControllingEntity(quest.Owner?.Entity);
         }
 
         public static bool IsServerDecider(this IMySession session)

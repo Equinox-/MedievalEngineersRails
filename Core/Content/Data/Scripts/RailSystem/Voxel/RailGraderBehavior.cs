@@ -111,13 +111,13 @@ namespace Equinox76561198048419394.RailSystem.Voxel
                 availableForDeposit = Definition.FillVolume;
                 var andHead = -1;
                 var missing = 0;
-                if (!MyAPIGateway.Session.IsCreative())
+                if (!player.IsCreative())
                     foreach (var item in Definition.FillMaterial.MinedItems)
                     {
                         var amount = 0;
                         foreach (var inv in Holder.Components.GetComponents<MyInventoryBase>())
                             amount += inv.GetItemAmountFuzzy(item.Key);
-                        amount /= item.Value;
+                        amount = amount * Definition.FillMaterial.Volume / item.Value;
                         if (amount == 0)
                         {
                             if (requiredMaterials == null)
@@ -125,8 +125,7 @@ namespace Equinox76561198048419394.RailSystem.Voxel
                             var itemDef = MyDefinitionManager.Get<MyInventoryItemDefinition>(item.Key);
                             andHead = requiredMaterials.Length;
                             missing++;
-                            if (IsLocallyControlled)
-                                requiredMaterials.Append(itemDef?.DisplayNameOf() ?? item.Key.ToString()).Append(", ");
+                            requiredMaterials.Append(itemDef?.DisplayNameOf() ?? item.Key.ToString()).Append(", ");
                         }
 
                         availableForDeposit = (uint) Math.Min(availableForDeposit, amount);
@@ -146,14 +145,14 @@ namespace Equinox76561198048419394.RailSystem.Voxel
             uint totalExcavated;
             bool triedToChange;
             bool intersectedDynamic;
-            var result = RailGrader.DoGrading(_gradeComponents, Target.Position, radius, availableForDeposit, 
+            var result = RailGrader.DoGrading(_gradeComponents, Target.Position, radius, availableForDeposit,
                 availableForExcavate, _excavated, Definition.FillMaterial.Material.Index,
-                out totalDeposited, out totalExcavated, testDynamic: true, 
+                out totalDeposited, out totalExcavated, testDynamic: true,
                 triedToChange: out triedToChange, intersectedDynamic: out intersectedDynamic);
-            
+
             #region Give Items
 
-            if (triedToChange && isExcavating)
+            if (triedToChange && isExcavating && !player.IsCreative())
             {
                 for (var i = 0; i < _excavated.Length; i++)
                 {
@@ -179,7 +178,7 @@ namespace Equinox76561198048419394.RailSystem.Voxel
             #region Take Items
 
             _depositAccumulation += (int) totalDeposited;
-            if (!MyAPIGateway.Session.IsCreative())
+            if (!player.IsCreative())
                 if (_depositAccumulation > 0 && !isExcavating && Definition.FillMaterial.MinedItems != null)
                 {
                     int amnt = (int) Math.Floor(_depositAccumulation / (float) Definition.FillMaterial.Volume);
@@ -203,6 +202,9 @@ namespace Equinox76561198048419394.RailSystem.Voxel
 
             if (totalDeposited > 0 || totalExcavated > 0)
             {
+                var duraCost = (int) Math.Round(totalDeposited * Definition.FillDurabilityPerVol + totalExcavated * Definition.ExcavateDurabilityPerVol);
+                if (duraCost > 0)
+                    UpdateDurability(-duraCost);
                 GraderUsed?.Invoke(this, _gradeComponents, totalDeposited, totalExcavated);
                 MyAPIGateway.Multiplayer?.RaiseStaticEvent((x) => DoGrade, _gradeComponents.Select(x => x.Blit()).ToArray(), Target.Position,
                     new GradingConfig()
@@ -233,6 +235,8 @@ namespace Equinox76561198048419394.RailSystem.Voxel
             public uint ExcavateExpected;
         }
 
+        private const int _gradingDesyncTol = 5;
+
         [Event]
         [Broadcast]
         private static void DoGrade(RailGradeComponentBlit[] components, Vector3D target, GradingConfig config)
@@ -244,11 +248,12 @@ namespace Equinox76561198048419394.RailSystem.Voxel
             var cbox = new IRailGradeComponent[components.Length];
             for (var i = 0; i < components.Length; i++)
                 cbox[i] = components[i];
-            RailGrader.DoGrading(cbox, target, config.Radius, config.DepositAvailable, config.ExcavateAvailable, null, config.MaterialToDeposit, out deposited, out excavated, testDynamic: true,
+            RailGrader.DoGrading(cbox, target, config.Radius, config.DepositAvailable, config.ExcavateAvailable, null, config.MaterialToDeposit, out deposited,
+                out excavated, testDynamic: true,
                 triedToChange: out triedToChange,
                 intersectedDynamic: out intersectedDynamic);
 
-            if (config.DepositExpected != deposited || config.ExcavateExpected != excavated)
+            if (Math.Abs(config.DepositExpected - deposited) > _gradingDesyncTol || Math.Abs(config.ExcavateExpected - excavated) > _gradingDesyncTol)
             {
                 MyLog.Default.Warning($"Grading desync occured!  {config.DepositExpected} != {deposited}, {config.ExcavateExpected} != {excavated}");
                 var time = DateTime.Now;
@@ -282,10 +287,12 @@ namespace Equinox76561198048419394.RailSystem.Voxel
         public MyDefinitionId ExcavateDefinition { get; private set; }
         public float ExcavateRadius { get; private set; }
         public uint ExcavateVolume { get; private set; }
+        public float ExcavateDurabilityPerVol { get; private set; }
 
         public MiningEntry FillMaterial { get; private set; }
         public float FillRadius { get; private set; }
         public uint FillVolume { get; private set; }
+        public float FillDurabilityPerVol { get; private set; }
 
         public struct MiningEntry
         {
@@ -335,10 +342,12 @@ namespace Equinox76561198048419394.RailSystem.Voxel
             ExcavateDefinition = ob.ExcavateDefinition;
             ExcavateRadius = ob.ExcavateRadius;
             ExcavateVolume = ob.ExcavateVolume;
+            ExcavateDurabilityPerVol = ob.ExcavateDurability / ob.ExcavateVolume;
 
             FillMaterial = new MiningEntry(ob.FillMaterial);
             FillRadius = ob.FillRadius;
             FillVolume = ob.FillVolume;
+            FillDurabilityPerVol = ob.FillDurability / ob.FillVolume;
         }
     }
 
@@ -349,9 +358,11 @@ namespace Equinox76561198048419394.RailSystem.Voxel
         public SerializableDefinitionId ExcavateDefinition;
         public float ExcavateRadius;
         public uint ExcavateVolume;
+        public float ExcavateDurability;
 
         public MyObjectBuilder_VoxelMiningDefinition_MiningDef FillMaterial;
         public float FillRadius;
         public uint FillVolume;
+        public float FillDurability;
     }
 }

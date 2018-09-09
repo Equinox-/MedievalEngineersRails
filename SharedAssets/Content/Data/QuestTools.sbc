@@ -4,7 +4,7 @@
         <Id Type="ResearchNodeDefinition" Subtype="ToolsRail"/>
         <DisplayName>Railroader's Tools</DisplayName>
         <Description>The tools required to begin constructing a railroad</Description>
-        <Icon>Textures\GUI\Icons\Schematics\SteelTools.dds</Icon>
+        <Icon>Textures\GUI\Icons\RailToolsResearch.dds</Icon>
         
         <Parent Type="ResearchNodeDefinition" Subtype="CivilianSteelTools"/>
         <Quest Type="QuestDefinition" Subtype="ToolsRail"/>

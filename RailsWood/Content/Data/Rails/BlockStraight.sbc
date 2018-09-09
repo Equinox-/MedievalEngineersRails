@@ -4,7 +4,7 @@
         <Id Type="CubeBlock" Subtype="RailWoodStraight" />
         <DisplayName>Straight Rail Segment (Standard Gauge, Wood)</DisplayName>
         <Public>true</Public>
-        <Icon>Textures\GUI\Icons\Equinox\RailBlockStraightGauge2Wood.dds</Icon>
+        <Icon>Textures\GUI\Icons\Equinox\RailWoodStraight.dds</Icon>
         <CubeSize>Large</CubeSize>
         <BlockTopology>TriangleMesh</BlockTopology>
         <Size x="4" y="1" z="1" />
@@ -22,8 +22,8 @@
         </MountPoints>
 
         <Components>
-            <Component Tag="Timber" Count="23" /> <!-- ref value is 15 2.5m sleepers, 20m of rail-->
-            <Component Tag="ScrapWood" Count="7" /> <!-- ref value 32 stakes -->
+            <Component Tag="Timber" Count="10" /> <!-- ref value is 15 2.5m sleepers, 20m of rail-->
+            <Component Tag="ScrapWood" Count="5" /> <!-- ref value 32 stakes -->
         </Components>
 
         <BuildProgressModels>

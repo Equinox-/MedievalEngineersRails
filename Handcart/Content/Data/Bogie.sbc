@@ -2,7 +2,7 @@
 <Definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <Definition xsi:type="MyObjectBuilder_CubeBlockDefinition">
         <Id Type="MyObjectBuilder_CubeBlock" Subtype="Bogie" />
-        <DisplayName>Basic Bogie (Standard Gauge)</DisplayName>
+        <DisplayName>Bogie (Standard Gauge)</DisplayName>
         <Icon>Textures\GUI\Icons\Cubes\RailStdGaugeBogieBasic.dds</Icon>
         <Public>true</Public>
         <Model>Models\Equinox\Bogie\Bogie.mwm</Model>
@@ -29,6 +29,22 @@
                 <PlacementMode>OutsideVoxel</PlacementMode>
             </DynamicMode>
         </VoxelPlacement>
+    </Definition>
+
+    <Definition xsi:type="MyObjectBuilder_CraftingRecipeDefinition">
+        <Id Type="MyObjectBuilder_CraftingRecipeDefinition" Subtype="Bogie" />
+        <DisplayName>Bogie (Standard Gauge)</DisplayName>
+        <Icon>Textures\GUI\Icons\Cubes\RailStdGaugeBogieBasic.dds</Icon>
+        <Category>MetalWorks</Category>
+        <Prerequisites>
+            <Item Tag="Timber" Amount="6"/>
+            <Item Tag="Ingot" Amount="5"/>
+            <Item Type="InventoryItem" Subtype="PartsMetal" Amount="24"/>
+        </Prerequisites>
+        <Results>
+            <Item Amount="1" Type="CubeBlock" Subtype="Bogie" />
+        </Results>
+        <CraftingTime Seconds="15" />
     </Definition>
 
     <Definition xsi:type="MyObjectBuilder_BogieComponentDefinition">
@@ -69,7 +85,7 @@
 
     <Definition xsi:type="MyObjectBuilder_ModelComponentDefinition">
         <Id Type="ModelComponent" Subtype="BogieSkin" />
-        <Model>Models\Equinox\Bogie\BogieSkin.mwm</Model>
+        <Model>Models\Equinox\Bogie\Bogie_Skin.mwm</Model>
         <PhysicalMaterial>Wood</PhysicalMaterial>
     </Definition>
 </Definitions>

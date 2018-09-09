@@ -42,7 +42,7 @@ namespace Equinox76561198048419394.RailSystem.Quest.Conditions
             if (!MyAPIGateway.Session.IsServerDecider())
                 return;
 
-            if ((Definition.VolumeAdded <= 0 && Definition.VolumeRemoved <= 0) || MyAPIGateway.Session.IsCreative())
+            if ((Definition.VolumeAdded <= 0 && Definition.VolumeRemoved <= 0) || this.Player().IsCreative())
             {
                 _volumeAdded = Definition.VolumeAdded;
                 _volumeRemoved = Definition.VolumeRemoved;
@@ -106,7 +106,7 @@ namespace Equinox76561198048419394.RailSystem.Quest.Conditions
 
             var descRemoved = Math.Min(_volumeRemoved, def.VolumeRemoved);
             var descAdded = Math.Min(_volumeAdded, def.VolumeAdded);
-            
+
             string descRoot;
             string amnt;
             if (def.VolumeAdded > 0 && def.VolumeRemoved > 0)
@@ -132,7 +132,8 @@ namespace Equinox76561198048419394.RailSystem.Quest.Conditions
             if (def.AllowedEntities.Count == 1)
                 description.Add($"{descRoot} of material {verb} a {DescContainer(def.AllowedEntities.First())} segment {amnt}");
             else if (def.AllowedEntities.Count > 1)
-                description.Add($"{descRoot} of material {verb} a segment from this list: {string.Join(", ", def.AllowedEntities.Select(DescContainer))} {amnt}");
+                description.Add(
+                    $"{descRoot} of material {verb} a segment from this list: {string.Join(", ", def.AllowedEntities.Select(DescContainer))} {amnt}");
             else
                 description.Add($"{descRoot} of material {verb} a segment {amnt}");
 
@@ -176,8 +177,8 @@ namespace Equinox76561198048419394.RailSystem.Quest.Conditions
             List<string> description = base.GetCompletedDescription();
             var def = this;
             var descRemoved = def.VolumeRemoved;
-            var descAdded =  def.VolumeAdded;
-            
+            var descAdded = def.VolumeAdded;
+
             string descRoot;
             if (def.VolumeAdded > 0 && def.VolumeRemoved > 0)
                 descRoot = $"Filled {def.VolumeAdded:F0}L and removed {def.VolumeRemoved}L";
@@ -193,7 +194,8 @@ namespace Equinox76561198048419394.RailSystem.Quest.Conditions
             if (def.AllowedEntities.Count == 1)
                 description.Add($"{descRoot} of material {verb} a {QuestConditionGrading.DescContainer(def.AllowedEntities.First())} segment");
             else if (def.AllowedEntities.Count > 1)
-                description.Add($"{descRoot} of material {verb} a segment from this list: {string.Join(", ", def.AllowedEntities.Select(QuestConditionGrading.DescContainer))}");
+                description.Add(
+                    $"{descRoot} of material {verb} a segment from this list: {string.Join(", ", def.AllowedEntities.Select(QuestConditionGrading.DescContainer))}");
             else
                 description.Add($"{descRoot} of material {verb} a segment");
 
@@ -207,9 +209,10 @@ namespace Equinox76561198048419394.RailSystem.Quest.Conditions
     {
         [XmlAttribute]
         public float VolumeRemoved;
+
         [XmlAttribute]
         public float VolumeAdded;
-        
+
         [XmlElement("Include")]
         public SerializableDefinitionId[] AllowedEntities;
     }

@@ -21,7 +21,7 @@
         <DisplayName>Schematic: Railroader's Tools</DisplayName>
         <Description>A document describing all the details of making railroad building tools out of steel.</Description>
         <Icon>Textures\GUI\Icons\Schematics\ScrollBackground_1.dds</Icon>
-        <Icon>Textures\GUI\Icons\Schematics\SteelTools.dds</Icon>
+        <Icon>Textures\GUI\Icons\RailToolsResearch.dds</Icon>
         <Icon>Textures\GUI\Icons\Schematics\ScrollBackground_2.dds</Icon>
         <Icon>Textures\GUI\Icons\Schematics\OverlayScrollCivil.dds</Icon>
         <Results>
@@ -35,7 +35,7 @@
         <DisplayName>Schematic: Railroader's Tools</DisplayName>
         <Description>A document describing all the details of making railroad building tools out of steel.</Description>
         <Icon>Textures\GUI\Icons\Schematics\ScrollBackground_1.dds</Icon>
-        <Icon>Textures\GUI\Icons\Schematics\SteelTools.dds</Icon>
+        <Icon>Textures\GUI\Icons\RailToolsResearch.dds</Icon>
         <Icon>Textures\GUI\Icons\Schematics\ScrollBackground_2.dds</Icon>
         <Icon>Textures\GUI\Icons\Schematics\OverlayScrollCivil.dds</Icon>
         <Research Type="ResearchDefinition" Subtype="ToolsRail" />

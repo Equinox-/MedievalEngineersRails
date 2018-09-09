@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Serialization;
+using Sandbox.ModAPI;
 using VRage;
 using VRage.Components.Entity.Animations;
 using VRage.Factory;
@@ -159,7 +160,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy
             if (_skeletonComponent == null)
                 return;
             if (_dirtyBones.Count == 0)
-                AddScheduledCallback(ApplyPose, 0L);
+                AddScheduledCallback(ApplyPose, -1L);
             _dirtyBones.Add(bone);
         }
 
@@ -243,8 +244,12 @@ namespace Equinox76561198048419394.RailSystem.Bendy
             if (_edges != null)
                 for (var i = 0; i < _edges.Length; i++)
                 {
-                    EdgeRemoved?.Invoke(this, _edges[i]);
-                    _edges[i].Close();
+                    if (_edges[i] != null)
+                    {
+                        _edges[i].CurveUpdated -= OnCurveUpdated;
+                        EdgeRemoved?.Invoke(this, _edges[i]);
+                        _edges[i].Close();
+                    }
                     _edges[i] = null;
                 }
 
@@ -252,9 +257,12 @@ namespace Equinox76561198048419394.RailSystem.Bendy
             if (_nodes != null)
                 for (var i = 0; i < _nodes.Length; i++)
                 {
-                    NodeRemoved?.Invoke(this, _nodes[i]);
-                    if (!Definition.Nodes[i].Movable)
-                        _nodes[i]?.UnpinTangent();
+                    if (_nodes[i] != null)
+                    {
+                        NodeRemoved?.Invoke(this, _nodes[i]);
+                        if (!Definition.Nodes[i].Movable)
+                            _nodes[i].UnpinTangent();
+                    }
                     _nodes[i] = null;
                 }
             EdgeSetupChanged?.Invoke(this);

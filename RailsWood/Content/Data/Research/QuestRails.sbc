@@ -4,7 +4,7 @@
         <Id Type="ResearchNodeDefinition" Subtype="RailWood"/>
         <DisplayName>Basic Railroading</DisplayName>
         <Description>Basic skills to lay a wooden railway</Description>
-        <Icon>Textures\GUI\Icons\Equinox\RailBlockStraightGauge2Wood.dds</Icon>
+        <Icon>Textures\GUI\Icons\Equinox\RailWoodResearch.dds</Icon>
         <Quest Type="QuestDefinition" Subtype="RailWood"/>
         <Research Type="ResearchDefinition" Subtype="RailWood"/>
         <Parent Type="ResearchNodeDefinition" Subtype="ToolsRail"/>
@@ -35,15 +35,18 @@
         <Step>
             <FullDescription>Every rail network starts with a single station. Gather the resources to build one 10m segment.</FullDescription>
             <Condition xsi:type="Quest.Conditions.Composite" Operator="AND">
-                <Condition xsi:type="Quest.Conditions.Gather" Tag="Timber" Amount="23" AreaInventory="Included"/>
-                <Condition xsi:type="Quest.Conditions.Gather" Tag="ScrapWood" Amount="7" AreaInventory="Included"/>
+                <Condition xsi:type="Quest.Conditions.Gather" Tag="Timber" Amount="10" AreaInventory="Included"/>
+                <Condition xsi:type="Quest.Conditions.Gather" Tag="ScrapWood" Amount="5" AreaInventory="Included"/>
             </Condition>
             <Action xsi:type="Quest.Actions.UnlockResearch" Type="CubeBlock" Subtype="RailWoodStraight"/>
             <Action xsi:type="Quest.Actions.ShowNotification" Text="Straight rail segments unlocked!" SoundCueId="QuestStepCompleted" SoundDelay="300"/>
         </Step>
         <Step>
-            <FullDescription>Place the first endpoint of your new rail network.</FullDescription>
-            <Condition xsi:type="Quest.Conditions.PlaceBlock" Type="CubeBlock" Subtype="RailWoodStraight" AmountBuilt="1"/>
+            <FullDescription>Place and construct the first endpoint of your new rail network.</FullDescription>
+            <Condition xsi:type="Quest.Conditions.Composite" Operator="AND">
+                <Condition xsi:type="Quest.Conditions.PlaceBlock" Type="CubeBlock" Subtype="RailWoodStraight" Amount="1" />
+                <Condition xsi:type="Quest.Conditions.BuildBlock" Type="CubeBlock" Subtype="RailWoodStraight" Amount="1" />
+            </Condition>
         </Step>
         <Step>
             <FullDescription>While a straight railway works, in most cases you'll need curves. Gather the resources for the rail planning tool.</FullDescription>
@@ -77,7 +80,7 @@
             <FullDescription>You're finally ready to construct your railway. Equip a rail sledgehammer and construct your new curved segments.</FullDescription>
             <Condition xsi:type="Quest.Conditions.Composite" Operator="AND">
                 <Condition xsi:type="Quest.Conditions.Gather" Tag="HammerRail" Amount="1"/>
-                <Condition xsi:type="MyObjectBuilder_QuestConditionConstructableDefinition" Amount="2" BuildLevel="0.9">
+                <Condition xsi:type="MyObjectBuilder_QuestConditionConstructableDefinition" Amount="2" BuildLevel="1.0">
                     <Include Type="EntityBase" Subtype="RailWoodBendy"/>
                 </Condition>
             </Condition>

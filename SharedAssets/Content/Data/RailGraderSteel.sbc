@@ -4,40 +4,31 @@
         <Id Type="ItemTagDefinition" Subtype="GraderRail" />
         <DisplayName>Railroader's Grader</DisplayName>
         <Description>The railroader's grader is the tool for leveling your railway</Description>
+        <Icon>Textures\GUI\Icons\ToolsAndWeapons\MattockSteel.DDS</Icon>
     </Definition>
-
     <Definition xsi:type="MyObjectBuilder_HandItemDefinition">
         <Id Type="HandItem" Subtype="GraderRail" />
         <DisplayName>Steel Railroader's Grader</DisplayName>
-        <Description>The steel rail grader is the superior tool for leveling your railway</Description>
+        <Description>The steel grader is the superior tool for leveling your railway</Description>
         <Icon>Textures\GUI\Icons\ToolsAndWeapons\MattockSteel.DDS</Icon>
         <Icon>Textures\GUI\Icons\Overlay_Rail.DDS</Icon>
         <Tag>GraderRail</Tag>
         <Size x="1.2" y="0.6" z="0.3" />
         <Mass>10</Mass>
         <Model>Models\Equinox\Weapons\RailMattock.mwm</Model>
-
         <PhysicalMaterial>PickAxe</PhysicalMaterial>
-
-        <DummyMapping Name="shovel_dumb_left" AnimationVariable="#shovelleft" />
-        <DummyMapping Name="shovel_dumb_left_female" AnimationVariable="#shovelleftfemale" />
         <MaxStackAmount>1</MaxStackAmount>
-
         <MaxDurability>1200</MaxDurability>
-
         <BrokenItem Type="MyObjectBuilder_InventoryItem" Subtype="GraderRailBroken" />
         <Position>
             <Slot>MainHand</Slot>
         </Position>
-
         <Position>
             <Slot>OffHand</Slot>
         </Position>
-
         <!-- extra transform on IK dummy in 1st person -->
         <EquippedTransform>
             <!-- tool rotation offset from hand -->
-            <Position x="0" y="0" z="0" />
             <Orientation>
                 <X>0</X>
                 <Y>0</Y>
@@ -47,7 +38,11 @@
         </EquippedTransform>
         <EquippedTransformFps>
             <!-- hand IK target offset -->
-            <Position x="0.464" y="-1.0" z="-0.455" />
+            <Position>
+                <X>0.464</X>
+                <Y>-1.0</Y>
+                <Z>-0.455</Z>
+            </Position>
             <Orientation>
                 <X>0.5215536</X>
                 <Y>0.4426106</Y>
@@ -57,7 +52,11 @@
         </EquippedTransformFps>
         <EquippedTransformFpsCrouch>
             <!-- hand IK target offset -->
-            <Position x="0.285" y="-0.334" z="-0.131" />
+            <Position>
+                <X>0.285</X>
+                <Y>-0.334</Y>
+                <Z>-0.131</Z>
+            </Position>
             <Orientation>
                 <X>0.5215536</X>
                 <Y>0.4426106</Y>
@@ -65,7 +64,6 @@
                 <W>0.6064432</W>
             </Orientation>
         </EquippedTransformFpsCrouch>
-
         <!-- Behavior -->
         <StanceToBehavior>
             <StanceName>NormalMode</StanceName>
@@ -73,34 +71,32 @@
         </StanceToBehavior>
         <StanceToBehavior>
             <StanceName>CombatMode</StanceName>
-            <BehaviorId Type="MeleeWeaponBehaviorDefinition" Subtype="GenericToolCombatBehavior" />
+            <BehaviorId Type="MeleeWeaponBehaviorDefinition" Subtype="PickaxeSteel" />
         </StanceToBehavior>
     </Definition>
-
     <Definition xsi:type="MyObjectBuilder_InventoryItemDefinition">
         <Id Type="InventoryItem" Subtype="GraderRailBroken" />
-        <DisplayName>Broken Steel Rail Grader</DisplayName>
+        <DisplayName>Broken Steel Railroader's Grader</DisplayName>
         <Description>Broken equipment can be melted in the furnace.</Description>
         <Icon>Textures\GUI\Icons\ToolsAndWeapons\MattockSteel.DDS</Icon>
         <Icon>Textures\GUI\Icons\Overlay_Rail.DDS</Icon>
         <Icon>Textures\GUI\Icons\ToolsAndWeapons\Broken.dds</Icon>
         <Public>true</Public>
-
         <Mass>5</Mass>
         <Size x="1.2" y="0.6" z="0.3" />
-        <Model>Models\Weapons\SteelShovel.mwm</Model>
+        <Model>Models\Equinox\Weapons\RailMattock.mwm</Model>
         <PhysicalMaterial>Hammer</PhysicalMaterial>
         <Health>50</Health>
-        
         <MaxStackAmount>5</MaxStackAmount>
     </Definition>
 
     <Definition xsi:type="MyObjectBuilder_RailGraderBehaviorDefinition">
         <Id Type="RailGraderBehaviorDefinition" Subtype="GraderRail" />
-
+        <Cost Stat="Stamina" Cost="2.5" />
         <ExcavateDefinition Type="MyObjectBuilder_VoxelMiningDefinition" Subtype="Pickaxe" />
         <ExcavateRadius>2</ExcavateRadius>
         <ExcavateVolume>1024</ExcavateVolume>
+        <ExcavateDurability>4</ExcavateDurability>
 
         <FillMaterial VoxelMaterial="Rocks_moss" Volume="256">
             <MinedItem Type="InventoryItem" Subtype="Dirt" Amount="1" />
@@ -108,6 +104,7 @@
         </FillMaterial>
         <FillRadius>2</FillRadius>
         <FillVolume>1024</FillVolume>
+        <FillDurability>2</FillDurability>
 
         <PrimaryEffect>
             <HitTime>.5</HitTime>
@@ -115,7 +112,6 @@
             <SwingSound>ToolSwish</SwingSound>
             <Animation>Mining</Animation>
         </PrimaryEffect>
-
         <SecondaryEffect>
             <HitTime>.5</HitTime>
             <AnimationTime>1.4</AnimationTime>
@@ -126,14 +122,15 @@
 
     <Definition xsi:type="MyObjectBuilder_CraftingRecipeDefinition">
         <Id Type="MyObjectBuilder_CraftingRecipeDefinition" Subtype="GraderRail" />
-        <DisplayName>Steel Rail Grader</DisplayName>
-        <Description>The steel rail grader is the superior tool for leveling your railway</Description>
+        <DisplayName>Steel Railroader's Grader</DisplayName>
+        <Description>The steel grader is the superior tool for leveling your railway</Description>
         <Icon>Textures\GUI\Icons\ToolsAndWeapons\MattockSteel.DDS</Icon>
         <Icon>Textures\GUI\Icons\Overlay_Rail.DDS</Icon>
         <Category>AdvancedWeapons</Category>
         <Prerequisites>
             <Item Amount="1" Tag="Timber" />
-            <Item Amount="4" Tag="IngotSteel" /> <!-- sum of pickaxe + shovel -->
+            <Item Amount="4" Tag="IngotSteel" />
+            <!-- sum of pickaxe + shovel -->
             <Item Amount="1" Type="InventoryItem" Subtype="JarClayWithLinseedOil" />
         </Prerequisites>
         <Results>
@@ -144,7 +141,7 @@
 
     <Definition xsi:type="MyObjectBuilder_CraftingRecipeDefinition">
         <Id Type="MyObjectBuilder_CraftingRecipeDefinition" Subtype="MeltGraderRail" />
-        <DisplayName>Melt a steel rail grader into ingots</DisplayName>
+        <DisplayName>Melt a steel grader into ingots</DisplayName>
         <Icon>Textures\GUI\Icons\ToolsAndWeapons\MattockSteel.DDS</Icon>
         <Icon>Textures\GUI\Icons\Overlay_Rail.DDS</Icon>
         <Icon>Textures\GUI\Icons\SmeltIcon.dds</Icon>

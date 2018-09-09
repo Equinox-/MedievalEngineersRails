@@ -5,7 +5,7 @@
 
         <DisplayName>Rail Planner (Standard Gauge, Steel)</DisplayName>
         <Description>Rail Planner for standard gauge, steel rails</Description>
-        <Icon>Textures\GUI\Icons\Equinox\RailPlannerGauge2Wood.dds</Icon>
+        <Icon>Textures\GUI\Icons\Equinox\RailSteelCurve.dds</Icon>
         <Size>
             <X>1.2</X>
             <Y>0.6</Y>

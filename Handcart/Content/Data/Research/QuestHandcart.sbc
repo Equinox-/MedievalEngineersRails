@@ -4,7 +4,7 @@
         <Id Type="ResearchNodeDefinition" Subtype="HandcartRail"/>
         <DisplayName>Railroader's Handcart</DisplayName>
         <Description>The skills to construct handcarts for a standard gauge railway</Description>
-        <Icon>Textures\GUI\Icons\Cubes\RailStdGaugeHandcart.dds</Icon>
+        <Icon>Textures\GUI\Icons\Cubes\RailStdGaugeHandcartResearch.dds</Icon>
 
         <Parent Type="ResearchNodeDefinition" Subtype="Bogie"/>
         <Quest Type="QuestDefinition" Subtype="HandcartRail"/>
@@ -40,6 +40,7 @@
                 <Condition xsi:type="Quest.Conditions.Gather" Type="InventoryItem" Subtype="PartsMetal" Amount="48" AreaInventory="Included"/>
             </Condition>
             <Action xsi:type="Quest.Actions.UnlockResearch" Type="CubeBlock" Subtype="HandcartRail"/>
+            <Action xsi:type="Quest.Actions.UnlockResearch" Type="CraftingRecipeDefinition" Subtype="HandcartRail"/>
             <Action xsi:type="Quest.Actions.ShowNotification" Text="Basic handcart unlocked!" SoundCueId="QuestStepCompleted" SoundDelay="300"/>
         </Step>
         <Step>

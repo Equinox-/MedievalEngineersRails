@@ -4,7 +4,7 @@
         <Id Type="ResearchNodeDefinition" Subtype="Bogie"/>
         <DisplayName>Basic Bogies</DisplayName>
         <Description>The skills to build basic bogies for a standard gauge railway</Description>
-        <Icon>Textures\GUI\Icons\Cubes\RailStdGaugeBogieBasic.dds</Icon>
+        <Icon>Textures\GUI\Icons\Cubes\RailStdGaugeBogieResearch.dds</Icon>
 
         <Parent Type="ResearchNodeDefinition" Subtype="ToolsRail"/>
         <Quest Type="QuestDefinition" Subtype="Bogie"/>
@@ -39,6 +39,7 @@
                 <Condition xsi:type="Quest.Conditions.Gather" Type="InventoryItem" Subtype="PartsMetal" Amount="24" AreaInventory="Included"/>
             </Condition>
             <Action xsi:type="Quest.Actions.UnlockResearch" Type="CubeBlock" Subtype="Bogie"/>
+            <Action xsi:type="Quest.Actions.UnlockResearch" Type="CraftingRecipeDefinition" Subtype="Bogie"/>
             <Action xsi:type="Quest.Actions.ShowNotification" Text="Basic bogie unlocked!" SoundCueId="QuestStepCompleted" SoundDelay="300"/>
         </Step>
         <Step>

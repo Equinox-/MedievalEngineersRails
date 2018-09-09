@@ -207,9 +207,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
         {
             MyEntity holderEntity;
             MyEntities.TryGetEntityById(cfg.EntityPlacing, out holderEntity);
-            var holderPlayer = holderEntity != null
-                ? MyAPIGateway.Players.GetPlayerControllingEntity(holderEntity)
-                : null;
+            var holderPlayer = holderEntity != null ? MyAPIGateway.Players.GetPlayerControllingEntity(holderEntity) : null;
 
             var def = DefinitionFor(cfg.Placed);
             if (def == null)
@@ -248,7 +246,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
                         MyDefinitionManager.Get<MyInventoryItemDefinition>(item.DefinitionId) as MyHandItemDefinition;
                     if (itemDef == null)
                         continue;
-                    foreach (var behaviorDef in itemDef.StanceToBehaviors.Values)
+                    foreach (var behaviorDef in itemDef.Behaviors)
                     {
                         var placeDef = behaviorDef as EdgePlacerBehaviorDefinition;
                         if (placeDef == null || placeDef.Placed != cfg.Placed) continue;
@@ -323,7 +321,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
                     ComponentContainer = obContainer
                 };
                 var entity = MyAPIGateway.Entities.CreateFromObjectBuilderAndAdd(entOb);
-                if (MyAPIGateway.Session.IsCreative())
+                if (holderPlayer != null && holderPlayer.IsCreative())
                 {
                     entity.Components.Get<ConstructableComponent>()?.InstallFromCreative();
                     ConstructableComponentDefinition.CcComponent test;
@@ -429,7 +427,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
                 return false;
             }
 
-            if (!MyAPIGateway.Session.IsCreative())
+            if (!holderPlayer.IsCreative())
             {
                 var constructionCon = removeEntity.Components.Get<ConstructableComponent>();
                 // ReSharper disable once InvertIf

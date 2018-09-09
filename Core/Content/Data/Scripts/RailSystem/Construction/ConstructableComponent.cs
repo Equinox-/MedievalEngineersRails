@@ -136,6 +136,7 @@ namespace Equinox76561198048419394.RailSystem.Construction
             IntegrityChanged = null;
             IntegrityChanged += () =>
                 MyAPIGateway.Multiplayer?.RaiseEvent(this, cc => cc.SyncIntegrity, BuildIntegrity);
+            IntegrityChanged += CheckModel;
         }
 
         public override void OnBeforeRemovedFromContainer()
@@ -164,6 +165,8 @@ namespace Equinox76561198048419394.RailSystem.Construction
 
         private void CheckModel()
         {
+            if (Entity == null || !Entity.InScene)
+                return;
             var stage = Definition.BuildModelFor(BuildIntegrity / Definition.MaxIntegrity);
             if (stage.ModelFile == _currentModel) return;
             Entity.RefreshModels(stage.ModelFile, null);
@@ -383,8 +386,7 @@ namespace Equinox76561198048419394.RailSystem.Construction
 
         #endregion
 
-        public void IncreaseIntegrity(float hammerTime,
-            out ConstructableComponentDefinition.CcComponent requiredComponent, out int requiredCount)
+        public void IncreaseIntegrity(float hammerTime, out ConstructableComponentDefinition.CcComponent requiredComponent, out int requiredCount)
         {
             var di = hammerTime * Definition.IntegrityPerSecond;
             var maxIntegrity = ComputeMaxPossibleIntegrity(out requiredComponent, out requiredCount);
@@ -395,14 +397,12 @@ namespace Equinox76561198048419394.RailSystem.Construction
             }
 
             BuildIntegrity = Math.Min(maxIntegrity, BuildIntegrity + di);
-            CheckModel();
         }
 
         public void DecreaseIntegrity(float hammerTime)
         {
             var di = -hammerTime * Definition.IntegrityPerSecond;
             BuildIntegrity = Math.Max(0, BuildIntegrity + di);
-            CheckModel();
         }
 
         private float ComputeMaxPossibleIntegrity(out ConstructableComponentDefinition.CcComponent requiredComponent,
@@ -471,18 +471,19 @@ namespace Equinox76561198048419394.RailSystem.Construction
 
             public void Dispose()
             {
+                var alwaysFullSync = false;
                 if (_snapshot != null && _snapshot.Count > 0 &&
                     (_component._stockpile == null || _component._stockpile.IsEmpty()))
                 {
                     // full resync, clear
-                    MyAPIGateway.Multiplayer?.RaiseEvent(_component, cc => cc.SyncFullState, SyncComponentBlit.Empty);
+                    MyAPIGateway.Multiplayer?.RaiseEvent(_component, cc => cc.SyncFullStateBcast, SyncComponentBlit.Empty);
                 }
-                else if ((_snapshot == null || _snapshot.Count == 0) &&
-                         (_component._stockpile != null && !_component._stockpile.IsEmpty()))
+                else if (alwaysFullSync || ((_snapshot == null || _snapshot.Count == 0) &&
+                                            (_component._stockpile != null && !_component._stockpile.IsEmpty())))
                 {
                     // full resync, set
-                    MyAPIGateway.Multiplayer?.RaiseEvent(_component, cc => cc.SyncFullState,
-                        _component._stockpile.Items.Select(x => (SyncComponentBlit) x).ToArray());
+                    MyAPIGateway.Multiplayer?.RaiseEvent(_component, cc => cc.SyncFullStateBcast,
+                        _component._stockpile?.Items?.Select(x => (SyncComponentBlit) x).ToArray() ?? SyncComponentBlit.Empty);
                 }
                 else if (_snapshot != null && _component._stockpile != null)
                 {
@@ -490,17 +491,17 @@ namespace Equinox76561198048419394.RailSystem.Construction
                     foreach (var test in _component._stockpile.Items)
                     {
                         int oldVal;
-                        if (!_snapshot.TryGetValue(test.Key, out oldVal))
-                            _snapshot[test.Key] = test.Value;
-                        else if (oldVal == test.Value)
+                        if (_snapshot.TryGetValue(test.Key, out oldVal) && oldVal == test.Value)
                             _snapshot.Remove(test.Key);
+                        else
+                            _snapshot[test.Key] = test.Value;
                     }
 
-                    var changes = new List<SyncComponentBlit>(_snapshot.Count);
+                    var changes = new SyncComponentBlit[_snapshot.Count];
+                    var i = 0;
                     foreach (var k in _snapshot)
-                        changes.Add(new SyncComponentBlit() {Id = k.Key, Count = _snapshot.GetValueOrDefault(k.Key)});
-                    var arr = changes.Count == 0 ? SyncComponentBlit.Empty : changes.ToArray();
-                    MyAPIGateway.Multiplayer?.RaiseEvent(_component, cc => cc.SyncPartialState, arr,
+                        changes[i++] = new SyncComponentBlit() {Id = k.Key, Count = _component._stockpile.Items.GetValueOrDefault(k.Key)};
+                    MyAPIGateway.Multiplayer?.RaiseEvent(_component, cc => cc.SyncPartialState, changes,
                         _component.ComputeComponentHash());
                 }
 
@@ -546,6 +547,14 @@ namespace Equinox76561198048419394.RailSystem.Construction
 
         [Event]
         [Reliable]
+        [Broadcast]
+        private void SyncFullStateBcast(SyncComponentBlit[] state)
+        {
+            ParseState(true, state);
+        }
+
+        [Event]
+        [Reliable]
         [Client]
         private void SyncFullState(SyncComponentBlit[] state)
         {
@@ -561,7 +570,10 @@ namespace Equinox76561198048419394.RailSystem.Construction
                 else if (reset)
                     _stockpile.Clear();
                 foreach (var entry in info)
-                    _stockpile.Items[entry.Id] = entry.Count;
+                    if (entry.Count == 0)
+                        _stockpile.Items.Remove(entry.Id);
+                    else
+                        _stockpile.Items[entry.Id] = entry.Count;
             }
             else if (reset)
             {
@@ -584,10 +596,12 @@ namespace Equinox76561198048419394.RailSystem.Construction
             var hash = 0;
             if (_stockpile == null) return hash;
             foreach (var kv in _stockpile.Items)
-            {
-                hash = (hash * 31) ^ kv.Key.GetHashCode();
-                hash = (hash * 31) ^ kv.Value.GetHashCode();
-            }
+                if (kv.Value > 0)
+                {
+                    hash = (hash * 31) ^ kv.Key.TypeId.ToString().GetHashCode();
+                    hash = (hash * 31) ^ kv.Key.SubtypeId.GetHashCode();
+                    hash = (hash * 31) ^ kv.Value.GetHashCode();
+                }
 
             return hash;
         }

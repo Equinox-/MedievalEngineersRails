@@ -126,13 +126,14 @@ namespace Equinox76561198048419394.RailSystem.Construction
                     }
 
                     var before = constructable.BuildIntegrity;
-                    var dt = Definition.Efficiency * (Definition.Effects[0]?.HitMilliseconds ?? 1000f) / 1000f;
-                    if (MyAPIGateway.Session.IsCreative())
+                    var dt = Definition.Efficiency;// to match vanilla * (Definition.Effects[0]?.AnimationEndMilliseconds ?? 1000f) / 1000f;
+                    if (player.IsCreative())
                         constructable.InstallFromCreative();
                     else
                         constructable.InstallFrom(_sourceInventories);
                     ConstructableComponentDefinition.CcComponent required;
                     int requiredCount;
+                    UpdateDurability(-1);
                     constructable.IncreaseIntegrity(dt, out required, out requiredCount);
                     if (requiredCount > 0)
                     {
@@ -143,7 +144,7 @@ namespace Equinox76561198048419394.RailSystem.Construction
                         else
                             name = MyDefinitionManager.Get<MyInventoryItemDefinition>(required.Required)?.DisplayNameOf();
                         name = name ?? required.Required.Subtype;
-                        player.ShowNotification("Requires " + requiredCount + " " + name, 2000, null, new Vector4(1, 0, 0, 1));
+                        player.ShowNotification($"Requires {requiredCount} {name}", 2000, null, new Vector4(1, 0, 0, 1));
                     }
                     OnConstructed?.Invoke(this, constructable, before, constructable.BuildIntegrity);
                     break;
@@ -159,9 +160,10 @@ namespace Equinox76561198048419394.RailSystem.Construction
                     }
 
                     var before = constructable.BuildIntegrity;
-                    var dt = Definition.Efficiency * (Definition.Effects[1]?.HitMilliseconds ?? 1000f) / 1000f;
+                    var dt = Definition.Efficiency;// to match vanilla * (Definition.Effects[1]?.AnimationEndMilliseconds ?? 1000f) / 1000f;
                     if (!HasPermission(MyPermissionsConstants.QuickDeconstruct))
                         dt *= 0.3333333f;
+                    UpdateDurability(-1);
                     constructable.DecreaseIntegrity(dt);
                     constructable.UninstallTo(_destinationInventory);
 

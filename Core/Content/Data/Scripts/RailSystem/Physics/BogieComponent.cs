@@ -7,15 +7,18 @@ using Equinox76561198048419394.RailSystem.Definition;
 using Equinox76561198048419394.RailSystem.Util;
 using Equinox76561198048419394.RailSystem.Util.Curve;
 using Sandbox.Engine.Physics;
+using Sandbox.Game.Entities.Entity.Stats;
 using Sandbox.Game.EntityComponents.Character;
 using Sandbox.Game.GameSystems;
 using Sandbox.ModAPI;
 using VRage.Components.Entity;
+using VRage.Definitions.Components.Character;
 using VRage.Game;
 using VRage.Game.Components;
 using VRage.Game.Entity;
 using VRage.Game.ObjectBuilders.ComponentSystem;
 using VRage.ObjectBuilders;
+using VRage.ObjectBuilders.Components.Entity.Stats;
 using VRage.Session;
 using VRage.Utils;
 using VRageMath;
@@ -139,6 +142,9 @@ namespace Equinox76561198048419394.RailSystem.Physics
                     FindControllerEntity(ctlPos, child.Entity, ref controller, ref bestDistanceSq);
         }
 
+        private static readonly MyDefinitionId _sprintingEffect =
+            new MyDefinitionId(typeof(MyObjectBuilder_EntityStatEffect), MyStringHash.GetOrCompute("Sprint"));
+
         private void Simulate()
         {
             var pivotWorld = Entity.PositionComp.WorldMatrix.Translation;
@@ -255,12 +261,18 @@ namespace Equinox76561198048419394.RailSystem.Physics
                     if (Math.Abs(control) < .01f)
                         _powerFactor = 0;
 
-                    var velocityLimit = Definition.MaxVelocity;
-                    if (bestEdgeCaps.HasValue)
-                        velocityLimit = Math.Min(velocityLimit, bestEdgeCaps.Value.MaxSpeed);
+                    var velocityLimit = Definition.MaxVelocity;// TODO * component.MovementSpeedMultiplier;
+                    velocityLimit = Math.Min(velocityLimit, bestEdgeCaps.Value.MaxSpeed);
 
                     var forceFactorBase = MathHelper.Clamp(1 - Math.Abs(cvel) / velocityLimit, 0, 1);
                     var forceFactorControl = Math.Abs(_powerFactor);
+                    if (component.WantsSprint)
+                    {
+                        var stats = component.Container?.Get<MyEntityStatComponent>();
+                        stats?.AddEffect(_sprintingEffect);
+                        forceFactorControl *= 5;
+                    }
+
                     var dir = Math.Sign(_powerFactor);
                     if (dir != Math.Sign(cvel))
                         forceFactorBase = 1;
@@ -317,7 +329,7 @@ namespace Equinox76561198048419394.RailSystem.Physics
                 angularImpulse);
         }
 
-        private const float _powerSmooth = .0005f;
+        private const float _powerSmooth = .005f;
         private float _powerFactor;
 
         private static Vector3 SolveAngularVel(Vector3 from, Vector3 to, bool reversible)

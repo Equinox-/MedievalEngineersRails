@@ -61,8 +61,8 @@
         <Id Type="MyObjectBuilder_ConstructableComponent" Subtype="RailWoodBendy" />
 
         <Components>
-            <Component Tag="Timber" Count="23" /> <!-- ref value is 15 2.5m sleepers, 20m of rail-->
-            <Component Tag="ScrapWood" Count="7" /> <!-- ref value 32 stakes -->
+            <Component Tag="Timber" Count="10" /> <!-- ref value is 15 2.5m sleepers, 20m of rail-->
+            <Component Tag="ScrapWood" Count="5" /> <!-- ref value 32 stakes -->
         </Components>
 
         <BuildProgressModels>

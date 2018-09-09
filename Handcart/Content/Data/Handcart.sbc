@@ -32,6 +32,23 @@
         </VoxelPlacement>
     </Definition>
 
+    <Definition xsi:type="MyObjectBuilder_CraftingRecipeDefinition">
+        <Id Type="MyObjectBuilder_CraftingRecipeDefinition" Subtype="HandcartRail" />
+        <DisplayName>Handcart (Standard Gauge)</DisplayName>
+        <Icon>Textures\GUI\Icons\Cubes\RailStdGaugeHandcart.dds</Icon>
+        <Category>MetalWorks</Category>
+        <Prerequisites>
+            <Item Tag="Timber" Amount="10"/>
+            <Item Tag="Plank" Amount="8"/>
+            <Item Tag="Ingot" Amount="10"/>
+            <Item Type="InventoryItem" Subtype="PartsMetal" Amount="48"/>
+        </Prerequisites>
+        <Results>
+            <Item Amount="1" Type="CubeBlock" Subtype="HandcartRail" />
+        </Results>
+        <CraftingTime Seconds="30" />
+    </Definition>
+
     <Definition xsi:type="MyObjectBuilder_BogieComponentDefinition">
         <Id Type="MyObjectBuilder_BogieComponent" Subtype="HandcartRail"/>
 
@@ -41,7 +58,7 @@
         <MaxForce>500</MaxForce>
         <DetachDistance>1.5</DetachDistance>
         <CoefficientOfFriction>.01</CoefficientOfFriction>
-        <BrakingCoefficientOfFriction>.75</BrakingCoefficientOfFriction>
+        <BrakingCoefficientOfFriction>.2</BrakingCoefficientOfFriction>
     </Definition>
 
     <Definition xsi:type="MyObjectBuilder_ModelAttachmentComponentDefinition">

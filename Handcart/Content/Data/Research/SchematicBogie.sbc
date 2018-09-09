@@ -5,6 +5,7 @@
         <DisplayName>Basic Bogie (Standard Gauge)</DisplayName>
         
         <Entry Type="CubeBlock" Subtype="Bogie"/>
+        <Entry Type="CraftingRecipeDefinition" Subtype="Bogie"/>
 
         <Entry Type="CraftingRecipeDefinition" Subtype="SchematicBogie"/>
     </Definition>
@@ -15,7 +16,7 @@
         <DisplayName>Schematic: Basic Bogie (Standard Gauge)</DisplayName>
         <Description>A document describing all the details of building basic bogies for a standard gauge railway</Description>
         <Icon>Textures\GUI\Icons\Schematics\ScrollBackground_1.dds</Icon>
-        <Icon>Textures\GUI\Icons\Cubes\RailStdGaugeBogieBasic.dds</Icon>
+        <Icon>Textures\GUI\Icons\Cubes\RailStdGaugeBogieResearch.dds</Icon>
         <Icon>Textures\GUI\Icons\Schematics\ScrollBackground_2.dds</Icon>
         <Icon>Textures\GUI\Icons\Schematics\OverlayScrollCivil.dds</Icon>
         <Results>
@@ -30,7 +31,7 @@
         <DisplayName>Schematic: Basic Bogie (Standard Gauge)</DisplayName>
         <Description>A document describing all the details of building basic bogies for a standard gauge railway</Description>
         <Icon>Textures\GUI\Icons\Schematics\ScrollBackground_1.dds</Icon>
-        <Icon>Textures\GUI\Icons\Cubes\RailStdGaugeBogieBasic.dds</Icon>
+        <Icon>Textures\GUI\Icons\Cubes\RailStdGaugeBogieResearch.dds</Icon>
         <Icon>Textures\GUI\Icons\Schematics\ScrollBackground_2.dds</Icon>
         <Icon>Textures\GUI\Icons\Schematics\OverlayScrollCivil.dds</Icon>
         <Research Type="ResearchDefinition" Subtype="Bogie"/>
