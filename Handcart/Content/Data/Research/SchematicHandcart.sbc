@@ -2,7 +2,7 @@
 <Definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <Definition xsi:type="ResearchDefinition">
         <Id Type="ResearchDefinition" Subtype="HandcartRail"/>
-        <DisplayName>Handcart (Standard Gauge)</DisplayName>
+        <DisplayName>Handcart</DisplayName>
         
         <Entry Type="CubeBlock" Subtype="HandcartRail"/>
         <Entry Type="CraftingRecipeDefinition" Subtype="HandcartRail"/>
@@ -13,7 +13,7 @@
     <Definition xsi:type="MyObjectBuilder_CraftingRecipeDefinition" Copy="Append">
         <Id Type="MyObjectBuilder_CraftingRecipeDefinition" Subtype="SchematicHandcartRail"/>
         <CopyFrom Type="MyObjectBuilder_CraftingRecipeDefinition" Subtype="SchematicBase"/>
-        <DisplayName>Schematic: Handcart (Standard Gauge)</DisplayName>
+        <DisplayName>Schematic: Handcart</DisplayName>
         <Description>A document describing all the details of creating handcarts for standard gauge railways</Description>
         <Icon>Textures\GUI\Icons\Schematics\ScrollBackground_1.dds</Icon>
         <Icon>Textures\GUI\Icons\Cubes\RailStdGaugeHandcartResearch.dds</Icon>
@@ -28,7 +28,7 @@
     <Definition xsi:type="MyObjectBuilder_SchematicItemDefinition" Copy="Append">
         <Id Type="SchematicItem" Subtype="SchematicHandcartRail"/>
         <CopyFrom Type="SchematicItem" Subtype="SchematicBase"/>
-        <DisplayName>Schematic: Handcart (Standard Gauge)</DisplayName>
+        <DisplayName>Schematic: Handcart</DisplayName>
         <Description>A document describing all the details of creating handcarts for standard gauge railways</Description>
         <Icon>Textures\GUI\Icons\Schematics\ScrollBackground_1.dds</Icon>
         <Icon>Textures\GUI\Icons\Cubes\RailStdGaugeHandcartResearch.dds</Icon>

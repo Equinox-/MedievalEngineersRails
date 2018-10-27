@@ -5,16 +5,20 @@ using Equinox76561198048419394.RailSystem.Bendy;
 using Equinox76561198048419394.RailSystem.Util;
 using Sandbox.Game.Entities;
 using Sandbox.Game.GameSystems;
+using Sandbox.ModAPI;
 using VRage.Definitions;
 using VRage.Game;
 using VRage.Game.Entity;
+using VRage.Library.Logging;
 using VRage.ModAPI;
+using VRage.Network;
 using VRage.Voxels;
 using VRageMath;
 
 namespace Equinox76561198048419394.RailSystem.Voxel
 {
-    public static class RailGrader
+    [StaticEventOwner]
+    public static class RailGraderSystem
     {
         public static void Grade(Edge edge, bool fill, bool excavate)
         {
@@ -280,6 +284,60 @@ namespace Equinox76561198048419394.RailSystem.Voxel
             var box = new BoundingBoxD(pos - 1, pos + 1);
             foreach (var vox in _workingVoxels)
                 vox.DisableFarmingItemsIn(box);
+        }
+
+
+        private const int _gradingDesyncTol = 5;
+
+        private struct GradingConfig
+        {
+            public float Radius;
+            public uint DepositAvailable;
+            public uint ExcavateAvailable;
+            public byte MaterialToDeposit;
+            public uint DepositExpected;
+            public uint ExcavateExpected;
+        }
+
+        private static DateTime _lastGradingDesync = new DateTime(0);
+
+        public static void RaiseDoGrade(IEnumerable<RailGradeComponent> components, Vector3D pos, float radius, uint availableForDeposit,
+            uint availableForExcavate, byte fillMaterial, uint totalExcavated, uint totalDeposited)
+        {
+            MyAPIGateway.Multiplayer?.RaiseStaticEvent((x) => DoGrade, components.Select(x => x.Blit()).ToArray(), pos,
+                new GradingConfig()
+                {
+                    Radius = radius,
+                    DepositAvailable = availableForDeposit,
+                    ExcavateAvailable = availableForExcavate,
+                    MaterialToDeposit = fillMaterial,
+                    ExcavateExpected = totalExcavated,
+                    DepositExpected = totalDeposited
+                });
+        }
+
+        [Event]
+        [Broadcast]
+        private static void DoGrade(RailGradeComponentBlit[] components, Vector3D target, GradingConfig config)
+        {
+            uint deposited;
+            uint excavated;
+            bool triedToChange;
+            bool intersectedDynamic;
+            var cbox = new IRailGradeComponent[components.Length];
+            for (var i = 0; i < components.Length; i++)
+                cbox[i] = components[i];
+            DoGrading(cbox, target, config.Radius, config.DepositAvailable, config.ExcavateAvailable, null, config.MaterialToDeposit, out deposited,
+                out excavated, true, out triedToChange, out intersectedDynamic);
+
+            if (Math.Abs(config.DepositExpected - deposited) <= _gradingDesyncTol && Math.Abs(config.ExcavateExpected - excavated) <= _gradingDesyncTol) return;
+            
+            MyLog.Default.Warning($"Grading desync occured!  {config.DepositExpected} != {deposited}, {config.ExcavateExpected} != {excavated}");
+            var time = DateTime.Now;
+            if ((time - _lastGradingDesync) <= TimeSpan.FromSeconds(30)) return;
+            var red = new Vector4(1, 0, 0, 1);
+            MyAPIGateway.Utilities.ShowNotification("Grading desync occured!  If you experience movement problems try reconnecting.", 5000, null, red);
+            _lastGradingDesync = time;
         }
     }
 }

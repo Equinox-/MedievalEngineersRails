@@ -13,24 +13,22 @@ namespace Equinox76561198048419394.RailSystem.Util
             if (box.Contains(g.PositionComp.WorldAABB) == ContainmentType.Contains)
                 return g.GetBlocks().Count > 0;
 
-            OrientedBoundingBoxD orientedBoundingBoxD = OrientedBoundingBoxD.Create(box, g.PositionComp.WorldMatrixNormalizedInv);
+            var orientedBoundingBoxD = OrientedBoundingBoxD.Create(box, g.PositionComp.WorldMatrixNormalizedInv);
             orientedBoundingBoxD.Center *= g.GridSizeR;
             orientedBoundingBoxD.HalfExtent *= g.GridSizeR;
             box = box.TransformFast(g.PositionComp.WorldMatrixNormalizedInv);
-            Vector3D min = box.Min;
-            Vector3D max = box.Max;
-            Vector3I obbPt1 = new Vector3I((int) Math.Round(min.X * g.GridSizeR), (int) Math.Round(min.Y * g.GridSizeR),
-                (int) Math.Round(min.Z * g.GridSizeR));
-            Vector3I obbPt2 = new Vector3I((int) Math.Round(max.X * g.GridSizeR), (int) Math.Round(max.Y * g.GridSizeR),
-                (int) Math.Round(max.Z * g.GridSizeR));
-            Vector3I obbMin = Vector3I.Min(obbPt1, obbPt2);
-            Vector3I obbMax = Vector3I.Max(obbPt1, obbPt2);
-            Vector3I start = Vector3I.Max(obbMin, g.Min);
-            Vector3I end = Vector3I.Min(obbMax, g.Max);
+            var min = box.Min;
+            var max = box.Max;
+            var obbPt1 = new Vector3I((int) Math.Round(min.X * g.GridSizeR), (int) Math.Round(min.Y * g.GridSizeR), (int) Math.Round(min.Z * g.GridSizeR));
+            var obbPt2 = new Vector3I((int) Math.Round(max.X * g.GridSizeR), (int) Math.Round(max.Y * g.GridSizeR), (int) Math.Round(max.Z * g.GridSizeR));
+            var obbMin = Vector3I.Min(obbPt1, obbPt2);
+            var obbMax = Vector3I.Max(obbPt1, obbPt2);
+            var start = Vector3I.Max(obbMin, g.Min);
+            var end = Vector3I.Min(obbMax, g.Max);
             if (start.X > end.X || start.Y > end.Y || start.Z > end.Z)
                 return false;
-            Vector3I_RangeIterator vector3IRangeIterator = new Vector3I_RangeIterator(ref start, ref end);
-            Vector3I next = vector3IRangeIterator.Current;
+            var vector3IRangeIterator = new Vector3I_RangeIterator(ref start, ref end);
+            var next = vector3IRangeIterator.Current;
 
             while (vector3IRangeIterator.IsValid())
             {

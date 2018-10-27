@@ -2,6 +2,15 @@
 {
     public static class RailConstants
     {
+        public struct DebugOptions
+        {
+            public bool DrawGraphNodes;
+            public bool DrawGraphEdges;
+            public bool AssertsWithStacks;
+        }
+
+        public static DebugOptions Debug = new DebugOptions {AssertsWithStacks = true, DrawGraphEdges = true, DrawGraphNodes = true};
+
         // Maximum nodes in a single call
         public const int MaxNodesPlaced = 128;
 

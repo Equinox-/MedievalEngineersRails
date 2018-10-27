@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Serialization;
+using Equinox76561198048419394.RailSystem.Util;
 using Sandbox.ModAPI;
 using VRage;
 using VRage.Components.Entity.Animations;
@@ -9,6 +10,7 @@ using VRage.Factory;
 using VRage.Game;
 using VRage.Game.Components;
 using VRage.Game.ObjectBuilders.ComponentSystem;
+using VRage.Library.Logging;
 using VRage.ObjectBuilders;
 using VRage.Session;
 using VRageMath;
@@ -26,6 +28,8 @@ namespace Equinox76561198048419394.RailSystem.Bendy
         {
             base.Init(def);
             Definition = (BendyComponentDefinition) def;
+            _nodes = new Node[Definition.Nodes.Count];
+            _edges = new Edge[Definition.Edges.Count];
         }
 
         #region Serialization
@@ -49,7 +53,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy
 
         private void CacheMovableData()
         {
-            if (_nodes == null || Definition == null)
+            if (_nodes == null || Definition == null || _nodes.All(x => x == null))
                 return;
             _movableNodeData.Clear();
             for (var i = 0; i < Math.Min(Definition.Nodes.Count, _nodes.Length); i++)
@@ -70,6 +74,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy
 
         public override void Deserialize(MyObjectBuilder_EntityComponent bbase)
         {
+            base.Deserialize(bbase);
             var ob = (MyObjectBuilder_BendyComponent) bbase;
             _movableNodeData.Clear();
             if (ob.Overrides != null)
@@ -112,8 +117,6 @@ namespace Equinox76561198048419394.RailSystem.Bendy
             CloseNodesAndEdges();
             if (Graph == null)
                 return;
-            Array.Resize(ref _nodes, Definition.Nodes.Count);
-            Array.Resize(ref _edges, Definition.Edges.Count);
             var entityMatrix = Entity.PositionComp.WorldMatrix;
 
             for (var i = 0; i < _nodes.Length; i++)
@@ -126,11 +129,15 @@ namespace Equinox76561198048419394.RailSystem.Bendy
                 }
                 else
                 {
+                    Assert.False(Definition.Nodes[i].Movable,
+                        $"Creating movable bendy node {i} for entity {Entity}, component def {Definition.Id} without movable data");
+
                     var nodeMatrix = Definition.Nodes[i].Position * entityMatrix;
                     _nodes[i] = Graph.GetOrCreateNode(nodeMatrix.Translation, nodeMatrix.Up);
                     if (!Definition.Nodes[i].Movable)
                         _nodes[i].Pin(nodeMatrix);
                 }
+
                 if (_nodes[i] != null)
                     NodeAdded?.Invoke(this, _nodes[i]);
             }
@@ -147,6 +154,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy
                     _edges[i].CurveUpdated += OnCurveUpdated;
                 }
             }
+
             EdgeSetupChanged?.Invoke(this);
 
             if (_skeletonComponent != null)
@@ -250,6 +258,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy
                         EdgeRemoved?.Invoke(this, _edges[i]);
                         _edges[i].Close();
                     }
+
                     _edges[i] = null;
                 }
 
@@ -263,8 +272,10 @@ namespace Equinox76561198048419394.RailSystem.Bendy
                         if (!Definition.Nodes[i].Movable)
                             _nodes[i].UnpinTangent();
                     }
+
                     _nodes[i] = null;
                 }
+
             EdgeSetupChanged?.Invoke(this);
         }
     }

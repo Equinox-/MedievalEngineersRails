@@ -42,7 +42,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy
         public void UnpinTangent()
         {
             TangentPins--;
-            if (TangentPins == 0)
+            if (TangentPins == 0 && InScene)
                 MarkDirty();
             else if (TangentPins < 0)
                 MyLog.Default.Warning($"Unpinned node more than we pinned");

@@ -43,8 +43,8 @@
         </Edges>
 
         <Distance Min="7" Max="15" />
-        <MaxGradeRatio>0.1</MaxGradeRatio>
-        <MaxAngleDegrees>15</MaxAngleDegrees>
+        <MaxGradeRatio>0.2</MaxGradeRatio>
+        <MaxAngleDegrees>25</MaxAngleDegrees>
     </Definition>
 
     <Definition xsi:type="MyObjectBuilder_BendyPhysicsComponentDefinition">
@@ -61,9 +61,9 @@
         <Id Type="MyObjectBuilder_ConstructableComponent" Subtype="RailSteelBendy" />
 
         <Components>
-            <Component Tag="Timber" Count="6" /> <!-- ref value is 15 sleepers -->
-            <Component Tag="Ingot" Count="3" /> <!-- ref value is 20m of rail @ 10kg/m, 40kg/ingot-->
-            <Component Type="InventoryItem" Subtype="PartsMetal" Count="2" /> <!-- ref value 60 spikes @ 100g/spike, 1kg/part-->
+            <Component Tag="Timber" Count="10" /> <!-- ref value is 15 sleepers (15 timbers) -->
+            <Component Tag="Ingot" Count="4" /> <!-- ref value is 20m of rail @ 10kg/m, 40kg/ingot (5 ingots)-->
+            <Component Type="InventoryItem" Subtype="PartsMetal" Count="6" /> <!-- ref value 60 spikes @ 100g/spike, 1kg/part (6 parts)-->
         </Components>
 
         <BuildProgressModels>

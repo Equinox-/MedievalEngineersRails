@@ -2,7 +2,7 @@
 <Definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <Definition xsi:type="ResearchDefinition">
         <Id Type="ResearchDefinition" Subtype="RailSteel"/>
-        <DisplayName>Steel Rails (Standard Gauge)</DisplayName>
+        <DisplayName>Steel Rails</DisplayName>
         
         <Entry Type="CubeBlock" Subtype="RailSteelStraight"/>
         <Entry Type="HandItem" Subtype="RailSteelPlanner"/>
@@ -14,7 +14,7 @@
     <Definition xsi:type="MyObjectBuilder_CraftingRecipeDefinition" Copy="Append">
         <Id Type="MyObjectBuilder_CraftingRecipeDefinition" Subtype="SchematicRailSteel"/>
         <CopyFrom Type="MyObjectBuilder_CraftingRecipeDefinition" Subtype="SchematicBase"/>
-        <DisplayName>Schematic: Steel Rails (Standard Gauge)</DisplayName>
+        <DisplayName>Schematic: Steel Rails</DisplayName>
         <Description>A document describing all the details of building standard gauge steel rails.</Description>
         <Icon>Textures\GUI\Icons\Schematics\ScrollBackground_1.dds</Icon>
         <Icon>Textures\GUI\Icons\Equinox\RailSteelResearch.dds</Icon>
@@ -28,7 +28,7 @@
     <Definition xsi:type="MyObjectBuilder_SchematicItemDefinition" Copy="Append">
         <Id Type="SchematicItem" Subtype="SchematicRailSteel"/>
         <CopyFrom Type="SchematicItem" Subtype="SchematicBase"/>
-        <DisplayName>Schematic: Steel Rails (Standard Gauge)</DisplayName>
+        <DisplayName>Schematic: Steel Rails</DisplayName>
         <Description>A document describing all the details of building standard gauge steel rails.</Description>
         <Icon>Textures\GUI\Icons\Schematics\ScrollBackground_1.dds</Icon>
         <Icon>Textures\GUI\Icons\Equinox\RailSteelResearch.dds</Icon>

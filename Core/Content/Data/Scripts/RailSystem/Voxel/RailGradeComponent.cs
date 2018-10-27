@@ -6,11 +6,15 @@ using Equinox76561198048419394.RailSystem.Bendy;
 using Equinox76561198048419394.RailSystem.Construction;
 using Equinox76561198048419394.RailSystem.Util;
 using Sandbox.Game.Entities;
+using Sandbox.Game.GameSystems;
+using Sandbox.ModAPI;
+using VRage.Components;
 using VRage.Factory;
 using VRage.Game;
 using VRage.Game.Components;
 using VRage.Game.ObjectBuilders.ComponentSystem;
 using VRage.ObjectBuilders;
+using VRage.Utils;
 using VRage.Voxels;
 using VRageMath;
 
@@ -86,20 +90,18 @@ namespace Equinox76561198048419394.RailSystem.Voxel
         private bool _isComplete = false;
 
         private bool _shapeDirty = true;
-        private readonly List<OrientedBoundingBox> _requiredShape = new List<OrientedBoundingBox>();
         private BoundingBoxD _localBox;
 
         private void CalculateShape()
         {
             if (!Definition.RequiredSupport.HasValue)
                 return;
-            _shapeDirty = false;
             var shape = Definition.RequiredSupport.Value;
             var edge = _bendy.Edges.FirstOrDefault();
-            if (edge == null)
+            var curve = edge?.Curve;
+            if (curve == null)
                 return;
-            var curve = edge.Curve;
-            _requiredShape.Clear();
+            _shapeDirty = false;
             _localBox = BoundingBoxD.CreateInvalid();
             for (var i = 0; i < shape.Segments; i++)
             {
@@ -107,7 +109,8 @@ namespace Equinox76561198048419394.RailSystem.Voxel
                 {
                     var t = (i + 0.5f) / shape.Segments;
                     var pos = (Vector3) Vector3D.Transform(curve.Sample(t), Entity.PositionComp.WorldMatrixNormalizedInv);
-                    var up = Vector3.TransformNormal(Vector3.Lerp((Vector3) edge.From.Up, (Vector3) edge.To.Up, t), Entity.PositionComp.WorldMatrixNormalizedInv);
+                    var up = Vector3.TransformNormal(Vector3.Lerp((Vector3) edge.From.Up, (Vector3) edge.To.Up, t),
+                        Entity.PositionComp.WorldMatrixNormalizedInv);
                     var tan = Vector3.TransformNormal((Vector3) curve.SampleDerivative(t), Entity.PositionComp.WorldMatrixNormalizedInv);
                     tan.Normalize();
                     up.Normalize();
@@ -136,7 +139,6 @@ namespace Equinox76561198048419394.RailSystem.Voxel
                 }
 
                 var obb = new OrientedBoundingBox(Vector3.Transform(box.Center, matrix), box.HalfExtents, Quaternion.CreateFromRotationMatrix(matrix));
-                _requiredShape.Add(obb);
                 _localBox = _localBox.Include(obb.GetAABB());
             }
         }
@@ -150,51 +152,50 @@ namespace Equinox76561198048419394.RailSystem.Voxel
 
             if (_shapeDirty)
                 CalculateShape();
+            var edge = _bendy.Edges.FirstOrDefault();
+            var curve = edge?.Curve;
+            if (curve == null)
+                return true;
 
+            var shape = Definition.RequiredSupport.Value;
             var sphere = new BoundingSphereD(Vector3D.Transform(_localBox.Center, Entity.PositionComp.WorldMatrix), _localBox.HalfExtents.Length());
-            var ents = MyEntities.GetTopMostEntitiesInSphere(ref sphere);
+            var entities = MyEntities.GetTopMostEntitiesInSphere(ref sphere);
+            var gravity = MyGravityProviderSystem.CalculateTotalGravityInPoint(Entity.GetPosition());
+            gravity.Normalize();
 
             var supported = 0;
             var total = 0;
-            foreach (var obb in _requiredShape)
+            for (var i = 0; i < shape.Segments; i++)
             {
-                var worldObb = new OrientedBoundingBoxD(obb.Center, obb.HalfExtent, obb.Orientation);
-                worldObb.Transform(Entity.WorldMatrix);
+                var t = (i + 0.5f) / shape.Segments;
+                var pos = curve.Sample(t);
+                pos += gravity;
 
-                var worldAbb = worldObb.GetAABB();
-
-                var halfExt = new Vector3I((int) Math.Ceiling(worldAbb.HalfExtents.X), (int) Math.Ceiling(worldAbb.HalfExtents.Y), (int) Math.Ceiling(worldAbb.HalfExtents.Z));
-                var halfExtNeg = -halfExt;
-                for (var itr = new Vector3I_RangeIterator(ref halfExtNeg, ref halfExt); itr.IsValid(); itr.MoveNext())
+                var aabb = new BoundingBoxD(pos - 0.5f, pos + 0.5f);
+                
+                var found = false;
+                foreach (var e in entities)
                 {
-                    var cell = new BoundingBoxD(worldAbb.Center + itr.Current - 0.5f, worldAbb.Center + itr.Current + 0.5f);
-
-                    if (worldObb.Contains(ref cell) == ContainmentType.Disjoint) continue;
-
-                    var found = false;
-                    foreach (var e in ents)
+                    var vox = e as MyVoxelBase;
+                    var grid = e as MyCubeGrid;
+                    if (vox != null)
                     {
-                        var vox = e as MyVoxelBase;
-                        var grid = e as MyCubeGrid;
-                        if (vox != null)
-                        {
-                            Vector3I vc;
-                            var test = cell.Center;
-                            MyVoxelCoordSystems.WorldPositionToVoxelCoord(vox.PositionLeftBottomCorner, ref test, out vc);
-                            _voxelStorage.Resize(Vector3I.One);
-                            vox.Storage.ReadRange(_voxelStorage, MyStorageDataTypeFlags.Content, 0, vc, vc);
-                            found |= _voxelStorage.Get(MyStorageDataTypeEnum.Content, ref Vector3I.Zero) > 0;
-                        }
-                        else if (grid != null)
-                            found |= grid.AnyBlocksInAABB(cell);
-
-                        if (found) break;
+                        Vector3I vc;
+                        var test =pos;
+                        MyVoxelCoordSystems.WorldPositionToVoxelCoord(vox.PositionLeftBottomCorner, ref test, out vc);
+                        _voxelStorage.Resize(Vector3I.One);
+                        vox.Storage.ReadRange(_voxelStorage, MyStorageDataTypeFlags.Content, 0, vc, vc);
+                        found |= _voxelStorage.Get(MyStorageDataTypeEnum.Content, ref Vector3I.Zero) > 0;
                     }
+                    else if (grid != null)
+                        found |= grid.AnyBlocksInAABB(aabb);
 
-                    if (found)
-                        supported++;
-                    total++;
+                    if (found) break;
                 }
+
+                if (found)
+                    supported++;
+                total++;
             }
 
             return supported >= 0.8 * total;
@@ -227,7 +228,7 @@ namespace Equinox76561198048419394.RailSystem.Voxel
             excavateShape = Excavation;
         }
     }
-    
+
     public struct RailGradeComponentBlit : IRailGradeComponent
     {
         public EdgeBlit Edge;
@@ -236,7 +237,7 @@ namespace Equinox76561198048419394.RailSystem.Voxel
         public void Unblit(out RailGradeShape fillShape, out RailGradeShape excavateShape)
         {
             fillShape = excavateShape = null;
-            
+
             var def = MyDefinitionManager.Get<RailGradeComponentDefinition>(Definition);
             if (def == null)
                 return;
@@ -246,7 +247,7 @@ namespace Equinox76561198048419394.RailSystem.Voxel
                 var s = def.Support.Value;
                 fillShape = new RailGradeShape(Edge, s.Width, s.RelaxAngleRadians, s.VerticalOffset, s.Segments, s.Height);
             }
-            
+
             if (def.Excavate.HasValue)
             {
                 var s = def.Excavate.Value;

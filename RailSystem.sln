@@ -52,6 +52,12 @@ ProjectSection(SolutionItems) = preProject
 	ModPack\Content\Data\QuestUnify.sbc = ModPack\Content\Data\QuestUnify.sbc
 EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ModPackFun", "ModPackFun", "{AD639D43-C304-4D17-A86B-47918259FFF0}"
+ProjectSection(SolutionItems) = preProject
+	ModPackFun\Content\Data\SteelAdjustments.sbc = ModPackFun\Content\Data\SteelAdjustments.sbc
+	ModPackFun\Content\Data\WoodAdjustments.sbc = ModPackFun\Content\Data\WoodAdjustments.sbc
+EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64

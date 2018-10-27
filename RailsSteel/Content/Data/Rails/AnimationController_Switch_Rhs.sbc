@@ -1,0 +1,93 @@
+<?xml version="1.0"?>
+<Definitions xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Definition xsi:type="AnimationControllerDefinition" Enabled="true" Merge="Append">
+    <Id Type="MyObjectBuilder_AnimationControllerComponent" Subtype="RailSwitchRhsParallelSkin" />
+    <CopyFrom xsi:nil="true" />
+    <Layers>
+      <Layer>
+        <Name>RollingStock</Name>
+        <Mode>Replace</Mode>
+        <StateMachine>RollingStock</StateMachine>
+        <InitialSMNode>Straight</InitialSMNode>
+        <BoneMask>ControlRod PointRod RailDiverging RailStraight</BoneMask>
+      </Layer>
+    </Layers>
+    <StateMachines>
+      <StateMachine>
+        <Name>RollingStock</Name>
+        <Nodes>
+          <Node>
+            <Name>Diverging</Name>
+            <AnimationTree>
+              <EdPos>
+                <X>-158</X>
+                <Y>2</Y>
+              </EdPos>
+              <Child xsi:type="MyObjectBuilder_AnimationTreeNodeTrack">
+                <EdPos>
+                  <X>241</X>
+                  <Y>-43</Y>
+                </EdPos>
+                <PathToModel>Models\Equinox\RailsGaugeStandard\Steel\Switch_RightHand_Parallel_Skin_Diverging.mwm</PathToModel>
+                <AnimationName>AnimStack::Armature|Action</AnimationName>
+                <Loop>false</Loop>
+                <Speed>-0</Speed>
+                <Interpolate>true</Interpolate>
+              </Child>
+            </AnimationTree>
+            <EdPos>
+              <X>70</X>
+              <Y>9</Y>
+            </EdPos>
+            <Type>Normal</Type>
+          </Node>
+          <Node>
+            <Name>Straight</Name>
+            <AnimationTree>
+              <EdPos>
+                <X>-158</X>
+                <Y>2</Y>
+              </EdPos>
+              <Child xsi:type="MyObjectBuilder_AnimationTreeNodeTrack">
+                <EdPos>
+                  <X>241</X>
+                  <Y>-43</Y>
+                </EdPos>
+                <PathToModel>Models\Equinox\RailsGaugeStandard\Steel\Switch_RightHand_Parallel_Skin_Straight.mwm</PathToModel>
+                <AnimationName>AnimStack::Armature|ArmatureAction</AnimationName>
+                <Loop>false</Loop>
+                <Speed>1</Speed>
+                <Interpolate>true</Interpolate>
+              </Child>
+            </AnimationTree>
+            <EdPos>
+              <X>-102</X>
+              <Y>4</Y>
+            </EdPos>
+            <Type>Normal</Type>
+          </Node>
+        </Nodes>
+        <Transitions>
+          <Transition From="Straight" To="Diverging" TimeInSec="2" Sync="Restart">
+            <Conditions>
+              <Conjunction>
+                <Condition Lhs="switch_0_state" Op="Equal" Rhs="0" />
+              </Conjunction>
+            </Conditions>
+            <Priority xsi:nil="true" />
+            <Curve>Smooth</Curve>
+          </Transition>
+          <Transition From="Diverging" To="Straight" TimeInSec="2" Sync="Restart">
+            <Conditions>
+              <Conjunction>
+                <Condition Lhs="switch_0_state" Op="Equal" Rhs="1" />
+              </Conjunction>
+            </Conditions>
+            <Priority xsi:nil="true" />
+            <Curve>Smooth</Curve>
+          </Transition>
+        </Transitions>
+      </StateMachine>
+    </StateMachines>
+  </Definition>
+</Definitions>

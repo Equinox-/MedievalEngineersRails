@@ -49,6 +49,30 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Shape
             _physicsProxies.Clear();
         }
 
+        private bool _destroyEnvItems;
+
+        public void DestroyEnvItems()
+        {
+            if (!Definition.DestroyEnvItems)
+                return;
+            _destroyEnvItems = true;
+            if (Entity.InScene && Boxes.Count > 0)
+                DestroyEnvItemsInternal();
+        }
+
+        private void DestroyEnvItemsInternal()
+        {
+            _destroyEnvItems = false;
+
+            foreach (var box in Boxes)
+            {
+                var aabb = new BoundingBox(box.Center - box.HalfExtent, box.Center + box.HalfExtent);
+                var tmp = aabb;
+                tmp.Inflate(new Vector3(1, 10, 1));
+                FarmingExtensions.DisableItemsIn(new OrientedBoundingBoxD(tmp, Entity.PositionComp.WorldMatrix));
+            }
+        }
+        
         protected override void BoxesUpdated(List<OrientedBoundingBox> boxes)
         {
             while (_physicsProxies.Count > boxes.Count)
@@ -66,6 +90,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Shape
                     PersistentFlags = MyPersistentEntityFlags2.InScene
                 });
                 ent.Save = false;
+                ent.IsPreview = true;
                 ent.Components.Add(new BendyShapeProxy(Entity));
                 if (DebugAsChildren)
                     Entity.Hierarchy.AddChild(ent);
@@ -91,18 +116,14 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Shape
                     ent.PositionComp.WorldMatrix = m * Entity.PositionComp.WorldMatrix;
                 var aabb = new BoundingBox(box.Center - box.HalfExtent, box.Center + box.HalfExtent);
                 ent.PositionComp.LocalAABB = aabb;
-
-                if (Definition.DestroyEnvItems)
-                {
-                    var tmp = aabb;
-                    tmp.Inflate(new Vector3(1, 10, 1));
-                    FarmingExtensions.DisableItemsIn(new OrientedBoundingBoxD(tmp, ent.PositionComp.WorldMatrix));
-                }
-                const int DefaultCollisionLayer = 15;
-                ent.InitBoxPhysics(Definition.Material, box.Center, box.HalfExtent * 2, 0f, 0f, 0f, DefaultCollisionLayer, RigidBodyFlag.RBF_STATIC);
+                const int defaultCollisionLayer = 15;
+                ent.InitBoxPhysics(Definition.Material, box.Center, box.HalfExtent * 2, 0f, 0f, 0f, defaultCollisionLayer, RigidBodyFlag.RBF_STATIC);
                 ent.Physics.Enabled = true;
                 ent.RaisePhysicsChanged();
             }
+            
+            if (_destroyEnvItems)
+                DestroyEnvItemsInternal();
         }
     }
 

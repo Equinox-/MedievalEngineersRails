@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Serialization;
 using Equinox76561198048419394.RailSystem.Util;
+using VRage.Definitions.Cube;
 using VRage.Game;
 using VRage.Game.Definitions;
 using VRage.ObjectBuilders;
@@ -51,13 +52,28 @@ namespace Equinox76561198048419394.RailSystem.Construction
         {
             base.Init(builder);
             var def = (MyObjectBuilder_ConstructableComponentDefinition) builder;
+            
             Components = new ReadOnlyList<CcComponent>(def.Components.Select(x => new CcComponent(x)).ToList());
+            TotalComponents = Components.Sum(x => x.Count);
+            if (TotalComponents == 0)
+                MyDefinitionErrors.Add(Context, $"{nameof(MyObjectBuilder_ConstructableComponentDefinition.BuildProgressModels)} has no values",
+                    TErrorSeverity.Critical);            
+            
             var models = def.BuildProgressModels.Select(x => new CcBuildModel(x)).ToList();
             models.Sort((a, b) => a.BuildPercentUpperBound.CompareTo(b.BuildPercentUpperBound));
-            TotalComponents = Components.Sum(x => x.Count);
             BuildModels = new ReadOnlyList<CcBuildModel>(models);
-            BuildTime = def.BuildTime;
-            MaxIntegrity = def.MaxIntegrity;
+            if (BuildModels.Count == 0)
+                MyDefinitionErrors.Add(Context, $"{nameof(MyObjectBuilder_ConstructableComponentDefinition.BuildProgressModels)} has no values",
+                    TErrorSeverity.Critical);
+            
+            if (!def.BuildTime.HasValue)
+                MyDefinitionErrors.Add(Context, $"{nameof(MyObjectBuilder_ConstructableComponentDefinition.BuildTime)} has no value", TErrorSeverity.Critical);
+            BuildTime = def.BuildTime != null ? (TimeSpan) def.BuildTime.Value : TimeSpan.Zero;
+            
+            if (!def.MaxIntegrity.HasValue)
+                MyDefinitionErrors.Add(Context, $"{nameof(MyObjectBuilder_ConstructableComponentDefinition.MaxIntegrity)} has no value",
+                    TErrorSeverity.Critical);
+            MaxIntegrity = def.MaxIntegrity ?? 0;
         }
 
         public CcBuildModel BuildModelFor(float percent)
@@ -122,9 +138,9 @@ namespace Equinox76561198048419394.RailSystem.Construction
         public CcObBuildModel[] BuildProgressModels;
 
         [XmlElement("BuildTime")]
-        public TimeDefinition BuildTime;
+        public TimeDefinition? BuildTime;
 
         [XmlElement("MaxIntegrity")]
-        public float MaxIntegrity;
+        public float? MaxIntegrity;
     }
 }

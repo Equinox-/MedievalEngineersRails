@@ -60,7 +60,7 @@
         <!-- Behavior -->
         <StanceToBehavior>
             <StanceName>NormalMode</StanceName>
-            <BehaviorId Type="MyObjectBuilder_RailGraderBehaviorDefinition" Subtype="GraderRail" />
+            <BehaviorId Type="MyObjectBuilder_RailGraderBehaviorDefinition" Subtype="GraderRailCreative" />
         </StanceToBehavior>
         <StanceToBehavior>
             <StanceName>CombatMode</StanceName>

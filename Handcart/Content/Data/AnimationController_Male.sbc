@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<Definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<Definitions xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <Definition xsi:type="AnimationControllerDefinition" Enabled="true" Merge="Append">
     <Id Type="MyObjectBuilder_CharacterAnimationControllerComponent" Subtype="Medieval_male" />
     <CopyFrom xsi:nil="true" />
@@ -52,16 +52,9 @@
               </EdPos>
               <Child xsi:type="MyObjectBuilder_AnimationTreeNodeSetter">
                 <EdPos>
-                  <X>230</X>
-                  <Y>-66</Y>
+                  <X>-206</X>
+                  <Y>-84</Y>
                 </EdPos>
-                <Time>0</Time>
-                <Value>
-                  <Name>sitting</Name>
-                  <Value>1</Value>
-                </Value>
-                <ResetValueEnabled>false</ResetValueEnabled>
-                <ResetValue>0</ResetValue>
                 <Child xsi:type="MyObjectBuilder_AnimationTreeNodeSpeedModifier">
                   <EdPos>
                     <X>-50</X>
@@ -70,11 +63,11 @@
                   <ParameterName>rail_speed_z</ParameterName>
                   <Child xsi:type="MyObjectBuilder_AnimationTreeNodeTrack">
                     <EdPos>
-                      <X>199</X>
-                      <Y>-78</Y>
+                      <X>364</X>
+                      <Y>-197</Y>
                     </EdPos>
                     <PathToModel>Models\Equinox\Handcart\Animation\Handcart_User_Male_Forward.mwm</PathToModel>
-                    <AnimationName>AnimStack::Armature|ArmatureAction.001</AnimationName>
+                    <AnimationName>AnimStack::Armature|Action</AnimationName>
                     <Loop>true</Loop>
                     <Speed>1</Speed>
                     <Interpolate>true</Interpolate>
@@ -88,37 +81,122 @@
                     <Speed>1000</Speed>
                   </SpeedMapping>
                 </Child>
+                <Time>0</Time>
+                <Value>
+                  <Name>sitting</Name>
+                  <Value>1</Value>
+                </Value>
+                <ResetValueEnabled>false</ResetValueEnabled>
+                <ResetValue>0</ResetValue>
               </Child>
             </AnimationTree>
             <EdPos>
-              <X>-539</X>
-              <Y>180</Y>
+              <X>-455</X>
+              <Y>224</Y>
             </EdPos>
             <Type>Normal</Type>
           </Node>
           <Node>
-            <Name>AnimSync</Name>
+            <Name>AnimSyncForward</Name>
             <EdPos>
-              <X>-235</X>
-              <Y>63</Y>
+              <X>-135</X>
+              <Y>223</Y>
+            </EdPos>
+            <Type>PassThrough</Type>
+          </Node>
+          <Node>
+            <Name>HandcardRailReverse</Name>
+            <EdPos>
+              <X>-513</X>
+              <Y>18</Y>
+            </EdPos>
+            <Type>Normal</Type>
+
+            <AnimationTree>
+              <EdPos>
+                <X>-468</X>
+                <Y>-78</Y>
+              </EdPos>
+              <Child xsi:type="MyObjectBuilder_AnimationTreeNodeSetter">
+                <EdPos>
+                  <X>-206</X>
+                  <Y>-84</Y>
+                </EdPos>
+                <Child xsi:type="MyObjectBuilder_AnimationTreeNodeSpeedModifier">
+                  <EdPos>
+                    <X>-50</X>
+                    <Y>-68</Y>
+                  </EdPos>
+                  <ParameterName>rail_speed_z</ParameterName>
+                  <Child xsi:type="MyObjectBuilder_AnimationTreeNodeTrack">
+                    <EdPos>
+                      <X>364</X>
+                      <Y>-197</Y>
+                    </EdPos>
+                    <PathToModel>Models\Equinox\Handcart\Animation\Handcart_User_Male_Forward.mwm</PathToModel>
+                    <AnimationName>AnimStack::Armature|Action</AnimationName>
+                    <Loop>true</Loop>
+                    <Speed>1</Speed>
+                    <Interpolate>true</Interpolate>
+                  </Child>
+                  <SpeedMapping>
+                    <Param>-1000</Param>
+                    <Speed>1000</Speed>
+                  </SpeedMapping>
+                  <SpeedMapping>
+                    <Param>1000</Param>
+                    <Speed>-1000</Speed>
+                  </SpeedMapping>
+                </Child>
+                <Time>0</Time>
+                <Value>
+                  <Name>sitting</Name>
+                  <Value>1</Value>
+                </Value>
+                <ResetValueEnabled>false</ResetValueEnabled>
+                <ResetValue>0</ResetValue>
+              </Child>
+            </AnimationTree>
+          </Node>
+          <Node>
+            <Name>AnimSyncReverse</Name>
+            <EdPos>
+              <X>-178</X>
+              <Y>19</Y>
             </EdPos>
             <Type>PassThrough</Type>
           </Node>
         </Nodes>
         <Transitions>
-          <Transition Name="equi_attach_end" From="HandcartRailForward" To="Nothing" TimeInSec="0" Sync="Restart">
+          <Transition Name="equi_attach_end" From="HandcartRailForward" To="Nothing" TimeInSec="1" Sync="Restart">
             <Priority xsi:nil="true" />
             <Curve>Smooth</Curve>
           </Transition>
-          <Transition Name="equi_handcart_rail_forward" From="Nothing" To="HandcartRailForward" TimeInSec="0" Sync="Restart">
+          <Transition Name="equi_handcart_rail_forward" From="Nothing" To="HandcartRailForward" TimeInSec="1" Sync="Restart">
             <Priority xsi:nil="true" />
             <Curve>Smooth</Curve>
           </Transition>
-          <Transition Name="equi_rail_sync" From="HandcartRailForward" To="AnimSync" TimeInSec="0" Sync="Restart">
+          <Transition Name="equi_rail_sync" From="HandcartRailForward" To="AnimSyncForward" TimeInSec="0" Sync="Restart">
             <Priority xsi:nil="true" />
             <Curve>Smooth</Curve>
           </Transition>
-          <Transition From="AnimSync" To="HandcartRailForward" TimeInSec="0" Sync="Restart">
+          <Transition From="AnimSyncForward" To="HandcartRailForward" TimeInSec="1" Sync="Restart">
+            <Priority xsi:nil="true" />
+            <Curve>Smooth</Curve>
+          </Transition>
+          <Transition Name="equi_attach_end" From="HandcardRailReverse" To="Nothing" TimeInSec="1" Sync="Restart">
+            <Priority xsi:nil="true" />
+            <Curve>Smooth</Curve>
+          </Transition>
+          <Transition Name="equi_handcart_rail_reverse" From="Nothing" To="HandcardRailReverse" TimeInSec="1" Sync="Restart">
+            <Priority xsi:nil="true" />
+            <Curve>Smooth</Curve>
+          </Transition>
+          <Transition Name="equi_rail_sync" From="HandcardRailReverse" To="AnimSyncReverse" TimeInSec="0" Sync="Restart">
+            <Priority xsi:nil="true" />
+            <Curve>Smooth</Curve>
+          </Transition>
+          <Transition From="AnimSyncReverse" To="HandcardRailReverse" TimeInSec="1" Sync="Restart">
             <Priority xsi:nil="true" />
             <Curve>Smooth</Curve>
           </Transition>

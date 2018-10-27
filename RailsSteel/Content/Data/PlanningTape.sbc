@@ -21,8 +21,10 @@
         <MaxDurability>1</MaxDurability>
 
         <Position>
-            <Slot>OffHand</Slot>
             <Slot>MainHand</Slot>
+        </Position>
+        <Position>
+            <Slot>OffHand</Slot>
         </Position>
 
         <Animation>Rope</Animation>
@@ -70,7 +72,7 @@
         <DisplayName>Rail Planner (Standard Gauge, Steel)</DisplayName>
         <Description>Rail Planner for standard gauge, steel rails</Description>
         <Category>Weaving</Category>
-        <Icon>Textures\GUI\Icons\Equinox\RailPlannerGauge2Wood.dds</Icon>
+        <Icon>Textures\GUI\Icons\Equinox\RailSteelCurve.dds</Icon>
         <Prerequisites>
             <Item Amount="10" Type="InventoryItem" Subtype="StringLinen"/>
             <Item Amount="1" Tag="Timber" />

@@ -2,7 +2,7 @@
 <Definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <Definition xsi:type="MyObjectBuilder_CubeBlockDefinition">
         <Id Type="MyObjectBuilder_CubeBlock" Subtype="Bogie" />
-        <DisplayName>Bogie (Standard Gauge)</DisplayName>
+        <DisplayName>Bogie</DisplayName>
         <Icon>Textures\GUI\Icons\Cubes\RailStdGaugeBogieBasic.dds</Icon>
         <Public>true</Public>
         <Model>Models\Equinox\Bogie\Bogie.mwm</Model>
@@ -11,7 +11,7 @@
 
         <CubeSize>Small</CubeSize>
         <BlockTopology>TriangleMesh</BlockTopology>
-        <Size x="6" y="3" z="8" />
+        <Size x="5" y="3" z="8" />
         <ModelOffset x="0" y="0" z="0" />
         <Components>
             <Component Tag="Timber" Count="6" />
@@ -23,7 +23,7 @@
         <MaxIntegrity>27500</MaxIntegrity>
         <VoxelPlacement>
             <StaticMode>
-                <PlacementMode>None</PlacementMode>
+                <PlacementMode>OutsideVoxel</PlacementMode>
             </StaticMode>
             <DynamicMode>
                 <PlacementMode>OutsideVoxel</PlacementMode>
@@ -33,7 +33,7 @@
 
     <Definition xsi:type="MyObjectBuilder_CraftingRecipeDefinition">
         <Id Type="MyObjectBuilder_CraftingRecipeDefinition" Subtype="Bogie" />
-        <DisplayName>Bogie (Standard Gauge)</DisplayName>
+        <DisplayName>Bogie</DisplayName>
         <Icon>Textures\GUI\Icons\Cubes\RailStdGaugeBogieBasic.dds</Icon>
         <Category>MetalWorks</Category>
         <Prerequisites>
@@ -42,9 +42,9 @@
             <Item Type="InventoryItem" Subtype="PartsMetal" Amount="24"/>
         </Prerequisites>
         <Results>
-            <Item Amount="1" Type="CubeBlock" Subtype="Bogie" />
+            <Item Type="CubeBlock" Subtype="Bogie" Amount="1" />
         </Results>
-        <CraftingTime Seconds="15" />
+        <CraftingTime Seconds="5" />
     </Definition>
 
     <Definition xsi:type="MyObjectBuilder_BogieComponentDefinition">

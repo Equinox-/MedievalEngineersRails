@@ -111,12 +111,14 @@ namespace Equinox76561198048419394.RailSystem.Voxel
             return IsInsideHelper(pt, null);
         }
 
-        private bool IsInsideHelper(Vector3D pt, IEnumerable<int> selector)
+        private static readonly Vector3D QueryDir = Vector3D.Up;
+
+        private bool IsInsideHelper(Vector3D pt, List<int> selector)
         {
             // ReSharper disable once ImpureMethodCallOnReadonlyValueField
             if (Box.Contains(pt) == ContainmentType.Disjoint)
                 return false;
-            var ray = new RayD(pt, Vector3D.Up);
+            var ray = new RayD(pt, QueryDir);
             double dist;
             var i = 0;
             if (selector != null)
@@ -142,25 +144,25 @@ namespace Equinox76561198048419394.RailSystem.Voxel
 
         public float GetDensity(ref Vector3D voxelCoord, int iterations = 3)
         {
-            Vector3 queryDir = Vector3.Up;
-
             // ReSharper disable once ImpureMethodCallOnReadonlyValueField
             if (Box.Contains(voxelCoord) == ContainmentType.Disjoint)
                 return 0f;
             var inflatedBox = new BoundingBoxD(voxelCoord - 0.5f, voxelCoord + 0.5f);
-            var queryBox = new BoundingBoxD(inflatedBox.Min - 0.1f, inflatedBox.Max + 0.1f + queryDir * 1000);
+            var queryBox = new BoundingBoxD(inflatedBox.Min - 0.1f, inflatedBox.Max + 0.1f + QueryDir * 1000);
 
-            int hits = 0;
-            foreach (var k in _tris)
             {
-                if (!inflatedBox.IntersectsTriangle(k.Origin, k.Origin + k.Edge1, k.Origin + k.Edge2))
-                    continue;
-                hits++;
-                break;
-            }
+                var hits = 0;
+                foreach (var k in _tris)
+                {
+                    if (!inflatedBox.IntersectsTriangle(k.Origin, k.Origin + k.Edge1, k.Origin + k.Edge2))
+                        continue;
+                    hits++;
+                    break;
+                }
 
-            if (hits == 0)
-                return IsInside(voxelCoord) ? 1 : 0;
+                if (hits == 0)
+                    return IsInside(voxelCoord) ? 1 : 0;
+            }
 
             List<int> tmp;
             if (!_stackBorrow.TryPop(out tmp))

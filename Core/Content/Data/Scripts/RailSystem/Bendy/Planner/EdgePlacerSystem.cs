@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Equinox76561198048419394.RailSystem.Bendy.Shape;
 using Equinox76561198048419394.RailSystem.Construction;
 using Equinox76561198048419394.RailSystem.Util;
 using Medieval.Constants;
@@ -22,7 +23,8 @@ using VRageMath;
 
 namespace Equinox76561198048419394.RailSystem.Bendy.Planner
 {
-    public class EdgePlacerSystem : IMyEventOwner
+    [StaticEventOwner]
+    public static class EdgePlacerSystem
     {
         public delegate void DelEdgeModified(MyEntity holderEntity, IMyPlayer holderPlayer, MyEntity modifiedEntity);
 
@@ -88,7 +90,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
                 var elevationNext = Vector3D.Distance(next, center);
                 var deltaElevation = elevationNext - elevationHere;
                 var grade = deltaElevation / result.Length;
-                result.Grade = Math.Abs(grade);
+                result.Grade = grade;
             }
 
             return result;
@@ -112,13 +114,13 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
             {
                 if (errors == null)
                     return false;
-                errors.Add($"Too long {jointData.Length:F1} m > {def.Distance.Max:F1} m");
+                errors.Add($"Too long {jointData.Length:F1} m >= {def.Distance.Max:F1} m");
             }
             else if (jointData.Length < def.Distance.Min)
             {
                 if (errors == null)
                     return false;
-                errors.Add($"Too short {jointData.Length:F1} m < {def.Distance.Max:F1} m");
+                errors.Add($"Too short {jointData.Length:F1} m <= {def.Distance.Min:F1} m");
             }
 
             if (jointData.BendRadians.HasValue)
@@ -128,7 +130,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
                 {
                     if (errors == null)
                         return false;
-                    errors.Add($"Too curvy {angle * 180 / Math.PI:F0}º > {def.MaxAngleDegrees:F0}º");
+                    errors.Add($"Too curvy {angle * 180 / Math.PI:F0}º >= {def.MaxAngleDegrees:F0}º");
                 }
             }
 
@@ -137,11 +139,11 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
             {
                 var grade = jointData.Grade.Value;
                 // ReSharper disable once InvertIf
-                if (grade > def.MaxGradeRatio)
+                if (Math.Abs(grade) > def.MaxGradeRatio)
                 {
                     if (errors == null)
                         return false;
-                    errors.Add($"Too steep {grade * 100:F0}% > {def.MaxGradeRatio * 100:F0}%");
+                    errors.Add($"Too steep {grade * 100:F0}% {(grade < 0 ? "<= -" : ">= ")}{def.MaxGradeRatio * 100:F0}%");
                 }
             }
 
@@ -176,17 +178,12 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
             {
                 var here = layer?.GetNode(nodes[i]);
                 var herePos = here?.Position ?? nodes[i];
-                var nextPos = i + 1 < nodes.Length ? nodes[i + 1] : here?.Opposition(nodes[i - 1])?.Position;
-                if (i == 0 && here != null)
+                if (i > 0)
                 {
-                    prevPos = here.Opposition(nodes[i + 1])?.Position;
-                    if (prevPos.HasValue && !VerifyJoint(def, null, prevPos.Value, herePos, errors) && errors == null)
+                    var nextPos = i + 1 < nodes.Length ? nodes[i + 1] : here?.Opposition(nodes[i - 1])?.Position;
+                    if (nextPos.HasValue && !VerifyJoint(def, prevPos, herePos, nextPos.Value, errors) && errors == null)
                         return false;
                 }
-
-                if (nextPos.HasValue && !VerifyJoint(def, prevPos, herePos, nextPos.Value, errors) && errors == null)
-                    return false;
-
                 prevPos = herePos;
             }
 
@@ -318,6 +315,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
                     EntityDefinitionId = (MyDefinitionId) cfg.Placed,
                     PersistentFlags = MyPersistentEntityFlags2.InScene,
                     PositionAndOrientation = new MyPositionAndOrientation(worldMatrix),
+                    SubtypeName = cfg.Placed.SubtypeId.String,
                     ComponentContainer = obContainer
                 };
                 var entity = MyAPIGateway.Entities.CreateFromObjectBuilderAndAdd(entOb);
@@ -329,6 +327,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
                     entity.Components.Get<ConstructableComponent>()
                         ?.IncreaseIntegrity(1e9f, out test, out test2);
                 }
+                entity.Components.Get<BendyPhysicsComponent>()?.DestroyEnvItems();
 
                 EntityAdded?.Invoke(holderEntity, holderPlayer, entity);
             }
