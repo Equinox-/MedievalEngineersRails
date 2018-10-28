@@ -82,9 +82,9 @@ namespace Equinox76561198048419394.RailSystem.Bendy
             return new Node(this, pos, up.Value);
         }
 
-        public Edge CreateEdge(BendyComponent owner, Node from, Node to, CurveMode mode)
+        public Edge CreateEdge(BendyComponent owner, Node from, Node to, CurveMode mode, Vector3? ctl0 = null, Vector3? ctl1 = null)
         {
-            return new Edge(owner, from, to, mode);
+            return new Edge(owner, from, to, mode, ctl0, ctl1);
         }
 
         internal void UpdateAfterSimulation()

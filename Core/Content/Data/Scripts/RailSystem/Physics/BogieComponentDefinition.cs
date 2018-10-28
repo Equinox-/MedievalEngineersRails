@@ -37,12 +37,6 @@ namespace Equinox76561198048419394.RailSystem.Physics
                 MyDefinitionErrors.Add(Context, $"Bogie {Id} has no {nameof(VerticalOffset)}", TErrorSeverity.Critical);
             if (!ob.CoefficientOfFriction.HasValue)
                 MyDefinitionErrors.Add(Context, $"Bogie {Id} has no {nameof(CoefficientOfFriction)}", TErrorSeverity.Critical);
-            if (!ob.BrakingCoefficientOfFriction.HasValue)
-                MyDefinitionErrors.Add(Context, $"Bogie {Id} has no {nameof(BrakingCoefficientOfFriction)}", TErrorSeverity.Critical);
-            if (!ob.MaxVelocity.HasValue)
-                MyDefinitionErrors.Add(Context, $"Bogie {Id} has no {nameof(MaxVelocity)}", TErrorSeverity.Critical);
-            if (!ob.MaxForce.HasValue)
-                MyDefinitionErrors.Add(Context, $"Bogie {Id} has no {nameof(MaxForce)}", TErrorSeverity.Critical);
             if (!ob.DetachDistance.HasValue)
                 MyDefinitionErrors.Add(Context, $"Bogie {Id} has no {nameof(DetachDistance)}", TErrorSeverity.Critical);
             

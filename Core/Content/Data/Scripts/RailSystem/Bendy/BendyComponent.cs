@@ -147,7 +147,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy
                 var def = Definition.Edges[i];
                 var from = _nodes[def.From];
                 var to = _nodes[def.To];
-                _edges[i] = Graph.GetEdge(from, to) ?? Graph.CreateEdge(this, from, to, def.Mode);
+                _edges[i] = Graph.GetEdge(from, to) ?? Graph.CreateEdge(this, from, to, def.Mode, def.Control0, def.Control1);
                 if (_edges[i] != null)
                 {
                     EdgeAdded?.Invoke(this, _edges[i]);

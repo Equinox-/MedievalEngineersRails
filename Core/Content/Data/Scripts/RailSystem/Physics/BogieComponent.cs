@@ -246,7 +246,7 @@ namespace Equinox76561198048419394.RailSystem.Physics
 
             var qConj = Quaternion.Multiply(Quaternion.Conjugate(qCurrent), qDesired);
             var localAngularDesired = 2 * qConj.W * new Vector3(qConj.X, qConj.Y, qConj.Z);
-            var desiredAngular = Vector3.Transform(localAngularDesired, qCurrent);
+            var desiredAngular = Vector3.Transform(localAngularDesired, qCurrent) * 10;
             var rotApply = desiredAngular;
             desiredAngular -= 0.25f * physics.AngularVelocity;
 
@@ -384,8 +384,8 @@ namespace Equinox76561198048419394.RailSystem.Physics
             float sv = e.Physics.Mass / 12;
 
             var m = Matrix.CreateScale(sv * (scale.Y + scale.Z), sv * (scale.X + scale.Z), sv * (scale.X + scale.Y));
-            return (Matrix) e.PositionComp.WorldMatrixInvScaled.GetOrientation() * m *
-                   (Matrix) e.PositionComp.WorldMatrix.GetOrientation();
+            return (Matrix) e.PositionComp.WorldMatrix.GetOrientation() * m *
+                   (Matrix) e.PositionComp.WorldMatrixInvScaled.GetOrientation();
         }
 
         private static Vector3 SolveImpulse(Vector3 desired, Vector3 actual, Matrix tensor)

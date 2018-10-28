@@ -42,12 +42,12 @@
         <Layer>TrainRailGaugeStandard</Layer>
         <Nodes>
             <Node>
-                <Position x="-10" y="-1.25" z="0" />
+                <Position x="10" y="-1.25" z="0" />
                 <Forward x="1" y="0" z="0" />
                 <Up x="0" y="1" z="0" />
             </Node>
             <Node>
-                <Position x="10" y="-1.25" z="0" />
+                <Position x="-10" y="-1.25" z="0" />
                 <Forward x="1" y="0" z="0" />
                 <Up x="0" y="1" z="0" />
             </Node>
@@ -59,7 +59,10 @@
         </Nodes>
         <Edges>
             <Edge From="0" To="1" />
-            <Edge From="1" To="2" Mode="CubicBez" />
+            <Edge From="0" To="2" Mode="CubicBez">
+                <Control1 x="0" y="0" z="-9" />
+                <Control2 x="0" y="0" z="9" />
+            </Edge>
         </Edges>
 
         <Distance Min="7" Max="15" />
@@ -74,9 +77,9 @@
         </Capabilities>
 
         <Switchable Dummy="detector_switch">
-            <Intersection>1</Intersection>
+            <Intersection>0</Intersection>
             <Destination>2</Destination>
-            <Destination>0</Destination>
+            <Destination>1</Destination>
         </Switchable>
     </Definition>
 

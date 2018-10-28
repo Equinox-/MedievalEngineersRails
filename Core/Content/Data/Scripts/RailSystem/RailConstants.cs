@@ -9,7 +9,8 @@
             public bool AssertsWithStacks;
         }
 
-        public static DebugOptions Debug = new DebugOptions {AssertsWithStacks = true, DrawGraphEdges = true, DrawGraphNodes = true};
+//        public static DebugOptions Debug = new DebugOptions {AssertsWithStacks = true, DrawGraphEdges = true, DrawGraphNodes = true};
+        public static DebugOptions Debug = default(DebugOptions);
 
         // Maximum nodes in a single call
         public const int MaxNodesPlaced = 128;

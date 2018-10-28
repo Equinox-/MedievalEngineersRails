@@ -9,9 +9,10 @@ namespace Equinox76561198048419394.RailSystem.Bendy
     public enum CurveMode
     {
         Linear,
+        QuadraticBez,
         CubicBez
     }
-    
+
     public class Edge
     {
         public readonly BendyLayer Graph;
@@ -20,13 +21,18 @@ namespace Equinox76561198048419394.RailSystem.Bendy
         public readonly CurveMode Mode;
         public readonly BendyComponent Owner;
 
-        internal Edge(BendyComponent owner, Node from, Node to, CurveMode mode)
+        private readonly Vector3? _ctl0, _ctl1;
+
+        internal Edge(BendyComponent owner, Node from, Node to, CurveMode mode, Vector3? ctl0 = null, Vector3? ctl1 = null)
         {
             Owner = owner;
             Graph = from.Graph;
             From = from;
             To = to;
             Mode = mode;
+            _ctl0 = ctl0;
+            _ctl1 = ctl1;
+
             EnsureInScene();
         }
 
@@ -68,13 +74,33 @@ namespace Equinox76561198048419394.RailSystem.Bendy
             FromMatrix = MatrixD.CreateWorld(From.Position, Tangent(From.Tangent), From.Up);
             ToMatrix = MatrixD.CreateWorld(To.Position, Tangent(To.Tangent), To.Up);
 
+
+            var ext = Math.Max((FromMatrix.Translation - ToMatrix.Translation).Length() / 3, 1f);
+            var d1 = default(Vector3D);
+            var d2 = default(Vector3D);
+            if (Mode != CurveMode.Linear)
+            {
+                if (_ctl0.HasValue)
+                    d1 = Vector3D.Transform(_ctl0.Value, FromMatrix);
+                else
+                    d1 = FromMatrix.Translation + (FromMatrix.Forward * ext);
+                if (_ctl1.HasValue)
+                    d2 = Vector3D.Transform(_ctl1.Value, ToMatrix);
+                else
+                    d2 = ToMatrix.Translation - (ToMatrix.Forward * ext);
+            }
+
+
             switch (Mode)
             {
                 case CurveMode.Linear:
                     Curve = new LinearCurve(From.Position, To.Position);
                     break;
+                case CurveMode.QuadraticBez:
+                    Curve = new QuadraticCurve(FromMatrix.Translation, (d1 + d2) / 2, ToMatrix.Translation);
+                    break;
                 case CurveMode.CubicBez:
-                    Curve = new CubicCurve(FromMatrix, ToMatrix);
+                    Curve = new CubicCurve(FromMatrix.Translation, d1, d2, ToMatrix.Translation);
                     break;
                 default:
                     throw new Exception($"Unsupported curve mode {Mode}");
@@ -88,7 +114,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy
         private bool _dirty;
         private int _proxyId = -1;
 
-        
+
         public bool InScene { get; private set; }
 
         public void EnsureInScene()
@@ -104,7 +130,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy
             To.MarkDirty();
             MarkDirty();
         }
-        
+
         public virtual void Close()
         {
             InScene = false;

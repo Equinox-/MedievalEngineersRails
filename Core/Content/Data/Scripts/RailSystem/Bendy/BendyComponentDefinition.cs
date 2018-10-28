@@ -34,12 +34,19 @@ namespace Equinox76561198048419394.RailSystem.Bendy
             public readonly CurveMode Mode;
             public readonly IReadOnlyList<string> Bones;
 
-            public ImmutableEdge(uint a, uint b, CurveMode mode, IReadOnlyList<string> bones)
+            /// <summary>
+            /// Optional control values for bez curves
+            /// </summary>
+            public readonly Vector3? Control0, Control1;
+
+            public ImmutableEdge(uint a, uint b, CurveMode mode, IReadOnlyList<string> bones, Vector3? ctl0, Vector3? ctl1)
             {
                 From = a;
                 To = b;
                 Mode = mode;
                 Bones = bones != null ? new ReadOnlyList<string>(bones) : null;
+                Control0 = ctl0;
+                Control1 = ctl1;
             }
         }
 
@@ -147,8 +154,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy
                             TErrorSeverity.Error);
 
                     var bones = e.Bones?.Split(null).Where(x => !string.IsNullOrWhiteSpace(x)).ToArray();
-                    edges[i] = new ImmutableEdge((uint) n0, (uint) n1, e.Mode,
-                        bones != null ? new ReadOnlyList<string>(bones) : null);
+                    edges[i] = new ImmutableEdge((uint) n0, (uint) n1, e.Mode, bones != null ? new ReadOnlyList<string>(bones) : null, e.Control1, e.Control2);
                 }
 
             Nodes = new ReadOnlyList<ImmutableNode>(nodes);
@@ -251,6 +257,15 @@ namespace Equinox76561198048419394.RailSystem.Bendy
             [XmlAttribute(nameof(Mode))]
             [DefaultValue(CurveMode.Linear)]
             public CurveMode Mode;
+
+            [XmlElement]
+            [DefaultValue(null)]
+            public SerializableVector3? Control1;
+
+            [XmlElement]
+            [DefaultValue(null)]
+            public SerializableVector3? Control2;
+
 
             public string Bones;
         }
