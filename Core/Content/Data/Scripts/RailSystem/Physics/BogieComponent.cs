@@ -125,7 +125,7 @@ namespace Equinox76561198048419394.RailSystem.Physics
             new MyDefinitionId(typeof(MyObjectBuilder_CompositeEntityEffect), MyStringHash.GetOrCompute("Sprint"));
 
         private const float SwitchingDistanceBias = 0.25f;
-        
+
         private void Simulate()
         {
             var root = Entity;
@@ -200,7 +200,7 @@ namespace Equinox76561198048419394.RailSystem.Physics
                     var dist = Vector3D.Distance(pos, pivotWorld);
                     if (edgeSegment.IsSwitchedTo(edge, t))
                         dist -= SwitchingDistanceBias;
-                    
+
                     // ReSharper disable once InvertIf
                     if (dist < best)
                     {
@@ -212,7 +212,8 @@ namespace Equinox76561198048419394.RailSystem.Physics
                     }
                 }
 
-            SetAnimVar(SpeedZVar, physics.LinearVelocity.Dot((Vector3) Entity.PositionComp.WorldMatrix.Forward));
+            var selfVelocity = physics.GetVelocityAtPoint(pivotWorld);
+            SetAnimVar(SpeedZVar, selfVelocity.Dot((Vector3) Entity.PositionComp.WorldMatrix.Forward));
             if (bestEdge == null || best > Definition.DetachDistance)
                 return;
             var up = (Vector3) Vector3D.Lerp(bestEdge.From.Up, bestEdge.To.Up, bestTime);
@@ -246,7 +247,8 @@ namespace Equinox76561198048419394.RailSystem.Physics
 
             var qConj = Quaternion.Multiply(Quaternion.Conjugate(qCurrent), qDesired);
             var localAngularDesired = 2 * qConj.W * new Vector3(qConj.X, qConj.Y, qConj.Z);
-            var desiredAngular = Vector3.Transform(localAngularDesired, qCurrent) * 10;
+            const float angularMult = 2;
+            var desiredAngular = Vector3.Transform(localAngularDesired, qCurrent) * angularMult;
             var rotApply = desiredAngular;
             desiredAngular -= 0.25f * physics.AngularVelocity;
 
@@ -355,7 +357,7 @@ namespace Equinox76561198048419394.RailSystem.Physics
             physics.AddForce(MyPhysicsForceType.APPLY_WORLD_IMPULSE_AND_WORLD_ANGULAR_IMPULSE, impulse, com,
                 angularImpulse);
         }
-        
+
         private const float _edgeWidth = 0.05f;
         private const float _nodeWidth = 0.01f;
         private static Vector4 _edgeColor = new Vector4(0, 0, 1, 0.1f);
@@ -364,7 +366,7 @@ namespace Equinox76561198048419394.RailSystem.Physics
         private static readonly MyStringId _squareMaterial = MyStringId.GetOrCompute("Square");
         private const float _nodeMarkerSize = 1;
         private const float _edgeMarkerVertOffset = 0.325f;
-        
+
 
         private const float PowerSmooth = .005f;
         private float _powerFactor;
@@ -384,8 +386,8 @@ namespace Equinox76561198048419394.RailSystem.Physics
             float sv = e.Physics.Mass / 12;
 
             var m = Matrix.CreateScale(sv * (scale.Y + scale.Z), sv * (scale.X + scale.Z), sv * (scale.X + scale.Y));
-            return (Matrix) e.PositionComp.WorldMatrix.GetOrientation() * m *
-                   (Matrix) e.PositionComp.WorldMatrixInvScaled.GetOrientation();
+            return (Matrix) e.PositionComp.WorldMatrixInvScaled.GetOrientation() * m *
+                   (Matrix) e.PositionComp.WorldMatrix.GetOrientation();
         }
 
         private static Vector3 SolveImpulse(Vector3 desired, Vector3 actual, Matrix tensor)

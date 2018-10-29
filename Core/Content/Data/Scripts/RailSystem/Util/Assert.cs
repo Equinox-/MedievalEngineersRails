@@ -8,7 +8,8 @@ namespace Equinox76561198048419394.RailSystem.Util
     {
         private static string BreakOrStackTrace()
         {
-            return System.Environment.StackTrace;
+//            return System.Environment.StackTrace;
+            return null;
         }
 
         public static void Warn(string msg)

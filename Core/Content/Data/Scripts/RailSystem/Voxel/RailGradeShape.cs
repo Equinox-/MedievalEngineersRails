@@ -10,8 +10,107 @@ using VRageMath;
 
 namespace Equinox76561198048419394.RailSystem.Voxel
 {
-    public class RailGradeShape
+    public interface IGradeShape
     {
+        float GetDensity(ref Vector3D worldCoord);
+        bool IsInside(Vector3D targetPosition);
+    }
+
+    public class CompositeGradeShape : IGradeShape
+    {
+        private readonly RailGradeShape[] _components;
+
+        private CompositeGradeShape(params RailGradeShape[] components)
+        {
+            _components = components;
+        }
+
+        public static IGradeShape Composite(params RailGradeShape[] shapes)
+        {
+            return shapes.Length == 1 ? (IGradeShape) shapes[0] : new CompositeGradeShape(shapes);
+        }
+
+        private static readonly ConcurrentStack<List<RailGradeShape>> _maskedBorrow = new ConcurrentStack<List<RailGradeShape>>();
+        private static readonly ConcurrentStack<List<List<int>>> _stackBorrow = new ConcurrentStack<List<List<int>>>();
+
+        public float GetDensity(ref Vector3D worldCoord)
+        {
+            List<RailGradeShape> maskedBorrow;
+            if (!_maskedBorrow.TryPop(out maskedBorrow))
+                maskedBorrow = new List<RailGradeShape>();
+            else
+                maskedBorrow.Clear();
+            try
+            {
+                const int iterations = RailGradeShape.DefaultDensityIterations;
+                var intersectsSurface = false;
+                foreach (var c in _components)
+                    if (c.IntersectsSurface(ref worldCoord))
+                    {
+                        intersectsSurface = true;
+                        maskedBorrow.Add(c);
+                    }
+                    else if (c.IsInside(worldCoord))
+                        return 1f;
+
+                if (!intersectsSurface)
+                    return 0f;
+
+                List<List<int>> borrowed;
+                if (!_stackBorrow.TryPop(out borrowed))
+                    borrowed = new List<List<int>>();
+                try
+                {
+                    foreach (var k in borrowed)
+                        k.Clear();
+                    while (borrowed.Count < maskedBorrow.Count)
+                        borrowed.Add(new List<int>());
+
+                    var inflatedBox = new BoundingBoxD(worldCoord - 0.5f, worldCoord + 0.5f);
+                    var queryBox = new BoundingBoxD(inflatedBox.Min - 0.1f, inflatedBox.Max + 0.1f + RailGradeShape.QueryDir * 1000);
+                    for (var i = 0; i < maskedBorrow.Count; i++)
+                        maskedBorrow[i].QueryTriangles(queryBox, borrowed[i]);
+
+                    var max = new Vector3I(iterations, iterations, iterations);
+                    var hit = 0;
+                    for (var itr = new Vector3I_RangeIterator(ref Vector3I.Zero, ref max); itr.IsValid(); itr.MoveNext())
+                    {
+                        var sample = inflatedBox.Min + inflatedBox.Extents * itr.Current / iterations;
+                        for (var i = 0; i < maskedBorrow.Count; i++)
+                            if (maskedBorrow[i].IsInsideHelper(sample, borrowed[i]))
+                            {
+                                hit++;
+                                break;
+                            }
+                    }
+
+                    return hit / (float) ((iterations + 1) * (iterations + 1) * (iterations + 1));
+                }
+                finally
+                {
+                    _stackBorrow.Push(borrowed);
+                }
+            }
+            finally
+            {
+                maskedBorrow.Clear();
+                _maskedBorrow.Push(maskedBorrow);
+            }
+        }
+
+        public bool IsInside(Vector3D targetPosition)
+        {
+            foreach (var c in _components)
+                if (c.IsInside(targetPosition))
+                    return true;
+            return false;
+        }
+    }
+
+    public class RailGradeShape : IGradeShape
+    {
+        public const int DefaultDensityIterations = 3;
+
         private readonly EdgeBlit _edge;
         private readonly ICurve _curve;
         private readonly float _width;
@@ -106,14 +205,19 @@ namespace Equinox76561198048419394.RailSystem.Voxel
             Box = box.Inflate(0.5f);
         }
 
+        public float GetDensity(ref Vector3D worldCoord)
+        {
+            return GetDensity(ref worldCoord, DefaultDensityIterations);
+        }
+
         public bool IsInside(Vector3D pt)
         {
             return IsInsideHelper(pt, null);
         }
 
-        private static readonly Vector3D QueryDir = Vector3D.Up;
+        internal static readonly Vector3D QueryDir = Vector3D.Up;
 
-        private bool IsInsideHelper(Vector3D pt, List<int> selector)
+        internal bool IsInsideHelper(Vector3D pt, List<int> selector)
         {
             // ReSharper disable once ImpureMethodCallOnReadonlyValueField
             if (Box.Contains(pt) == ContainmentType.Disjoint)
@@ -142,7 +246,28 @@ namespace Equinox76561198048419394.RailSystem.Voxel
 
         private static readonly ConcurrentStack<List<int>> _stackBorrow = new ConcurrentStack<List<int>>();
 
-        public float GetDensity(ref Vector3D voxelCoord, int iterations = 3)
+        internal bool IntersectsSurface(ref Vector3D voxelCoord)
+        {
+            if (Box.Contains(voxelCoord) == ContainmentType.Disjoint)
+                return false;
+            var inflatedBox = new BoundingBoxD(voxelCoord - 0.5f, voxelCoord + 0.5f);
+            foreach (var k in _tris)
+                if (inflatedBox.IntersectsTriangle(k.Origin, k.Origin + k.Edge1, k.Origin + k.Edge2))
+                    return true;
+            return false;
+        }
+
+        internal void QueryTriangles(BoundingBoxD queryBox, List<int> indices)
+        {
+            for (var index = 0; index < _tris.Length; index++)
+            {
+                var k = _tris[index];
+                if (queryBox.IntersectsTriangle(k.Origin, k.Origin + k.Edge1, k.Origin + k.Edge2))
+                    indices.Add(index);
+            }
+        }
+
+        private float GetDensity(ref Vector3D voxelCoord, int iterations)
         {
             // ReSharper disable once ImpureMethodCallOnReadonlyValueField
             if (Box.Contains(voxelCoord) == ContainmentType.Disjoint)
@@ -169,12 +294,7 @@ namespace Equinox76561198048419394.RailSystem.Voxel
                 tmp = new List<int>();
             else
                 tmp.Clear();
-            for (var index = 0; index < _tris.Length; index++)
-            {
-                var k = _tris[index];
-                if (queryBox.IntersectsTriangle(k.Origin, k.Origin + k.Edge1, k.Origin + k.Edge2))
-                    tmp.Add(index);
-            }
+            QueryTriangles(queryBox, tmp);
 
             var max = new Vector3I(iterations, iterations, iterations);
             var hit = 0;
@@ -199,7 +319,8 @@ namespace Equinox76561198048419394.RailSystem.Voxel
                 var p1 = t.Origin + t.Edge1;
                 var p2 = t.Origin + t.Edge2;
                 var n = Vector3.Cross(t.Edge1, t.Edge2);
-                MyTransparentGeometry.AddTriangleBillboard(p0, p1, p2, n, n, n, Vector2.Zero, new Vector2(1, 0), new Vector2(0, 1), material, 0, (p0 + p1 + p2) / 3);
+                MyTransparentGeometry.AddTriangleBillboard(p0, p1, p2, n, n, n, Vector2.Zero, new Vector2(1, 0), new Vector2(0, 1), material, 0,
+                    (p0 + p1 + p2) / 3);
             }
         }
     }

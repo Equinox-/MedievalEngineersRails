@@ -130,8 +130,8 @@ namespace Equinox76561198048419394.RailSystem.Voxel
                 triedToChange = false;
                 intersectedDynamic = false;
 
-                var fill = new RailGradeShape[components.Count];
-                var excavate = new RailGradeShape[components.Count];
+                var fill = new IGradeShape[components.Count];
+                var excavate = new IGradeShape[components.Count];
                 for (var i = 0; i < components.Count; i++)
                     components[i].Unblit(out fill[i], out excavate[i]);
 

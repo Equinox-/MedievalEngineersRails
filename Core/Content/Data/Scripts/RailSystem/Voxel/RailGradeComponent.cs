@@ -57,31 +57,33 @@ namespace Equinox76561198048419394.RailSystem.Voxel
             _shapeDirty = true;
         }
 
-        private RailGradeShape _excavationCache;
+        private IGradeShape _excavationCache;
 
-        public RailGradeShape Excavation
+        public IGradeShape Excavation
         {
             get
             {
                 if (_excavationCache != null) return _excavationCache;
-                var e = _bendy?.Edges.FirstOrDefault();
-                if (e == null || !Definition.Excavate.HasValue) return _excavationCache;
+                if (_bendy == null || _bendy.Edges.Count == 0 || !Definition.Excavate.HasValue) return _excavationCache;
                 var s = Definition.Excavate.Value;
-                return _excavationCache = new RailGradeShape(new EdgeBlit(e), s.Width, s.RelaxAngleRadians, s.VerticalOffset, s.Segments, -s.Height);
+                return _excavationCache = CompositeGradeShape.Composite(
+                    _bendy.Edges.Select(e => new RailGradeShape(new EdgeBlit(e), s.Width, s.RelaxAngleRadians, s.VerticalOffset, s.Segments, -s.Height))
+                        .ToArray());
             }
         }
 
-        private RailGradeShape _supportCache;
+        private IGradeShape _supportCache;
 
-        public RailGradeShape Support
+        public IGradeShape Support
         {
             get
             {
                 if (_supportCache != null) return _supportCache;
-                var e = _bendy?.Edges.FirstOrDefault();
-                if (e == null || !Definition.Support.HasValue) return _supportCache;
+                if (_bendy == null || _bendy.Edges.Count == 0 || !Definition.Support.HasValue) return _supportCache;
                 var s = Definition.Support.Value;
-                return _supportCache = new RailGradeShape(new EdgeBlit(e), s.Width, s.RelaxAngleRadians, s.VerticalOffset, s.Segments, s.Height);
+                return _supportCache = CompositeGradeShape.Composite(
+                    _bendy.Edges.Select(e => new RailGradeShape(new EdgeBlit(e), s.Width, s.RelaxAngleRadians, s.VerticalOffset, s.Segments, s.Height))
+                        .ToArray());
             }
         }
 
@@ -172,7 +174,7 @@ namespace Equinox76561198048419394.RailSystem.Voxel
                 pos += gravity;
 
                 var aabb = new BoundingBoxD(pos - 0.5f, pos + 0.5f);
-                
+
                 var found = false;
                 foreach (var e in entities)
                 {
@@ -181,7 +183,7 @@ namespace Equinox76561198048419394.RailSystem.Voxel
                     if (vox != null)
                     {
                         Vector3I vc;
-                        var test =pos;
+                        var test = pos;
                         MyVoxelCoordSystems.WorldPositionToVoxelCoord(vox.PositionLeftBottomCorner, ref test, out vc);
                         _voxelStorage.Resize(Vector3I.One);
                         vox.Storage.ReadRange(_voxelStorage, MyStorageDataTypeFlags.Content, 0, vc, vc);
@@ -217,12 +219,12 @@ namespace Equinox76561198048419394.RailSystem.Voxel
         {
             return new RailGradeComponentBlit()
             {
-                Edge = new EdgeBlit(_bendy.Edges.First()),
+                Edges = _bendy.Edges.Select(x => new EdgeBlit(x)).ToArray(),
                 Definition = Definition.Id
             };
         }
 
-        public void Unblit(out RailGradeShape fillShape, out RailGradeShape excavateShape)
+        public void Unblit(out IGradeShape fillShape, out IGradeShape excavateShape)
         {
             fillShape = Support;
             excavateShape = Excavation;
@@ -231,10 +233,10 @@ namespace Equinox76561198048419394.RailSystem.Voxel
 
     public struct RailGradeComponentBlit : IRailGradeComponent
     {
-        public EdgeBlit Edge;
+        public EdgeBlit[] Edges;
         public DefinitionIdBlit Definition;
 
-        public void Unblit(out RailGradeShape fillShape, out RailGradeShape excavateShape)
+        public void Unblit(out IGradeShape fillShape, out IGradeShape excavateShape)
         {
             fillShape = excavateShape = null;
 
@@ -245,20 +247,22 @@ namespace Equinox76561198048419394.RailSystem.Voxel
             if (def.Support.HasValue)
             {
                 var s = def.Support.Value;
-                fillShape = new RailGradeShape(Edge, s.Width, s.RelaxAngleRadians, s.VerticalOffset, s.Segments, s.Height);
+                fillShape = CompositeGradeShape.Composite(Edges
+                    .Select(e => new RailGradeShape(e, s.Width, s.RelaxAngleRadians, s.VerticalOffset, s.Segments, s.Height)).ToArray());
             }
 
             if (def.Excavate.HasValue)
             {
                 var s = def.Excavate.Value;
-                excavateShape = new RailGradeShape(Edge, s.Width, s.RelaxAngleRadians, s.VerticalOffset, s.Segments, -s.Height);
+                excavateShape = CompositeGradeShape.Composite(Edges
+                    .Select(e => new RailGradeShape(e, s.Width, s.RelaxAngleRadians, s.VerticalOffset, s.Segments, -s.Height)).ToArray());
             }
         }
     }
 
     public interface IRailGradeComponent
     {
-        void Unblit(out RailGradeShape fillShape, out RailGradeShape excavateShape);
+        void Unblit(out IGradeShape fillShape, out IGradeShape excavateShape);
     }
 
     [MyObjectBuilderDefinition]
