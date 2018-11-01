@@ -12,6 +12,7 @@ using Sandbox.Game.Entities.Entity.Stats;
 using Sandbox.Game.EntityComponents.Character;
 using Sandbox.Game.GameSystems;
 using Sandbox.ModAPI;
+using VRage.Components;
 using VRage.Components.Entity;
 using VRage.Definitions.Components.Character;
 using VRage.Entity.EntityComponents;
@@ -50,14 +51,14 @@ namespace Equinox76561198048419394.RailSystem.Physics
         {
             Graph = MySession.Static.Components.Get<BendyController>()?.GetOrCreateLayer(Definition.Layer);
             _attacher = Container.Get<MyModelAttachmentComponent>();
-            AddFixedUpdate(Simulate);
-
             if (_attacher != null)
             {
                 _attacher.OnEntityAttached += FixupSkinEntity;
                 foreach (var e in _attacher.GetAttachedEntities(SkinHash))
                     FixupSkinEntity(_attacher, e);
             }
+
+            base.OnAddedToScene();
         }
 
         private void FixupSkinEntity(MyModelAttachmentComponent attacher, MyEntity entity)
@@ -76,16 +77,13 @@ namespace Equinox76561198048419394.RailSystem.Physics
 
         public override void OnRemovedFromScene()
         {
+            base.OnRemovedFromScene();
             if (_attacher != null)
             {
                 _attacher.OnEntityAttached -= FixupSkinEntity;
                 _attacher = null;
             }
-
-            RemoveFixedUpdate(Simulate);
         }
-
-        private bool _debugDraw = false;
 
         private static readonly MyStringHash SkinHash = MyStringHash.GetOrCompute("Skin");
         private static readonly MyStringId DebugMtl = MyStringId.GetOrCompute("Square");
@@ -124,15 +122,25 @@ namespace Equinox76561198048419394.RailSystem.Physics
         private static readonly MyDefinitionId SprintingEffect =
             new MyDefinitionId(typeof(MyObjectBuilder_CompositeEntityEffect), MyStringHash.GetOrCompute("Sprint"));
 
-        private const float SwitchingDistanceBias = 0.25f;
+        public const float SwitchingDistanceBias = 0.25f;
 
+        [FixedUpdate]
         private void Simulate()
         {
             var root = Entity;
             while (root != null && root.Physics == null)
                 root = root.Parent;
             if (root?.Physics == null || root.Physics.IsStatic)
+            {
+                if (!RailConstants.Debug.DrawBogiePhysics)
+                    return;
+
+                var drawPivot = Entity.GetPosition() + 4 * Entity.PositionComp.WorldMatrix.Up;
+                var colorTarget = new Vector4(1, 1, 0, 1);
+                MySimpleObjectDraw.DrawLine(Entity.GetPosition(), drawPivot, DebugMtl, ref colorTarget,
+                    .01f);
                 return;
+            }
 
             // Clean good controllers
             {
@@ -214,8 +222,30 @@ namespace Equinox76561198048419394.RailSystem.Physics
 
             var selfVelocity = physics.GetVelocityAtPoint(pivotWorld);
             SetAnimVar(SpeedZVar, selfVelocity.Dot((Vector3) Entity.PositionComp.WorldMatrix.Forward));
-            if (bestEdge == null || best > Definition.DetachDistance)
+            if (bestEdge == null)
+            {
+                if (!RailConstants.Debug.DrawBogiePhysics)
+                    return;
+
+                var drawPivot = pivotWorld + 4 * Entity.PositionComp.WorldMatrix.Up;
+                var colorTarget = new Vector4(1, 0, 0, 1);
+                MySimpleObjectDraw.DrawLine(pivotWorld, drawPivot, DebugMtl, ref colorTarget,
+                    .01f);
                 return;
+            }
+
+            if (best > Definition.DetachDistance)
+            {
+                if (!RailConstants.Debug.DrawBogiePhysics)
+                    return;
+
+                var drawPivot = pivotWorld + 4 * Entity.PositionComp.WorldMatrix.Up;
+                var colorTarget = new Vector4(1, 0, 1, 1);
+                MySimpleObjectDraw.DrawLine(pivotWorld, drawPivot, DebugMtl, ref colorTarget,
+                    .01f);
+                return;
+            }
+
             var up = (Vector3) Vector3D.Lerp(bestEdge.From.Up, bestEdge.To.Up, bestTime);
             var tangent = (Vector3) bestEdge.Curve.SampleDerivative(bestTime);
             if (Entity.PositionComp.WorldMatrix.Forward.Dot(tangent) < 0)
@@ -225,8 +255,12 @@ namespace Equinox76561198048419394.RailSystem.Physics
             var normal = Vector3.Cross(tangent, up);
             normal.Normalize();
 
+            up = Vector3.Cross(normal, tangent);
+            up.Normalize();
+
             // a) spring joint along normal to get dot(normal, (pivot*matrix - position)) == 0
             var impulse = Vector3.Zero;
+            var allowDeactivation = true;
             var err = (Vector3) (position - pivotWorld);
 
             var effectiveMass = physics.Mass;
@@ -241,18 +275,22 @@ namespace Equinox76561198048419394.RailSystem.Physics
             // b) half spring joint along up to get dot(up, (pivot*matrix - position)) >= 0
             impulse += SolveImpulse(err, up, physics.LinearVelocity, effectiveMass, 1); // only up force
 
+            if (err.LengthSquared() > .01f)
+                allowDeactivation = false;
+
             var qCurrent = Quaternion.CreateFromRotationMatrix(Entity.PositionComp.WorldMatrix);
             var qDesired = Quaternion.CreateFromRotationMatrix(Matrix.CreateWorld(Vector3.Zero, tangent, up));
 
 
             var qConj = Quaternion.Multiply(Quaternion.Conjugate(qCurrent), qDesired);
             var localAngularDesired = 2 * qConj.W * new Vector3(qConj.X, qConj.Y, qConj.Z);
-            const float angularMult = 2;
-            var desiredAngular = Vector3.Transform(localAngularDesired, qCurrent) * angularMult;
+            if (localAngularDesired.LengthSquared() > .01f)
+                allowDeactivation = false;
+            var desiredAngular = Vector3.Transform(localAngularDesired, qCurrent) * 2;
             var rotApply = desiredAngular;
             desiredAngular -= 0.25f * physics.AngularVelocity;
 
-            var angularImpulse = Vector3.TransformNormal(desiredAngular, inertiaTensor) /
+            var angularImpulse = Vector3.TransformNormal(desiredAngular, inertiaTensor) * Definition.OrientationConvergenceFactor /
                                  MyEngineConstants.UPDATE_STEP_SIZE_IN_SECONDS;
 
             var com = physics.GetCenterOfMassWorld();
@@ -317,23 +355,33 @@ namespace Equinox76561198048419394.RailSystem.Physics
             }
 
 
-            var frictiveNormalForce = Math.Max(0, impulse.Dot(up) / MyEngineConstants.UPDATE_STEP_SIZE_IN_SECONDS);
+            Vector3 frictiveImpulse;
+            {
+                var frictiveNormalForce = Math.Max(0, impulse.Dot(up) / MyEngineConstants.UPDATE_STEP_SIZE_IN_SECONDS);
 
-            var frictiveForce =
-                Math.Max(Definition.CoefficientOfFriction, braking ? Definition.BrakingCoefficientOfFriction : 0) *
-                (bestEdgeCaps?.Friction ?? 1) * frictiveNormalForce;
+                var frictiveForce =
+                    Math.Max(Definition.CoefficientOfFriction, braking ? Definition.BrakingCoefficientOfFriction : 0) *
+                    (bestEdgeCaps?.Friction ?? 1) * frictiveNormalForce;
 
-            // clamp frictive impulse to at-max stopping.
-            var tangentMomentumAfterUpdate =
-                (physics.Mass * (physics.LinearVelocity + gravityHere * MyEngineConstants.UPDATE_STEP_SIZE_IN_SECONDS) + impulse).Dot(tangent);
+                // clamp frictive impulse to at-max stopping.
+                var tangentMomentumAfterUpdate =
+                    (physics.Mass * (physics.LinearVelocity + gravityHere * MyEngineConstants.UPDATE_STEP_SIZE_IN_SECONDS) + impulse).Dot(tangent);
 
-            var frictiveImpulse = -Math.Sign(tangentMomentumAfterUpdate) *
-                                  Math.Min(frictiveForce * MyEngineConstants.UPDATE_STEP_SIZE_IN_SECONDS,
-                                      Math.Abs(tangentMomentumAfterUpdate)) * tangent;
+                var frictiveFloatImpulse = frictiveForce * MyEngineConstants.UPDATE_STEP_SIZE_IN_SECONDS;
 
-            impulse += frictiveImpulse;
+                if (frictiveFloatImpulse > Math.Abs(tangentMomentumAfterUpdate))
+                    // Stationary, allow deactivation
+                    frictiveImpulse = -tangentMomentumAfterUpdate * tangent;
+                else
+                {
+                    frictiveImpulse = -Math.Sign(tangentMomentumAfterUpdate) * frictiveFloatImpulse * tangent;
+                    allowDeactivation = false;
+                }
 
-            if (!MyAPIGateway.Utilities.IsDedicated && _debugDraw)
+                impulse += frictiveImpulse;
+            }
+
+            if (!MyAPIGateway.Utilities.IsDedicated && RailConstants.Debug.DrawBogiePhysics)
             {
                 var drawPivot = pivotWorld + 4 * up;
                 var colorTarget = Vector4.One;
@@ -353,6 +401,12 @@ namespace Equinox76561198048419394.RailSystem.Physics
                     .01f);
             }
 
+//            if (allowDeactivation)
+//            {
+//                physics.Sleep();
+//                if (physics.AngularAcceleration == Vector3.Zero && physics.LinearAcceleration == Vector3.Zero)
+//                    return;
+//            }
 
             physics.AddForce(MyPhysicsForceType.APPLY_WORLD_IMPULSE_AND_WORLD_ANGULAR_IMPULSE, impulse, com,
                 angularImpulse);

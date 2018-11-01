@@ -143,7 +143,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy
 
         private void MoveProxy()
         {
-            var bb = BoundingBoxD.CreatePoint(Position).Inflate(0.1f);
+            var bb = BoundingBoxD.CreatePoint(Position).Inflate(0.005f);
             if (_proxyId >= 0)
                 Graph.Nodes.MoveProxy(_proxyId, ref bb, Vector3D.Zero);
             else

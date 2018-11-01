@@ -19,14 +19,16 @@ namespace Equinox76561198048419394.RailSystem.Definition
             public readonly float ActivationLevel;
             public readonly float Friction;
             public readonly float MaxSpeed;
+            public readonly float Gauge;
 
-            public static readonly RailSegmentCaps Default = new RailSegmentCaps(0.95f, 1f, float.PositiveInfinity);
+            public static readonly RailSegmentCaps Default = new RailSegmentCaps(0.95f, 1f, float.PositiveInfinity, 1f);
 
-            private RailSegmentCaps(float activate, float fric, float max)
+            private RailSegmentCaps(float activate, float fric, float max, float gauge)
             {
                 ActivationLevel = activate;
                 Friction = fric;
                 MaxSpeed = max;
+                Gauge = gauge;
             }
 
             internal RailSegmentCaps(MyObjectBuilder_RailSegmentDefinition.RsObRailSegmentCaps caps)
@@ -34,6 +36,7 @@ namespace Equinox76561198048419394.RailSystem.Definition
                 ActivationLevel = caps.ActivationLevel;
                 Friction = caps.Friction;
                 MaxSpeed = caps.MaxSpeed;
+                Gauge = caps.Gauge;
             }
         }
 
@@ -136,6 +139,9 @@ namespace Equinox76561198048419394.RailSystem.Definition
             [XmlAttribute]
             [DefaultValue(float.PositiveInfinity)]
             public float MaxSpeed = float.PositiveInfinity;
+
+            [XmlAttribute]
+            public float Gauge;
         }
 
         [XmlArrayItem("Capability")]

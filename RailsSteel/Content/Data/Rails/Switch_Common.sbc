@@ -73,7 +73,7 @@
     <Definition xsi:type="MyObjectBuilder_RailSegmentDefinition">
         <Id Type="MyObjectBuilder_RailSegmentComponent" Subtype="RailSwitchRhsParallel" />
         <Capabilities>
-            <Capability ActivationLevel="0.95" Friction="1" MaxSpeed="30" />
+            <Capability ActivationLevel="0.95" Friction="1" MaxSpeed="30" Gauge="1.435" />
         </Capabilities>
 
         <Switchable Dummy="detector_switch">

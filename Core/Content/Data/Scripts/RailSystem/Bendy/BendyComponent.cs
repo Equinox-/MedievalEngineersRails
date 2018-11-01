@@ -133,7 +133,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy
                         $"Creating movable bendy node {i} for entity {Entity}, component def {Definition.Id} without movable data");
 
                     var nodeMatrix = Definition.Nodes[i].Position * entityMatrix;
-                    _nodes[i] = Graph.GetOrCreateNode(nodeMatrix.Translation, nodeMatrix.Up);
+                    _nodes[i] = Graph.GetOrCreateNode(nodeMatrix.Translation, nodeMatrix.Up, !Definition.Nodes[i].Movable);
                     if (!Definition.Nodes[i].Movable)
                         _nodes[i].Pin(nodeMatrix);
                 }

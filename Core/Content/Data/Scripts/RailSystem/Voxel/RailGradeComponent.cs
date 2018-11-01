@@ -67,7 +67,7 @@ namespace Equinox76561198048419394.RailSystem.Voxel
                 if (_bendy == null || _bendy.Edges.Count == 0 || !Definition.Excavate.HasValue) return _excavationCache;
                 var s = Definition.Excavate.Value;
                 return _excavationCache = CompositeGradeShape.Composite(
-                    _bendy.Edges.Select(e => new RailGradeShape(new EdgeBlit(e), s.Width, s.RelaxAngleRadians, s.VerticalOffset, s.Segments, -s.Height))
+                    _bendy.Edges.Select(e => new RailGradeShape(new EdgeBlit(e), s.Width, s.RelaxAngleRadians, s.VerticalOffset, s.Segments, -s.Height, s.EndPadding))
                         .ToArray());
             }
         }
@@ -82,7 +82,7 @@ namespace Equinox76561198048419394.RailSystem.Voxel
                 if (_bendy == null || _bendy.Edges.Count == 0 || !Definition.Support.HasValue) return _supportCache;
                 var s = Definition.Support.Value;
                 return _supportCache = CompositeGradeShape.Composite(
-                    _bendy.Edges.Select(e => new RailGradeShape(new EdgeBlit(e), s.Width, s.RelaxAngleRadians, s.VerticalOffset, s.Segments, s.Height))
+                    _bendy.Edges.Select(e => new RailGradeShape(new EdgeBlit(e), s.Width, s.RelaxAngleRadians, s.VerticalOffset, s.Segments, s.Height, s.EndPadding))
                         .ToArray());
             }
         }
@@ -248,14 +248,14 @@ namespace Equinox76561198048419394.RailSystem.Voxel
             {
                 var s = def.Support.Value;
                 fillShape = CompositeGradeShape.Composite(Edges
-                    .Select(e => new RailGradeShape(e, s.Width, s.RelaxAngleRadians, s.VerticalOffset, s.Segments, s.Height)).ToArray());
+                    .Select(e => new RailGradeShape(e, s.Width, s.RelaxAngleRadians, s.VerticalOffset, s.Segments, s.Height, s.EndPadding)).ToArray());
             }
 
             if (def.Excavate.HasValue)
             {
                 var s = def.Excavate.Value;
                 excavateShape = CompositeGradeShape.Composite(Edges
-                    .Select(e => new RailGradeShape(e, s.Width, s.RelaxAngleRadians, s.VerticalOffset, s.Segments, -s.Height)).ToArray());
+                    .Select(e => new RailGradeShape(e, s.Width, s.RelaxAngleRadians, s.VerticalOffset, s.Segments, -s.Height, s.EndPadding)).ToArray());
             }
         }
     }

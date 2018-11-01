@@ -51,6 +51,13 @@ namespace Equinox76561198048419394.RailSystem.Voxel
 
         private Vector3D _cachedTargetDirection;
 
+        private void FillGradeComponents(MyEntity e)
+        {
+            foreach (var k in e.Components.GetComponents<RailGradeComponent>())
+                if ((k.Excavation != null && k.Excavation.IsInside(Target.Position, 1f)) || (k.Support != null && k.Support.IsInside(Target.Position, 1f)))
+                    _gradeComponents.Add(k);
+        }
+
         protected override bool ValidateTarget()
         {
             if (Vector3D.DistanceSquared(_cachedTargetDirection, Target.Position) < 1)
@@ -59,9 +66,18 @@ namespace Equinox76561198048419394.RailSystem.Voxel
             _gradeComponents.Clear();
             var sphere = new BoundingSphereD(Target.Position, GRADE_SCAN_DISTANCE);
             foreach (var e in MyEntities.GetEntitiesInSphere(ref sphere))
-            foreach (var k in e.Components.GetComponents<RailGradeComponent>())
-                if ((k.Excavation != null && k.Excavation.IsInside(Target.Position)) || (k.Support != null && k.Support.IsInside(Target.Position)))
-                    _gradeComponents.Add(k);
+            {
+                FillGradeComponents(e);
+                var compound = e as MyCompoundCubeBlock;
+                if (compound != null)
+                {
+                    using (var itr = compound.GetFatBlocks())
+                    {
+                        while (itr.MoveNext())
+                            FillGradeComponents(itr.Current);
+                    }
+                }
+            }
 
             _cachedTargetDirection = Target.Position;
             return _gradeComponents.Count > 0;
@@ -166,9 +182,9 @@ namespace Equinox76561198048419394.RailSystem.Voxel
                     }
                 }
             }
-            
+
             if (ranOutOfInventorySpace)
-                player.ShowNotification("Inventory is full", color: new Vector4(1,0,0,1));
+                player.ShowNotification("Inventory is full", color: new Vector4(1, 0, 0, 1));
 
             #endregion
 
@@ -209,9 +225,9 @@ namespace Equinox76561198048419394.RailSystem.Voxel
             }
 
             if (!isExcavating && intersectedDynamic && triedToChange)
-                player.ShowNotification("Cannot fill where there are players or dynamic grids", color: new Vector4(1,0,0,1));
+                player.ShowNotification("Cannot fill where there are players or dynamic grids", color: new Vector4(1, 0, 0, 1));
             if (!isExcavating && requiredMaterials != null && triedToChange)
-                player.ShowNotification(requiredMaterials?.ToString(), color: new Vector4(1,0,0,1));
+                player.ShowNotification(requiredMaterials?.ToString(), color: new Vector4(1, 0, 0, 1));
         }
 
 

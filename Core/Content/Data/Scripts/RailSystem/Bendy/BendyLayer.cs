@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Equinox76561198048419394.RailSystem.Util;
+using Equinox76561198048419394.RailSystem.Util.Curve;
 using Sandbox.Game.GameSystems;
 using VRage.Components.Entity.Camera;
 using VRage.Game;
@@ -18,8 +19,8 @@ namespace Equinox76561198048419394.RailSystem.Bendy
             Layer = id;
         }
 
-        internal readonly MyDynamicAABBTreeD Nodes = new MyDynamicAABBTreeD();
-        internal readonly MyDynamicAABBTreeD Edges = new MyDynamicAABBTreeD();
+        internal readonly MyDynamicAABBTreeD Nodes = new MyDynamicAABBTreeD(Vector3D.Zero);
+        internal readonly MyDynamicAABBTreeD Edges = new MyDynamicAABBTreeD(Vector3D.Zero);
         internal readonly Queue<Node> NodesForUpdate = new Queue<Node>();
         internal readonly Queue<Edge> EdgesForUpdate = new Queue<Edge>();
         internal readonly List<Node> NodeList = new List<Node>();
@@ -65,11 +66,14 @@ namespace Equinox76561198048419394.RailSystem.Bendy
             return null;
         }
 
-        public Node GetOrCreateNode(Vector3D pos, Vector3D? up = null)
+        public Node GetOrCreateNode(Vector3D pos, Vector3D? up = null, bool desirePin = false)
         {
             var nearest = NearestNode(pos);
             if (nearest != null && Vector3D.DistanceSquared(nearest.Position, pos) < RailConstants.NodeMergeDistanceSq)
-                return nearest;
+            {
+                if (!desirePin || Vector3D.DistanceSquared(nearest.Position, pos) < .05f * .05f)
+                    return nearest;
+            }
 
             // ReSharper disable once InvertIf
             if (!up.HasValue)
@@ -140,7 +144,9 @@ namespace Equinox76561198048419394.RailSystem.Bendy
                     var last = bezCurve.Sample(1);
                     var center = (first + last) / 2;
                     var factor = Math.Sqrt(Vector3D.DistanceSquared(first, last) / (1 + Vector3D.DistanceSquared(cam.GetPosition(), center)));
-                    var count = MathHelper.Clamp(factor * 100, 1, 25);
+                    var count = MathHelper.Clamp(factor * 50, 1, 25);
+                    if (bezCurve is LinearCurve)
+                        count = 1;
                     var lastPos = default(Vector3D);
                     for (var t = 0; t <= count; t++)
                     {

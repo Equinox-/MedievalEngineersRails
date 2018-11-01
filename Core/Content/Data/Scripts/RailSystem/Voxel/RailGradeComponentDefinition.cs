@@ -17,6 +17,7 @@ namespace Equinox76561198048419394.RailSystem.Voxel
             public float RelaxAngleDegrees => (float) (RelaxAngleRadians * 180 / Math.PI);
             public readonly float RelaxAngleRadians;
             public readonly float VerticalOffset;
+            public readonly float EndPadding;
             public readonly int Segments;
             public readonly float Height;
 
@@ -27,6 +28,7 @@ namespace Equinox76561198048419394.RailSystem.Voxel
                 VerticalOffset = s.VerticalOffset;
                 Segments = s.Segments <= 0 ? MyObjectBuilder_RailGradeComponentDefinition.Shape.DefaultSegments : s.Segments;
                 Height = s.Height;
+                EndPadding = s.EndPadding ?? 0.5f;
             }
         }
 
@@ -64,6 +66,9 @@ namespace Equinox76561198048419394.RailSystem.Voxel
 
             [XmlIgnore]
             public float RelaxAngleRadians;
+
+            [XmlElement]
+            public float? EndPadding;
 
             [XmlElement]
             public float VerticalOffset;
