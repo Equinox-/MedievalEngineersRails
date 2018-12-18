@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using Sandbox.ModAPI;
 using VRage.Components.Entity.Camera;
 using VRage.Game;
 using VRage.Game.Components;
+using VRage.Game.ModAPI;
 using VRage.Utils;
 using VRageMath;
 
@@ -33,6 +35,8 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Shape
 
         public void DebugDraw()
         {
+            if (((IMyUtilities) MyAPIUtilities.Static).IsDedicated)
+                return;
             foreach (var k in _boxes)
             {
                 var box = new BoundingBoxD(k.Center - k.HalfExtent, k.Center + k.HalfExtent);
@@ -69,6 +73,15 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Shape
         {
             base.OnAddedToScene();
             ScheduleCalcShape();
+            if (RailConstants.Debug.DrawBendyPhysics && !((IMyUtilities) MyAPIUtilities.Static).IsDedicated)
+                AddFixedUpdate(DebugDraw);
+        }
+
+        public override void OnRemovedFromScene()
+        {
+            if (RailConstants.Debug.DrawBendyPhysics)
+                RemoveFixedUpdate(DebugDraw);
+            base.OnRemovedFromScene();
         }
 
         protected abstract void BoxesUpdated(List<OrientedBoundingBox> boxes);
@@ -117,8 +130,9 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Shape
 
                         var last = i == Definition.Segments - 1;
                         buildingBox.Include(pos);
-                        if (last || (Math.Abs(buildingBox.HalfExtents.Dot(up)) > Definition.Height / 8 ||
-                                     firstUp.Value.Dot(up) < 0.99 || Math.Abs(firstForward.Dot(tan)) < 0.75))
+                        if (last || (Math.Abs(buildingBox.HalfExtents.Dot(up)) > Definition.Height * Definition.VerticalSizeTol ||
+                                     firstUp.Value.Dot(up) < (1 - Definition.VerticalAlignTol) ||
+                                     Math.Abs(firstForward.Dot(tan)) < (1 - Definition.HorizontalAlignTol)))
                         {
                             accumForward.Normalize();
                             accumUp.Normalize();

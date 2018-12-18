@@ -2,25 +2,26 @@
 using System.Collections.Generic;
 using System.Linq;
 using Equinox76561198048419394.RailSystem.Util;
+using VRage.Collections;
 using VRage.Library.Logging;
 using VRageMath;
 
 namespace Equinox76561198048419394.RailSystem.Bendy
 {
-    public class Node
+    public class Node : UserDataTable
     {
         public readonly BendyLayer Graph;
         public Vector3D Position { get; private set; }
-        public Vector3D UpBias { get; private set; }
-        public Vector3D Up { get; private set; }
+        public Vector3 UpBias { get; private set; }
+        public Vector3 Up { get; private set; }
         private int _proxyId = -1;
         public int TangentPins { get; private set; }
 
         public Node(BendyLayer s, Vector3D pos, Vector3D up)
         {
             Position = pos;
-            Up = UpBias = up;
-            Tangent = Vector3D.Normalize(Vector3D.Cross(UpBias, UpBias.Shifted()));
+            Up = UpBias = (Vector3) up;
+            Tangent = Vector3.Normalize(Vector3.CalculatePerpendicularVector(Up));
             Graph = s;
             TangentPins = 0;
             EnsureInScene();
@@ -30,9 +31,9 @@ namespace Equinox76561198048419394.RailSystem.Bendy
         {
             if (TangentPins == 0)
             {
-                Tangent = matrix.Forward;
+                Tangent = (Vector3) matrix.Forward;
                 Position = matrix.Translation;
-                UpBias = Up = matrix.Up;
+                UpBias = Up = (Vector3) matrix.Up;
                 MarkDirty();
             }
 
@@ -48,12 +49,18 @@ namespace Equinox76561198048419394.RailSystem.Bendy
                 MyLog.Default.Warning($"Unpinned node more than we pinned");
         }
 
-        public Vector3D Tangent { get; private set; }
+        public Vector3 Tangent { get; private set; }
+
+        public delegate void DelNeighborChanged(Node self, Node target, Edge via);
+
+        public event DelNeighborChanged NeighborAdded;
+        public event DelNeighborChanged NeighborRemoved;
 
         private readonly Dictionary<Node, Edge> _neighbors = new Dictionary<Node, Edge>();
 
-        public IEnumerable<Node> Neighbors => _neighbors.Keys;
-        public IEnumerable<Edge> Edges => _neighbors.Values;
+        public DictionaryReader<Node, Edge> Connections => _neighbors;
+        public DictionaryKeysReader<Node, Edge> Neighbors => new DictionaryKeysReader<Node, Edge>(_neighbors);
+        public DictionaryValuesReader<Node, Edge> Edges => _neighbors;
         public MatrixD Matrix => MatrixD.CreateWorld(Position, Tangent, Up);
 
         public Edge ConnectionTo(Node other)
@@ -61,14 +68,28 @@ namespace Equinox76561198048419394.RailSystem.Bendy
             return _neighbors.GetValueOrDefault(other);
         }
 
+        private void RemoveNeighbor(Node n, Edge via)
+        {
+            var tmp = _neighbors[n];
+            Assert.True(via == tmp, "Remove neighbor via improper edge");
+            _neighbors.Remove(n);
+            NeighborRemoved?.Invoke(this, n, via);
+        }
+
+        private void AddNeighbor(Node n, Edge via)
+        {
+            _neighbors.Add(n, via);
+            NeighborAdded?.Invoke(this, n, via);
+        }
+
         /// <summary>
         /// Do not directly use!  Edge handles this.
         /// </summary>
         internal static void AddConnection(Edge edge)
         {
-            edge.From._neighbors.Add(edge.To, edge);
+            edge.From.AddNeighbor(edge.To, edge);
             edge.From.MarkDirty();
-            edge.To._neighbors.Add(edge.From, edge);
+            edge.To.AddNeighbor(edge.From, edge);
             edge.To.MarkDirty();
         }
 
@@ -77,8 +98,8 @@ namespace Equinox76561198048419394.RailSystem.Bendy
         /// </summary>
         internal static void RemoveConnection(Edge edge)
         {
-            edge.From._neighbors.Remove(edge.To);
-            edge.To._neighbors.Remove(edge.From);
+            edge.From.RemoveNeighbor(edge.To, edge);
+            edge.To.RemoveNeighbor(edge.From, edge);
 
             if (edge.From._neighbors.Count > 0)
                 edge.From.MarkDirty();
@@ -162,8 +183,8 @@ namespace Equinox76561198048419394.RailSystem.Bendy
             if (TangentPins == 0)
             {
                 Tangent = CalculateTangent();
-                var norm = Vector3D.Cross(UpBias, Tangent);
-                Up = Vector3D.Normalize(Vector3D.Cross(Tangent, norm));
+                var norm = Vector3.Cross(UpBias, Tangent);
+                Up = Vector3.Normalize(Vector3.Cross(Tangent, norm));
             }
 
             Graph.RaiseNodeMoved(this);
@@ -174,13 +195,13 @@ namespace Equinox76561198048419394.RailSystem.Bendy
                 b.MarkDirty();
         }
 
-        private Vector3D CalculateTangent()
+        private Vector3 CalculateTangent()
         {
             if (TangentPins > 0)
                 return Tangent;
             if (_neighbors.Count == 0)
             {
-                var tmp = Vector3D.Cross(UpBias, UpBias.Shifted());
+                var tmp = Vector3.CalculatePerpendicularVector(Up);
                 tmp.Normalize();
                 return tmp;
             }
@@ -188,14 +209,17 @@ namespace Equinox76561198048419394.RailSystem.Bendy
             // ReSharper disable once InvertIf
             if (_neighbors.Count > 1)
             {
-                var tan = Vector3D.Zero;
+                var tan = Vector3.Zero;
                 foreach (var k in _neighbors.Keys)
                 {
                     var op = Opposition(k);
 
-                    var a = Vector3D.Normalize(k.Position - Position);
-                    var b = Vector3D.Normalize(op.Position - Position);
-                    var tanVec = (a - b).SafeNormalized();
+                    var a = Vector3.Normalize(k.Position - Position);
+                    var b = Vector3.Normalize(op.Position - Position);
+                    var tanVec = a - b;
+                    var lenTmp = tanVec.Length();
+                    if (lenTmp > 1e-3f)
+                        tanVec /= lenTmp;
                     if (tan.Dot(tanVec) < 0)
                         tan -= tanVec;
                     else
@@ -207,10 +231,10 @@ namespace Equinox76561198048419394.RailSystem.Bendy
                     return tan / len;
             }
 
-            return Vector3D.Normalize(_neighbors.First().Key.Position - Position);
+            return Vector3.Normalize(_neighbors.First().Key.Position - Position);
         }
 
-        
+
         public bool InScene { get; private set; }
 
         public void EnsureInScene()
@@ -222,7 +246,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy
             Graph.RaiseNodeCreated(this);
             MarkDirty();
         }
-        
+
         public void Close()
         {
             if (_neighbors.Count > 0)

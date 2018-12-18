@@ -64,7 +64,7 @@ namespace Equinox76561198048419394.RailSystem.Voxel
             get
             {
                 if (_excavationCache != null) return _excavationCache;
-                if (_bendy == null || _bendy.Edges.Count == 0 || !Definition.Excavate.HasValue) return _excavationCache;
+                if (_bendy == null || _bendy.Edges.Length == 0 || !Definition.Excavate.HasValue) return _excavationCache;
                 var s = Definition.Excavate.Value;
                 return _excavationCache = CompositeGradeShape.Composite(
                     _bendy.Edges.Select(e => new RailGradeShape(new EdgeBlit(e), s.Width, s.RelaxAngleRadians, s.VerticalOffset, s.Segments, -s.Height, s.EndPadding))
@@ -79,7 +79,7 @@ namespace Equinox76561198048419394.RailSystem.Voxel
             get
             {
                 if (_supportCache != null) return _supportCache;
-                if (_bendy == null || _bendy.Edges.Count == 0 || !Definition.Support.HasValue) return _supportCache;
+                if (_bendy == null || _bendy.Edges.Length == 0 || !Definition.Support.HasValue) return _supportCache;
                 var s = Definition.Support.Value;
                 return _supportCache = CompositeGradeShape.Composite(
                     _bendy.Edges.Select(e => new RailGradeShape(new EdgeBlit(e), s.Width, s.RelaxAngleRadians, s.VerticalOffset, s.Segments, s.Height, s.EndPadding))
@@ -214,6 +214,8 @@ namespace Equinox76561198048419394.RailSystem.Voxel
                 return _isComplete;
             }
         }
+        
+        public bool IsValid => _bendy?.Edges != null && Definition != null;
 
         public RailGradeComponentBlit Blit()
         {

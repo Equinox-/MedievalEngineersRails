@@ -9,7 +9,21 @@ namespace Equinox76561198048419394.RailSystem.Util
     {
         private static readonly MyConcurrentQueue<NearestNodeQuery> _cache = new MyConcurrentQueue<NearestNodeQuery>();
 
-        public static IEnumerator<KeyValuePair<int, double>> SortedByDistance(this MyDynamicAABBTreeD tree,
+        public struct NearestNodeResult
+        {
+            public readonly int NodeIndex;
+            public readonly object UserData;
+            public readonly double DistanceSquared;
+
+            public NearestNodeResult(int idx, double distSq, object userData)
+            {
+                NodeIndex = idx;
+                UserData = userData;
+                DistanceSquared = distSq;
+            }
+        }
+
+        public static IEnumerator<NearestNodeResult> SortedByDistance(this MyDynamicAABBTreeD tree,
             Vector3D test)
         {
             NearestNodeQuery query;
@@ -19,7 +33,7 @@ namespace Equinox76561198048419394.RailSystem.Util
             return query;
         }
 
-        private class NearestNodeQuery : IEnumerator<KeyValuePair<int, double>>
+        private class NearestNodeQuery : IEnumerator<NearestNodeResult>
         {
             private Vector3D _vec;
             private MyDynamicAABBTreeD _tree;
@@ -65,7 +79,7 @@ namespace Equinox76561198048419394.RailSystem.Util
                     _tree.GetChildren(min, out child1, out child2);
                     if (child1 == -1)
                     {
-                        Current = new KeyValuePair<int, double>(min, minKey);
+                        Current = new NearestNodeResult(min, minKey, _tree.GetUserData<object>(min));
                         return true;
                     }
 
@@ -73,7 +87,7 @@ namespace Equinox76561198048419394.RailSystem.Util
                     Insert(child2);
                 }
 
-                Current = default(KeyValuePair<int, double>);
+                Current = default(NearestNodeResult);
                 return false;
             }
 
@@ -85,7 +99,7 @@ namespace Equinox76561198048419394.RailSystem.Util
                     Insert(rt);
             }
 
-            public KeyValuePair<int, double> Current { get; private set; }
+            public NearestNodeResult Current { get; private set; }
 
             object IEnumerator.Current => Current;
         }

@@ -1,7 +1,10 @@
 ﻿using System;
 using Equinox76561198048419394.RailSystem.Util;
 using Equinox76561198048419394.RailSystem.Util.Curve;
+using VRage.Components.Entity.Camera;
+using VRage.Game;
 using VRage.Library.Logging;
+using VRage.Utils;
 using VRageMath;
 
 namespace Equinox76561198048419394.RailSystem.Bendy
@@ -71,8 +74,8 @@ namespace Equinox76561198048419394.RailSystem.Bendy
                 _dirty = false;
             }
 
-            FromMatrix = MatrixD.CreateWorld(From.Position, Tangent(From.Tangent), From.Up);
-            ToMatrix = MatrixD.CreateWorld(To.Position, Tangent(To.Tangent), To.Up);
+            FromMatrix = MatrixD.CreateWorld(From.Position, CorrectTangent(From.Tangent), From.Up);
+            ToMatrix = MatrixD.CreateWorld(To.Position, CorrectTangent(To.Tangent), To.Up);
 
 
             var ext = Math.Max((FromMatrix.Translation - ToMatrix.Translation).Length() / 3, 1f);
@@ -131,7 +134,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy
             MarkDirty();
         }
 
-        public virtual void Close()
+        public void Close()
         {
             InScene = false;
             Node.RemoveConnection(this);
@@ -144,12 +147,60 @@ namespace Equinox76561198048419394.RailSystem.Bendy
             Graph.EdgeList.Remove(this);
         }
 
-
-        public Vector3D Tangent(Vector3D orig)
+        /// <summary>
+        /// Gets the other endpoint of this curve, given one endpoint
+        /// </summary>
+        /// <param name="n"></param>
+        /// <returns></returns>
+        public Node Opposition(Node n)
         {
-            if (orig.Dot(To.Position - From.Position) < 0)
+            return From == n ? To : From;
+        }
+
+        public Vector3 EdgeTangent => Vector3.Normalize(To.Position - From.Position);
+
+        /// <summary>
+        /// Corrects a tangent vector so that it points in the general direction of positive T factor
+        /// </summary>
+        /// <param name="orig"></param>
+        /// <returns></returns>
+        public Vector3 CorrectTangent(Vector3 orig)
+        {
+            if (orig.Dot((Vector3) (To.Position - From.Position)) < 0)
                 return -orig;
             return orig;
+        }
+
+        private const float EdgeWidth = 0.05f;
+        private static readonly MyStringId SquareMaterial = MyStringId.GetOrCompute("Square");
+        private const float EdgeMarkerVertOffset = 0.325f;
+
+        public void DebugDraw(float tStart, float tEnd, Vector4 color, int verticalGroup = 0)
+        {
+            var cam2 = MyCameraComponent.ActiveCamera;
+            if (cam2 == null || Curve == null)
+                return;
+            var bezCurve = Curve;
+            var first = bezCurve.Sample(tStart);
+            var last = bezCurve.Sample(tEnd);
+            var center = (first + last) / 2;
+            var factor = Math.Sqrt(Vector3D.DistanceSquared(first, last) / (1 + Vector3D.DistanceSquared(cam2.GetPosition(), center)));
+            var count = (int) MathHelper.Clamp(factor * 5, 1, 25);
+            if (bezCurve is LinearCurve)
+                count = 1;
+            var lastPos = default(Vector3D);
+            for (var t = 0; t <= count; t++)
+            {
+                var time = MathHelper.Lerp(tStart, tEnd, (t / (float) count));
+                var pos = bezCurve.Sample(time);
+                var pact = pos + Vector3D.Lerp(From.Up, To.Up, time) * (EdgeMarkerVertOffset + verticalGroup * EdgeWidth * 8);
+                if (t > 0)
+                {
+                    MySimpleObjectDraw.DrawLine(lastPos, pact, SquareMaterial, ref color, EdgeWidth);
+                }
+
+                lastPos = pact;
+            }
         }
     }
 }

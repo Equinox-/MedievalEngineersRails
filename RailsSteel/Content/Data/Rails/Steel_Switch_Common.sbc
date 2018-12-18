@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <Definition xsi:type="MyObjectBuilder_RailSegmentDefinition">
+        <Id Type="MyObjectBuilder_RailSegmentComponent" Subtype="RailSwitch" />
+        <Capabilities>
+            <Capability ActivationLevel="0.95" Friction="1" MaxSpeed="30" Gauge="1.435" />
+        </Capabilities>
+    </Definition>
+
+    <Definition xsi:type="MyObjectBuilder_RailSwitchInternalComponentDefinition">
+        <Id Type="MyObjectBuilder_RailSwitchInternalComponent" Subtype="RailSwitch" />
+        <Switchable Dummy="detector_switch">
+            <Intersection>0</Intersection>
+            <Destination>2</Destination>
+            <Destination>1</Destination>
+        </Switchable>
+    </Definition>
+
+    <Definition xsi:type="MyObjectBuilder_ContainerDefinition">
+        <Id Type="CubeBlock" Subtype="RailSwitchBase" />
+
+        <Component Type="RailSegmentComponent" Subtype="RailSwitch" />
+        <Component Type="UseObjectsComponent" Subtype="RailSwitch" />
+        <Component Type="RailGradeComponent" Subtype="RailSteel"/>
+        <Component Type="RailSwitchInternalComponent" Subtype="RailSwitch" />
+        <Component Type="SkeletonComponent" />
+    </Definition>
+
+    <Definition xsi:type="MyObjectBuilder_UseObjectsComponentDefinition">
+        <Id Type="UseObjectsComponent" Subtype="RailSwitch" />
+        <LoadFromModel>false</LoadFromModel>
+        <CustomUseObject Name="generic" Dummy="detector_switch" Scale="0.0" />
+    </Definition>
+
+    <!-- the handle -->
+    <Definition xsi:type="MyObjectBuilder_ContainerDefinition" Copy="Append">
+        <Id Type="MyObjectBuilder_EntityBase" Subtype="RailSwitchHandle" />
+
+        <Component Type="ModelComponent" Subtype="RailSwitchHandle" />
+        <Component Type="UseObjectsComponent" Subtype="RailSwitchHandleDetector" />
+        <Component Type="PhysicsBodyComponent" Subtype="InteractableProxyBase" />
+    </Definition>
+
+    <Definition xsi:type="MyObjectBuilder_ModelComponentDefinition">
+        <Id Type="ModelComponent" Subtype="RailSwitchHandle" />
+        <Model>Models\Equinox\RailsGaugeStandard\Steel\Switch_Handle.mwm</Model>
+        <PhysicalMaterial>Wood</PhysicalMaterial>
+    </Definition>
+
+    <Definition xsi:type="MyObjectBuilder_UseObjectsComponentDefinition">
+        <Id Type="UseObjectsComponent" Subtype="RailSwitchHandleDetector" />
+        <LoadFromModel>false</LoadFromModel>
+        <CustomUseObject Name="proxy" Dummy="detector_switch" Scale="5.0" />
+    </Definition>
+</Definitions>

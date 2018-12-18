@@ -134,8 +134,7 @@ namespace Equinox76561198048419394.RailSystem.Construction
             base.OnAddedToContainer();
             ModelChanged = null;
             IntegrityChanged = null;
-            IntegrityChanged += () =>
-                MyAPIGateway.Multiplayer?.RaiseEvent(this, cc => cc.SyncIntegrity, BuildIntegrity);
+            IntegrityChanged += () => MyMultiplayerModApi.Static.RaiseEvent(this, cc => cc.SyncIntegrity, BuildIntegrity);
             IntegrityChanged += CheckModel;
         }
 
@@ -476,13 +475,13 @@ namespace Equinox76561198048419394.RailSystem.Construction
                     (_component._stockpile == null || _component._stockpile.IsEmpty()))
                 {
                     // full resync, clear
-                    MyAPIGateway.Multiplayer?.RaiseEvent(_component, cc => cc.SyncFullStateBcast, SyncComponentBlit.Empty);
+                    MyMultiplayerModApi.Static.RaiseEvent(_component, cc => cc.SyncFullStateBcast, SyncComponentBlit.Empty);
                 }
                 else if (alwaysFullSync || ((_snapshot == null || _snapshot.Count == 0) &&
                                             (_component._stockpile != null && !_component._stockpile.IsEmpty())))
                 {
                     // full resync, set
-                    MyAPIGateway.Multiplayer?.RaiseEvent(_component, cc => cc.SyncFullStateBcast,
+                    MyMultiplayerModApi.Static.RaiseEvent(_component, cc => cc.SyncFullStateBcast,
                         _component._stockpile?.Items?.Select(x => (SyncComponentBlit) x).ToArray() ?? SyncComponentBlit.Empty);
                 }
                 else if (_snapshot != null && _component._stockpile != null)
@@ -501,7 +500,7 @@ namespace Equinox76561198048419394.RailSystem.Construction
                     var i = 0;
                     foreach (var k in _snapshot)
                         changes[i++] = new SyncComponentBlit() {Id = k.Key, Count = _component._stockpile.Items.GetValueOrDefault(k.Key)};
-                    MyAPIGateway.Multiplayer?.RaiseEvent(_component, cc => cc.SyncPartialState, changes,
+                    MyMultiplayerModApi.Static.RaiseEvent(_component, cc => cc.SyncPartialState, changes,
                         _component.ComputeComponentHash());
                 }
 
@@ -534,7 +533,7 @@ namespace Equinox76561198048419394.RailSystem.Construction
             ParseState(false, changed);
             if (ComputeComponentHash() == hash) return;
             MyLog.Default.Warning($"Constructable state verification failed, reacquiring");
-            MyAPIGateway.Multiplayer.RaiseEvent(this, cc => cc.SyncRequestFullState);
+            MyMultiplayerModApi.Static.RaiseEvent(this, cc => cc.SyncRequestFullState);
         }
 
         [Event]
@@ -586,7 +585,7 @@ namespace Equinox76561198048419394.RailSystem.Construction
         [Server]
         private void SyncRequestFullState()
         {
-            MyAPIGateway.Multiplayer.RaiseEvent(this, cc => cc.SyncFullState,
+            MyMultiplayerModApi.Static.RaiseEvent(this, cc => cc.SyncFullState,
                 _stockpile?.Items.Select(x => (SyncComponentBlit) x).ToArray() ?? SyncComponentBlit.Empty,
                 MyEventContext.Current.Sender);
         }

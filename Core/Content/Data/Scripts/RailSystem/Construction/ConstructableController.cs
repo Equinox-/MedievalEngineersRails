@@ -35,7 +35,7 @@ namespace Equinox76561198048419394.RailSystem.Construction
                 result = idx;
             }
 
-            MyAPIGateway.Multiplayer?.RaiseStaticEvent(s => PaletteUpdateClient, result, (DefinitionIdBlit) def, HashPalette());
+            MyMultiplayerModApi.Static.RaiseStaticEvent(s => PaletteUpdateClient, result, (DefinitionIdBlit) def, HashPalette());
             return result;
         }
 
@@ -103,7 +103,7 @@ namespace Equinox76561198048419394.RailSystem.Construction
             if (hash == verifyHash) return;
 
             MyLog.Default.Warning($"Palette verification failed, reacquiring");
-            MyAPIGateway.Multiplayer.RaiseStaticEvent(s => PaletteRequestUpdateServer);
+            MyMultiplayerModApi.Static.RaiseStaticEvent(s => PaletteRequestUpdateServer);
         }
 
         [Event]
@@ -139,7 +139,7 @@ namespace Equinox76561198048419394.RailSystem.Construction
             if (mgr == null)
                 return;
             var blits = mgr._definitionPalette.Select(x => (DefinitionIdBlit) x).ToArray();
-            MyAPIGateway.Multiplayer.RaiseStaticEvent(s => PaletteFullUpdateClient, blits, MyEventContext.Current.Sender);
+            MyMultiplayerModApi.Static.RaiseStaticEvent(s => PaletteFullUpdateClient, blits, MyEventContext.Current.Sender);
         }
     }
 

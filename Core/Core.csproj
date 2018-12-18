@@ -26,6 +26,9 @@
       <HintPath>..\packages\Keen.MedievalEngineers.0.6.4.8686242\lib\net461\DirectShowLib-2005.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="EquinoxCore, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
+      <HintPath>..\..\MiscMods\EquinoxCore\bin\Debug\x64\EquinoxCore.dll</HintPath>
+    </Reference>
     <Reference Include="GameAnalytics.Mono, Version=1.0.6710.29255, Culture=neutral, PublicKeyToken=null">
       <HintPath>..\packages\Keen.MedievalEngineers.0.6.4.8686242\lib\net461\GameAnalytics.Mono.dll</HintPath>
       <Private>True</Private>
@@ -61,9 +64,6 @@
     <Reference Include="NLog, Version=4.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c">
       <HintPath>..\packages\Keen.MedievalEngineers.0.6.4.8686242\lib\net461\NLog.dll</HintPath>
       <Private>True</Private>
-    </Reference>
-    <Reference Include="PlayerAttachmentComponent, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
-      <HintPath>..\..\MiscMods\PlayerAttachmentComponent\bin\x64\Debug\PlayerAttachmentComponent.dll</HintPath>
     </Reference>
     <Reference Include="RecastDetourWrapper, Version=1.0.6302.28662, Culture=neutral, PublicKeyToken=null">
       <HintPath>..\packages\Keen.MedievalEngineers.0.6.4.8686242\lib\net461\RecastDetourWrapper.dll</HintPath>
@@ -223,8 +223,14 @@
     <Compile Include="Content\Data\Scripts\RailSystem\Construction\ConstructionStockpile.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Construction\ConstructorBehavior.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Construction\IConstructionPrereq.cs" />
+    <Compile Include="Content\Data\Scripts\RailSystem\Definition\IRailSwitch.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Definition\RailSegmentComponent.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Definition\RailSegmentDefinition.cs" />
+    <Compile Include="Content\Data\Scripts\RailSystem\Definition\RailSwitchImpactProxyComponent.cs" />
+    <Compile Include="Content\Data\Scripts\RailSystem\Definition\SwitchableNodeSide.cs" />
+    <Compile Include="Content\Data\Scripts\RailSystem\Definition\RailSwitchExternalComponent.cs" />
+    <Compile Include="Content\Data\Scripts\RailSystem\Definition\RailSwitchInternalComponent.cs" />
+    <Compile Include="Content\Data\Scripts\RailSystem\Definition\SwitchableNodeData.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Physics\BogieComponent.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Physics\BogieComponentDefinition.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Quest\Conditions\QuestConditionConstructable.cs" />
@@ -250,6 +256,7 @@
     <Compile Include="Content\Data\Scripts\RailSystem\Util\ShellEnumerator.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Util\SphericalExtensions.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Util\TriangleUtil.cs" />
+    <Compile Include="Content\Data\Scripts\RailSystem\Util\UserDataTable.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Util\VectorExtensions.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Util\WhitelistExtensions.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Voxel\EdgeBlit.cs" />

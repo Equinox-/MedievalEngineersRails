@@ -28,8 +28,8 @@
                   <X>241</X>
                   <Y>-43</Y>
                 </EdPos>
-                <PathToModel>Models\Equinox\RailsGaugeStandard\Steel\Switch_RightHand_Parallel_Skin_Diverging.mwm</PathToModel>
-                <AnimationName>AnimStack::Armature|Action</AnimationName>
+                <PathToModel>Models\Equinox\RailsGaugeStandard\Steel\Switch_RightHand_Parallel.mwm</PathToModel>
+                <AnimationName>AnimStack::Armature|PoseDiverge</AnimationName>
                 <Loop>false</Loop>
                 <Speed>-0</Speed>
                 <Interpolate>true</Interpolate>
@@ -53,8 +53,8 @@
                   <X>241</X>
                   <Y>-43</Y>
                 </EdPos>
-                <PathToModel>Models\Equinox\RailsGaugeStandard\Steel\Switch_RightHand_Parallel_Skin_Straight.mwm</PathToModel>
-                <AnimationName>AnimStack::Armature|ArmatureAction</AnimationName>
+                <PathToModel>Models\Equinox\RailsGaugeStandard\Steel\Switch_RightHand_Parallel.mwm</PathToModel>
+                <AnimationName>AnimStack::Armature|PoseStraight</AnimationName>
                 <Loop>false</Loop>
                 <Speed>1</Speed>
                 <Interpolate>true</Interpolate>

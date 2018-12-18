@@ -32,7 +32,7 @@ namespace Equinox76561198048419394.RailSystem.Util
 
         public static bool IsServerDecider(this IMySession session)
         {
-            return MyAPIGateway.Multiplayer?.IsServer ?? true;
+            return MyMultiplayerModApi.Static.IsServer;
         }
 
         public static bool HasPermission(this IMyPlayer player, Vector3D location, MyStringId id)

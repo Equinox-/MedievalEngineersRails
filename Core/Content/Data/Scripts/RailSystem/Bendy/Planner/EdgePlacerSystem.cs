@@ -184,6 +184,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
                     if (nextPos.HasValue && !VerifyJoint(def, prevPos, herePos, nextPos.Value, errors) && errors == null)
                         return false;
                 }
+
                 prevPos = herePos;
             }
 
@@ -192,10 +193,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
 
         public static void RaisePlaceEdge(EdgePlacerConfig cfg, Vector3D[] segments)
         {
-            if (MyAPIGateway.Multiplayer != null)
-                MyAPIGateway.Multiplayer.RaiseStaticEvent(x => PlaceEdge, cfg, segments);
-            else
-                PlaceEdge(cfg, segments);
+            MyMultiplayerModApi.Static.RaiseStaticEvent(x => PlaceEdge, cfg, segments);
         }
 
         [Event]
@@ -327,6 +325,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
                     entity.Components.Get<ConstructableComponent>()
                         ?.IncreaseIntegrity(1e9f, out test, out test2);
                 }
+
                 entity.Components.Get<BendyPhysicsComponent>()?.DestroyEnvItems();
 
                 EntityAdded?.Invoke(holderEntity, holderPlayer, entity);
@@ -335,10 +334,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
 
         public static void RaiseRemoveEdge(long removerEntityId, long entityIdToRemove)
         {
-            if (MyAPIGateway.Multiplayer != null)
-                MyAPIGateway.Multiplayer.RaiseStaticEvent(x => RemoveEdge, removerEntityId, entityIdToRemove);
-            else
-                RemoveEdge(removerEntityId, entityIdToRemove);
+            MyMultiplayerModApi.Static.RaiseStaticEvent(x => RemoveEdge, removerEntityId, entityIdToRemove);
         }
 
         [Event]

@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using Equinox76561198048419394.RailSystem.Util;
 using Equinox76561198048419394.RailSystem.Util.Curve;
 using Sandbox.Game.GameSystems;
+using Sandbox.ModAPI;
 using VRage.Components.Entity.Camera;
 using VRage.Game;
+using VRage.Game.ModAPI;
 using VRage.Utils;
 using VRageMath;
 
@@ -54,7 +56,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy
         {
             using (var e = Nodes.SortedByDistance(v))
                 if (e.MoveNext())
-                    return Nodes.GetUserData<Node>(e.Current.Key);
+                    return (Node) e.Current.UserData;
             return null;
         }
 
@@ -105,22 +107,21 @@ namespace Equinox76561198048419394.RailSystem.Bendy
                 n.DeferredUpdate();
             }
 
-            if (RailConstants.Debug.DrawGraphEdges || RailConstants.Debug.DrawGraphNodes)
+            if (!((IMyUtilities) MyAPIUtilities.Static).IsDedicated && (RailConstants.Debug.DrawGraphEdges || RailConstants.Debug.DrawGraphNodes))
                 DebugDraw();
         }
 
 
-        private const float _edgeWidth = 0.05f;
         private const float _nodeWidth = 0.01f;
         private static Vector4 _edgeColor = new Vector4(1, 0, 1, 0.1f);
-        private static readonly Vector4 _edgeColorBad = new Vector4(1, 0, 0, 0.1f);
         private static readonly Vector4 _nodeColor = new Vector4(0, 0, 1, 0.1f);
         private static readonly MyStringId _squareMaterial = MyStringId.GetOrCompute("Square");
         private const float _nodeMarkerSize = 1;
-        private const float _edgeMarkerVertOffset = 0.325f;
 
         private void DebugDraw()
         {
+            if (((IMyUtilities) MyAPIUtilities.Static).IsDedicated)
+                return;
             var cam = MyCameraComponent.ActiveCamera;
             if (cam == null)
                 return;
@@ -137,27 +138,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy
                 });
 
             if (RailConstants.Debug.DrawGraphEdges)
-                Edges.OverlapAllFrustum(ref frust, (Edge edge, bool intersects) =>
-                {
-                    var bezCurve = edge.Curve;
-                    var first = bezCurve.Sample(0);
-                    var last = bezCurve.Sample(1);
-                    var center = (first + last) / 2;
-                    var factor = Math.Sqrt(Vector3D.DistanceSquared(first, last) / (1 + Vector3D.DistanceSquared(cam.GetPosition(), center)));
-                    var count = MathHelper.Clamp(factor * 50, 1, 25);
-                    if (bezCurve is LinearCurve)
-                        count = 1;
-                    var lastPos = default(Vector3D);
-                    for (var t = 0; t <= count; t++)
-                    {
-                        var time = t / (float) count;
-                        var pos = bezCurve.Sample(time);
-                        var pact = pos + Vector3D.Lerp(edge.From.Up, edge.To.Up, time) * _edgeMarkerVertOffset;
-                        if (t > 0)
-                            MySimpleObjectDraw.DrawLine(lastPos, pact, _squareMaterial, ref _edgeColor, _edgeWidth);
-                        lastPos = pact;
-                    }
-                });
+                Edges.OverlapAllFrustum(ref frust, (Edge edge, bool intersects) => { edge.DebugDraw(0, 1, _edgeColor); });
         }
     }
 }

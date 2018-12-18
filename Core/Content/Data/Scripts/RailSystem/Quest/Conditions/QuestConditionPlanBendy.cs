@@ -41,7 +41,7 @@ namespace Equinox76561198048419394.RailSystem.Quest.Conditions
             if (!MyAPIGateway.Session.IsServerDecider())
                 return;
 
-            if (Definition.Amount == 0 || this.Player().IsCreative())
+            if (Definition.Amount == 0 || MyAPIGateway.Session.CreativeMode)
             {
                 _amountPlanned = Definition.Amount;
                 MarkAsCompleted();

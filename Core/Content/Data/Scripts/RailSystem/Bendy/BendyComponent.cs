@@ -28,8 +28,8 @@ namespace Equinox76561198048419394.RailSystem.Bendy
         {
             base.Init(def);
             Definition = (BendyComponentDefinition) def;
-            _nodes = new Node[Definition.Nodes.Count];
-            _edges = new Edge[Definition.Edges.Count];
+            Nodes = new Node[Definition.Nodes.Count];
+            Edges = new Edge[Definition.Edges.Count];
         }
 
         #region Serialization
@@ -53,18 +53,18 @@ namespace Equinox76561198048419394.RailSystem.Bendy
 
         private void CacheMovableData()
         {
-            if (_nodes == null || Definition == null || _nodes.All(x => x == null))
+            if (Nodes == null || Definition == null || Nodes.All(x => x == null))
                 return;
             _movableNodeData.Clear();
-            for (var i = 0; i < Math.Min(Definition.Nodes.Count, _nodes.Length); i++)
-                if (Definition.Nodes[i].Movable && _nodes[i] != null)
+            for (var i = 0; i < Math.Min(Definition.Nodes.Count, Nodes.Length); i++)
+                if (Definition.Nodes[i].Movable && Nodes[i] != null)
                 {
                     var inv = Entity.PositionComp.WorldMatrixInvScaled;
                     _movableNodeData[(uint) i] = new MyObjectBuilder_BendyComponent.NodePose
                     {
                         Index = (uint) i,
-                        Position = (Vector3) Vector3D.Transform(_nodes[i].Position, inv),
-                        Up = (Vector3) Vector3D.TransformNormal(_nodes[i].Up, inv)
+                        Position = (Vector3) Vector3D.Transform(Nodes[i].Position, inv),
+                        Up = (Vector3) Vector3D.TransformNormal(Nodes[i].Up, inv)
                     };
                 }
         }
@@ -87,8 +87,8 @@ namespace Equinox76561198048419394.RailSystem.Bendy
 
         #endregion
 
-        public IReadOnlyList<Node> Nodes => _nodes;
-        public IReadOnlyList<Edge> Edges => _edges;
+        public Node[] Nodes { get; private set; }
+        public Edge[] Edges { get; private set; }
 
         public event Action<BendyComponent> EdgeSetupChanged;
         public event Action<BendyComponent, Edge> EdgeRemoved;
@@ -109,9 +109,6 @@ namespace Equinox76561198048419394.RailSystem.Bendy
                 _skeletonComponent.OnReloadBones += OnBonesReloaded;
         }
 
-        private Node[] _nodes;
-        private Edge[] _edges;
-
         private void ReloadNodesAndEdges()
         {
             CloseNodesAndEdges();
@@ -119,12 +116,12 @@ namespace Equinox76561198048419394.RailSystem.Bendy
                 return;
             var entityMatrix = Entity.PositionComp.WorldMatrix;
 
-            for (var i = 0; i < _nodes.Length; i++)
+            for (var i = 0; i < Nodes.Length; i++)
             {
                 MyObjectBuilder_BendyComponent.NodePose data;
                 if (_movableNodeData.TryGetValue((uint) i, out data))
                 {
-                    _nodes[i] = Graph.GetOrCreateNode(Vector3D.Transform((Vector3) data.Position, ref entityMatrix),
+                    Nodes[i] = Graph.GetOrCreateNode(Vector3D.Transform((Vector3) data.Position, ref entityMatrix),
                         Vector3D.Transform((Vector3) data.Up, ref entityMatrix));
                 }
                 else
@@ -133,25 +130,25 @@ namespace Equinox76561198048419394.RailSystem.Bendy
                         $"Creating movable bendy node {i} for entity {Entity}, component def {Definition.Id} without movable data");
 
                     var nodeMatrix = Definition.Nodes[i].Position * entityMatrix;
-                    _nodes[i] = Graph.GetOrCreateNode(nodeMatrix.Translation, nodeMatrix.Up, !Definition.Nodes[i].Movable);
+                    Nodes[i] = Graph.GetOrCreateNode(nodeMatrix.Translation, nodeMatrix.Up, !Definition.Nodes[i].Movable);
                     if (!Definition.Nodes[i].Movable)
-                        _nodes[i].Pin(nodeMatrix);
+                        Nodes[i].Pin(nodeMatrix);
                 }
 
-                if (_nodes[i] != null)
-                    NodeAdded?.Invoke(this, _nodes[i]);
+                if (Nodes[i] != null)
+                    NodeAdded?.Invoke(this, Nodes[i]);
             }
 
-            for (var i = 0; i < _edges.Length; i++)
+            for (var i = 0; i < Edges.Length; i++)
             {
                 var def = Definition.Edges[i];
-                var from = _nodes[def.From];
-                var to = _nodes[def.To];
-                _edges[i] = Graph.GetEdge(from, to) ?? Graph.CreateEdge(this, from, to, def.Mode, def.Control0, def.Control1);
-                if (_edges[i] != null)
+                var from = Nodes[def.From];
+                var to = Nodes[def.To];
+                Edges[i] = Graph.GetEdge(from, to) ?? Graph.CreateEdge(this, from, to, def.Mode, def.Control0, def.Control1);
+                if (Edges[i] != null)
                 {
-                    EdgeAdded?.Invoke(this, _edges[i]);
-                    _edges[i].CurveUpdated += OnCurveUpdated;
+                    EdgeAdded?.Invoke(this, Edges[i]);
+                    Edges[i].CurveUpdated += OnCurveUpdated;
                 }
             }
 
@@ -174,11 +171,11 @@ namespace Equinox76561198048419394.RailSystem.Bendy
 
         private void OnCurveUpdated(Edge e)
         {
-            if (_edges == null)
+            if (Edges == null)
                 return;
             EdgeSetupChanged?.Invoke(this);
-            for (var i = 0; i < _edges.Length; i++)
-                if (_edges[i] == e)
+            for (var i = 0; i < Edges.Length; i++)
+                if (Edges[i] == e)
                 {
                     var def = Definition.Edges[i];
                     if (def.Bones != null && def.Bones.Count > 0)
@@ -211,7 +208,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy
                         var weight = 0f;
                         foreach (var meta in boneMeta)
                         {
-                            var edge = _edges?[meta.Edge];
+                            var edge = Edges?[meta.Edge];
                             if (edge?.Curve == null)
                                 continue;
                             var pos = edge.Curve.Sample(meta.EdgeFactor);
@@ -249,34 +246,54 @@ namespace Equinox76561198048419394.RailSystem.Bendy
         private void CloseNodesAndEdges()
         {
             CacheMovableData();
-            if (_edges != null)
-                for (var i = 0; i < _edges.Length; i++)
+            if (Edges != null)
+                for (var i = 0; i < Edges.Length; i++)
                 {
-                    if (_edges[i] != null)
+                    if (Edges[i] != null)
                     {
-                        _edges[i].CurveUpdated -= OnCurveUpdated;
-                        EdgeRemoved?.Invoke(this, _edges[i]);
-                        _edges[i].Close();
+                        Edges[i].CurveUpdated -= OnCurveUpdated;
+                        EdgeRemoved?.Invoke(this, Edges[i]);
+                        Edges[i].Close();
                     }
 
-                    _edges[i] = null;
+                    Edges[i] = null;
                 }
 
             // ReSharper disable once InvertIf
-            if (_nodes != null)
-                for (var i = 0; i < _nodes.Length; i++)
+            if (Nodes != null)
+                for (var i = 0; i < Nodes.Length; i++)
                 {
-                    if (_nodes[i] != null)
+                    if (Nodes[i] != null)
                     {
-                        NodeRemoved?.Invoke(this, _nodes[i]);
+                        NodeRemoved?.Invoke(this, Nodes[i]);
                         if (!Definition.Nodes[i].Movable)
-                            _nodes[i].UnpinTangent();
+                            Nodes[i].UnpinTangent();
                     }
 
-                    _nodes[i] = null;
+                    Nodes[i] = null;
                 }
 
             EdgeSetupChanged?.Invoke(this);
+        }
+
+        public int IndexOfNode(Node n)
+        {
+            if (Nodes == null)
+                return -1;
+            for (var i = 0; i < Nodes.Length; i++)
+                if (Nodes[i] == n)
+                    return i;
+            return -1;
+        }
+        
+        public int IndexOfEdge(Edge n)
+        {
+            if (Edges == null)
+                return -1;
+            for (var i = 0; i < Edges.Length; i++)
+                if (Edges[i] == n)
+                    return i;
+            return -1;
         }
     }
 

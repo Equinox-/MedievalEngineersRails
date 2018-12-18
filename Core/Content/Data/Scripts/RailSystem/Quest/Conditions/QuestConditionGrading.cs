@@ -42,7 +42,7 @@ namespace Equinox76561198048419394.RailSystem.Quest.Conditions
             if (!MyAPIGateway.Session.IsServerDecider())
                 return;
 
-            if ((Definition.VolumeAdded <= 0 && Definition.VolumeRemoved <= 0) || this.Player().IsCreative())
+            if ((Definition.VolumeAdded <= 0 && Definition.VolumeRemoved <= 0) || MyAPIGateway.Session.CreativeMode)
             {
                 _volumeAdded = Definition.VolumeAdded;
                 _volumeRemoved = Definition.VolumeRemoved;

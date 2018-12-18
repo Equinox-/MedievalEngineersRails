@@ -8,9 +8,16 @@
             public bool DrawGraphEdges;
             public bool AssertsWithStacks;
             public bool DrawBogiePhysics;
+            public bool DrawBendyPhysics;
+            public bool DrawSwitchControllers;
+            public bool DrawBogieEdges;
         }
 
-//        public static DebugOptions Debug = new DebugOptions {AssertsWithStacks = true, DrawGraphEdges = true, DrawGraphNodes = true, DrawBogiePhysics = true};
+//        public static DebugOptions Debug = new DebugOptions
+//        {
+//            AssertsWithStacks = false, DrawGraphEdges = false, DrawGraphNodes = false, DrawBogiePhysics = false,
+//            DrawBendyPhysics = false, DrawSwitchControllers = true, DrawBogieEdges = false
+//        };
         public static DebugOptions Debug = default(DebugOptions);
 
         // Maximum nodes in a single call

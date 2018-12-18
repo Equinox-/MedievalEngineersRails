@@ -58,6 +58,11 @@
                 <Condition xsi:type="Quest.Conditions.Craft" Type="HandItem" Subtype="HammerRail" Amount="1"/>
                 <Condition xsi:type="Quest.Conditions.Craft" Type="HandItem" Subtype="GraderRail" Amount="1"/>
             </Condition>
+            
+            <Action xsi:type="Quest.Actions.UnlockResearch" Type="CraftingRecipeDefinition" Subtype="MeltHammerRail"/>
+            <Action xsi:type="Quest.Actions.UnlockResearch" Type="CraftingRecipeDefinition" Subtype="MeltHammerRail_Unbroken"/>
+            <Action xsi:type="Quest.Actions.UnlockResearch" Type="CraftingRecipeDefinition" Subtype="MeltGraderRail"/>
+            <Action xsi:type="Quest.Actions.UnlockResearch" Type="CraftingRecipeDefinition" Subtype="MeltGraderRail_Unbroken"/>
         </Step>
     </Definition>
 </Definitions>

@@ -7,10 +7,12 @@
         <Entry Type="CraftingRecipeDefinition" Subtype="GraderRail" />
         <Entry Type="HandItem" Subtype="GraderRail" />
         <Entry Type="CraftingRecipeDefinition" Subtype="MeltGraderRail" />
+        <Entry Type="CraftingRecipeDefinition" Subtype="MeltGraderRail_Unbroken" />
         
         <Entry Type="CraftingRecipeDefinition" Subtype="HammerRail" />
         <Entry Type="HandItem" Subtype="HammerRail" />
         <Entry Type="CraftingRecipeDefinition" Subtype="MeltHammerRail" />
+        <Entry Type="CraftingRecipeDefinition" Subtype="MeltHammerRail_Unbroken" />
         
         <Entry Type="CraftingRecipeDefinition" Subtype="SchematicToolsRail" />
     </Definition>

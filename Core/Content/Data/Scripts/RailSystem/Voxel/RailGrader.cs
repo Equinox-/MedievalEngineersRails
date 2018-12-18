@@ -68,7 +68,7 @@ namespace Equinox76561198048419394.RailSystem.Voxel
                 _storage.Resize(voxMin, voxMax);
                 voxel.Storage.ReadRange(_storage, MyStorageDataTypeFlags.ContentAndMaterial, 0, voxMin, voxMax);
 
-                bool changed = false;
+                var changed = false;
 
                 #region Mutate
 
@@ -210,7 +210,7 @@ namespace Equinox76561198048419394.RailSystem.Voxel
         }
 
 
-        private const int _gradingDesyncTol = 5;
+        private const int GradingDesyncTol = 25;
 
         private struct GradingConfig
         {
@@ -227,7 +227,7 @@ namespace Equinox76561198048419394.RailSystem.Voxel
         public static void RaiseDoGrade(IEnumerable<RailGradeComponent> components, Vector3D pos, float radius, uint availableForDeposit,
             uint availableForExcavate, byte fillMaterial, uint totalExcavated, uint totalDeposited)
         {
-            MyAPIGateway.Multiplayer?.RaiseStaticEvent((x) => DoGrade, components.Select(x => x.Blit()).ToArray(), pos,
+            MyMultiplayerModApi.Static.RaiseStaticEvent((x) => DoGrade, components.Where(x => x.IsValid).Select(x => x.Blit()).ToArray(), pos,
                 new GradingConfig()
                 {
                     Radius = radius,
@@ -253,7 +253,7 @@ namespace Equinox76561198048419394.RailSystem.Voxel
             DoGrading(cbox, target, config.Radius, config.DepositAvailable, config.ExcavateAvailable, null, config.MaterialToDeposit, out deposited,
                 out excavated, true, out triedToChange, out intersectedDynamic);
 
-            if (Math.Abs(config.DepositExpected - deposited) <= _gradingDesyncTol && Math.Abs(config.ExcavateExpected - excavated) <= _gradingDesyncTol) return;
+            if (Math.Abs(config.DepositExpected - deposited) <= GradingDesyncTol && Math.Abs(config.ExcavateExpected - excavated) <= GradingDesyncTol) return;
             
             MyLog.Default.Warning($"Grading desync occured!  {config.DepositExpected} != {deposited}, {config.ExcavateExpected} != {excavated}");
             var time = DateTime.Now;

@@ -4,36 +4,36 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Core", "Core\Core.csproj", 
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Handcart", "Handcart", "{AA5705EF-365C-4ED2-89EE-0F389BF2454C}"
 ProjectSection(SolutionItems) = preProject
-	Handcart\Content\Data\AnimationController_Bogie.sbc = Handcart\Content\Data\AnimationController_Bogie.sbc
-	Handcart\Content\Data\AnimationController_Female.sbc = Handcart\Content\Data\AnimationController_Female.sbc
-	Handcart\Content\Data\AnimationController_Handcart.sbc = Handcart\Content\Data\AnimationController_Handcart.sbc
-	Handcart\Content\Data\AnimationController_Male.sbc = Handcart\Content\Data\AnimationController_Male.sbc
-	Handcart\Content\Data\Bogie.sbc = Handcart\Content\Data\Bogie.sbc
-	Handcart\Content\Data\Handcart.sbc = Handcart\Content\Data\Handcart.sbc
 	Handcart\Content\Data\Research\QuestBogie.sbc = Handcart\Content\Data\Research\QuestBogie.sbc
 	Handcart\Content\Data\Research\QuestHandcart.sbc = Handcart\Content\Data\Research\QuestHandcart.sbc
 	Handcart\Content\Data\Research\SchematicBogie.sbc = Handcart\Content\Data\Research\SchematicBogie.sbc
 	Handcart\Content\Data\Research\SchematicHandcart.sbc = Handcart\Content\Data\Research\SchematicHandcart.sbc
+	Handcart\Content\Data\Bogie\Bogie.sbc = Handcart\Content\Data\Bogie\Bogie.sbc
+	Handcart\Content\Data\Bogie\Handcart.sbc = Handcart\Content\Data\Bogie\Handcart.sbc
 EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "RailsSteel", "RailsSteel", "{942E6E1B-9581-4406-BF51-08D434DD24EF}"
 ProjectSection(SolutionItems) = preProject
-	RailsSteel\Content\Data\PlanningTape.sbc = RailsSteel\Content\Data\PlanningTape.sbc
-	RailsSteel\Content\Data\Rails\Bendy.sbc = RailsSteel\Content\Data\Rails\Bendy.sbc
-	RailsSteel\Content\Data\Rails\BlockStraight.sbc = RailsSteel\Content\Data\Rails\BlockStraight.sbc
-	RailsSteel\Content\Data\Rails\Common.sbc = RailsSteel\Content\Data\Rails\Common.sbc
-	RailsSteel\Content\Data\Research\QuestRails.sbc = RailsSteel\Content\Data\Research\QuestRails.sbc
-	RailsSteel\Content\Data\Research\SchematicRail.sbc = RailsSteel\Content\Data\Research\SchematicRail.sbc
+	RailsSteel\Content\Data\Rails\Steel_Bendy.sbc = RailsSteel\Content\Data\Rails\Steel_Bendy.sbc
+	RailsSteel\Content\Data\Rails\Steel_BlockStraight.sbc = RailsSteel\Content\Data\Rails\Steel_BlockStraight.sbc
+	RailsSteel\Content\Data\Rails\Steel_Common.sbc = RailsSteel\Content\Data\Rails\Steel_Common.sbc
+	RailsSteel\Content\Data\Rails\Steel_ExternalSwitchControl.sbc = RailsSteel\Content\Data\Rails\Steel_ExternalSwitchControl.sbc
+	RailsSteel\Content\Data\Rails\Steel_PlanningTape.sbc = RailsSteel\Content\Data\Rails\Steel_PlanningTape.sbc
+	RailsSteel\Content\Data\Rails\Steel_Switch_Common.sbc = RailsSteel\Content\Data\Rails\Steel_Switch_Common.sbc
+	RailsSteel\Content\Data\Rails\Steel_Switch_Rhs_Parallel.sbc = RailsSteel\Content\Data\Rails\Steel_Switch_Rhs_Parallel.sbc
+	RailsSteel\Content\Data\Rails\Steel_Switch_Rhs_Parallel_AC.sbc = RailsSteel\Content\Data\Rails\Steel_Switch_Rhs_Parallel_AC.sbc
+	RailsSteel\Content\Data\Research\Steel_QuestRails.sbc = RailsSteel\Content\Data\Research\Steel_QuestRails.sbc
+	RailsSteel\Content\Data\Research\Steel_SchematicRail.sbc = RailsSteel\Content\Data\Research\Steel_SchematicRail.sbc
 EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "RailsWood", "RailsWood", "{AF45395A-F1FD-43A9-9D35-00B782C80D05}"
 ProjectSection(SolutionItems) = preProject
-	RailsWood\Content\Data\PlanningTape.sbc = RailsWood\Content\Data\PlanningTape.sbc
-	RailsWood\Content\Data\Rails\Bendy.sbc = RailsWood\Content\Data\Rails\Bendy.sbc
-	RailsWood\Content\Data\Rails\BlockStraight.sbc = RailsWood\Content\Data\Rails\BlockStraight.sbc
-	RailsWood\Content\Data\Rails\Common.sbc = RailsWood\Content\Data\Rails\Common.sbc
-	RailsWood\Content\Data\Research\QuestRails.sbc = RailsWood\Content\Data\Research\QuestRails.sbc
-	RailsWood\Content\Data\Research\SchematicRail.sbc = RailsWood\Content\Data\Research\SchematicRail.sbc
+	RailsWood\Content\Data\Rails\Wood_Bendy.sbc = RailsWood\Content\Data\Rails\Wood_Bendy.sbc
+	RailsWood\Content\Data\Rails\Wood_BlockStraight.sbc = RailsWood\Content\Data\Rails\Wood_BlockStraight.sbc
+	RailsWood\Content\Data\Rails\Wood_Common.sbc = RailsWood\Content\Data\Rails\Wood_Common.sbc
+	RailsWood\Content\Data\Rails\Wood_PlanningTape.sbc = RailsWood\Content\Data\Rails\Wood_PlanningTape.sbc
+	RailsWood\Content\Data\Research\Wood_QuestRails.sbc = RailsWood\Content\Data\Research\Wood_QuestRails.sbc
+	RailsWood\Content\Data\Research\Wood_SchematicRail.sbc = RailsWood\Content\Data\Research\Wood_SchematicRail.sbc
 EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SharedAssets", "SharedAssets", "{E7259ADB-1772-41D8-B7DA-FB5F2AAEE5F7}"

@@ -44,6 +44,7 @@
         </Edges>
 
         <Distance Min="7" Max="15" />
+        <PreferredDistance>10</PreferredDistance>
         <MaxGradeRatio>0.2</MaxGradeRatio>
         <MaxAngleDegrees>25</MaxAngleDegrees>
     </Definition>

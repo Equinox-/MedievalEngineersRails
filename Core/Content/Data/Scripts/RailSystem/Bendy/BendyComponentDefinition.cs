@@ -89,6 +89,9 @@ namespace Equinox76561198048419394.RailSystem.Bendy
         #region Constraints
 
         public ImmutableRange<float> Distance { get; private set; }
+        
+        public float PreferredDistance { get; private set; }
+        
         public float MaxGradeRatio { get; private set; }
 
         public float MaxAngleRadians { get; private set; }
@@ -203,6 +206,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy
                 MyDefinitionErrors.Add(def.ModContext,
                     $"{nameof(BendyComponentDefinition)} {builder.GetId()} distance has min > max",
                     TErrorSeverity.Error);
+            PreferredDistance = def.PreferredDistance ?? ((Distance.Max + Distance.Min) / 2);
             MaxAngleDegrees = def.MaxAngleDegrees ?? RailConstants.DefaultMaxAngleDegrees;
             if (MaxAngleDegrees < 0)
                 MyDefinitionErrors.Add(def.ModContext,
@@ -276,6 +280,9 @@ namespace Equinox76561198048419394.RailSystem.Bendy
 
         [XmlElement]
         public MutableRange<float>? Distance;
+
+        [XmlElement]
+        public float? PreferredDistance;
 
         [XmlElement]
         public float? MaxGradeRatio;

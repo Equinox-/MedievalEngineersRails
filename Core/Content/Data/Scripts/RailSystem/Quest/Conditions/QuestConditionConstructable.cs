@@ -40,7 +40,7 @@ namespace Equinox76561198048419394.RailSystem.Quest.Conditions
                 return;
 
             var definition = (QuestConditionConstructableDefinition) m_definition;
-            if (definition.Amount == 0 || this.Player().IsCreative())
+            if (definition.Amount == 0 || MyAPIGateway.Session.CreativeMode)
             {
                 _amountConstructed = definition.Amount;
                 MarkAsCompleted();

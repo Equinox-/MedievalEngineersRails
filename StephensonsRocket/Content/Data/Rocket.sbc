@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <Definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <Definition xsi:type="MyObjectBuilder_CubeBlockDefinition">
-        <Id Type="MyObjectBuilder_CubeBlock" Subtype="Bogie" />
-        <DisplayName>Bogie</DisplayName>
+        <Id Type="MyObjectBuilder_CubeBlock" Subtype="StephensonsRocket" />
+        <DisplayName>StephensonsRocket</DisplayName>
         <Icon>Textures\GUI\Icons\Cubes\RailStdGaugeBogieBasic.dds</Icon>
         <Public>true</Public>
         <Model>Models\Equinox\Bogie\Bogie.mwm</Model>
@@ -32,8 +32,8 @@
     </Definition>
 
     <Definition xsi:type="MyObjectBuilder_CraftingRecipeDefinition">
-        <Id Type="MyObjectBuilder_CraftingRecipeDefinition" Subtype="Bogie" />
-        <DisplayName>Bogie</DisplayName>
+        <Id Type="MyObjectBuilder_CraftingRecipeDefinition" Subtype="StephensonsRocket" />
+        <DisplayName>StephensonsRocket</DisplayName>
         <Icon>Textures\GUI\Icons\Cubes\RailStdGaugeBogieBasic.dds</Icon>
         <Category>MetalWorks</Category>
         <Prerequisites>
@@ -48,44 +48,72 @@
     </Definition>
 
     <Definition xsi:type="MyObjectBuilder_BogieComponentDefinition">
-        <Id Type="MyObjectBuilder_BogieComponent" Subtype="Bogie" />
+        <Id Type="MyObjectBuilder_BogieComponent" Subtype="StephensonsRocket" />
 
         <Layer>TrainRailGaugeStandard</Layer>
         <VerticalOffset>0.325</VerticalOffset>
-        <CoefficientOfFriction>.01</CoefficientOfFriction>
+        <CoefficientOfFriction>.05</CoefficientOfFriction>
         <BrakingCoefficientOfFriction>.75</BrakingCoefficientOfFriction>
         <DetachDistance>1.5</DetachDistance>
+
+        <MaxVelocity>15</MaxVelocity>
+        <MaxForce>5000</MaxForce>
     </Definition>
 
     <Definition xsi:type="MyObjectBuilder_ModelAttachmentComponentDefinition">
-        <Id Type="ModelAttachmentComponent" Subtype="Bogie" />
+        <Id Type="ModelAttachmentComponent" Subtype="StephensonsRocket" />
         <Attachment Name="Skin">
-            <Offset x="0" y="0" z="0" />
-            <Rotation x="0" y="0" z="0" />
-            <DefaultEntity Type="EntityBase" Subtype="BogieSkin" />
+            <Offset x="0" y="0.9" z="0" />
+            <Rotation x="-90" y="0" z="0" />
+            <DefaultEntity Type="EntityBase" Subtype="StephensonsRocketSkin" />
+        </Attachment>
+    </Definition>
+
+    <Definition xsi:type="MyObjectBuilder_UseObjectsComponentDefinition">
+        <Id Type="UseObjectsComponent" Subtype="StephensonsRocket"/>
+        <LoadFromModel>false</LoadFromModel>
+        <CustomUseObject Name="generic" Dummy="detector_generic_left" />
+    </Definition>
+
+    <Definition xsi:type="MyObjectBuilder_EquiPlayerAttachmentComponentDefinition">
+        <Id Type="EquiPlayerAttachmentComponent" Subtype="StephensonsRocket"/>
+        <Attachment Name="left">
+            <Anchor>
+                <Position x="0" y=".75" z="1.5"/>
+                <Forward x="0" y="0" z="-1"/>
+                <Up x="0" y="1" z="0"/>
+            </Anchor>
+            <Animations>
+                <AnimationDesc Start="equi_handcart_rail_reverse" Stop="equi_attach_end" Weight="1"/>
+            </Animations>
+            <EmptyAction Text="Board Handcart"/>
+            <OccupiedAction Text="Occupied"/>
+            <DummyName>detector_generic_left</DummyName>
         </Attachment>
     </Definition>
 
     <Definition xsi:type="MyObjectBuilder_ContainerDefinition" Copy="Append">
-        <Id Type="MyObjectBuilder_CubeBlock" Subtype="Bogie" />
+        <Id Type="MyObjectBuilder_CubeBlock" Subtype="StephensonsRocket" />
 
-        <Component Type="BogieComponent" Subtype="Bogie" />
-        <Component Type="ModelAttachmentComponent" Subtype="Bogie" />
+        <Component Type="BogieComponent" Subtype="StephensonsRocket" />
+        <Component Type="ModelAttachmentComponent" Subtype="StephensonsRocket" />
+        <Component Type="UseObjectsComponent" Subtype="StephensonsRocket"/>
+        <Component Type="EquiPlayerAttachmentComponent" Subtype="StephensonsRocket"/>
     </Definition>
 
     <!-- the skin host -->
     <Definition xsi:type="MyObjectBuilder_ContainerDefinition" Copy="Append">
-        <Id Type="MyObjectBuilder_EntityBase" Subtype="BogieSkin" />
+        <Id Type="MyObjectBuilder_EntityBase" Subtype="StephensonsRocketSkin" />
 
-        <Component Type="ModelComponent" Subtype="BogieSkin" />
+        <Component Type="ModelComponent" Subtype="StephensonsRocketSkin" />
         <Component Type="SkeletonComponent" />
         <Component Type="RenderComponentRigged" />
-        <Component Type="MyObjectBuilder_AnimationControllerComponent" Subtype="BogieSkin" />
+        <Component Type="MyObjectBuilder_AnimationControllerComponent" Subtype="StephensonsRocketSkin" />
     </Definition>
 
     <Definition xsi:type="MyObjectBuilder_ModelComponentDefinition">
-        <Id Type="ModelComponent" Subtype="BogieSkin" />
-        <Model>Models\Equinox\Bogie\Bogie_Skin.mwm</Model>
+        <Id Type="ModelComponent" Subtype="StephensonsRocketSkin" />
+        <Model>Models\Equinox\Engines\EngineStephensonsRocket_LowPoly.mwm</Model>
         <PhysicalMaterial>Wood</PhysicalMaterial>
     </Definition>
 </Definitions>

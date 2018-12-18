@@ -39,5 +39,10 @@ namespace Equinox76561198048419394.RailSystem.Util
 
             return false;
         }
+
+        public static T AccessSafe<T>(this T[] array, int index)
+        {
+            return index >= 0 && index < array.Length ? array[index] : default(T);
+        }
     }
 }

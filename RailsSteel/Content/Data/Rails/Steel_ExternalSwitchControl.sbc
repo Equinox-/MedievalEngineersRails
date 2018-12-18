@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <Definition xsi:type="MyObjectBuilder_CubeBlockDefinition">
+        <Id Type="CubeBlock" Subtype="RailSwitchExternal" />
+        <DisplayName>Switch Controller</DisplayName>
+        <Icon>Textures\GUI\Icons\Equinox\RailSwitchExternal.dds</Icon>
+        <Public>true</Public>
+        
+        <Mass>50</Mass>
+        <CubeSize>Small</CubeSize>
+        <BlockTopology>TriangleMesh</BlockTopology>
+        <Size x="2" y="6" z="4" />
+        <ModelOffset x="0" y="0" z="0" />
+        <Model>Models/Equinox/RailsGaugeStandard/Steel/ExternalSwitchControl.mwm</Model>
+
+        <Direction>Horizontal</Direction>
+        <Rotation>Vertical</Rotation>
+        <BuildType>Cube</BuildType>
+        <PhysicalMaterial>Iron</PhysicalMaterial>
+        <NavigationDefinition>Default</NavigationDefinition>
+        <CompoundEnabled>false</CompoundEnabled>
+        <MountPoints>
+            <MountPoint Side="Bottom" StartX="0" StartY="0" EndX="2" EndY="4" />
+        </MountPoints>
+
+        <Components>
+            <Component Tag="Timber" Count="1" />
+            <Component Tag="Ingot" Count="2" />
+            <Component Type="InventoryItem" Subtype="PartsMetal" Count="5" />
+        </Components>
+
+        <CriticalComponent Type="InventoryItem" Subtype="PartsMetal" Index="0" />
+        <BuildTimeSeconds>50</BuildTimeSeconds>
+        <MaxIntegrity>5000</MaxIntegrity>
+
+        <VoxelPlacement>
+          <StaticMode>
+            <PlacementMode>Both</PlacementMode>
+            <MaxAllowed>1</MaxAllowed>
+            <MinAllowed>0</MinAllowed>
+          </StaticMode>
+          <DynamicMode>
+            <PlacementMode>InVoxel</PlacementMode>
+            <MaxAllowed>1</MaxAllowed>
+            <MinAllowed>0</MinAllowed>
+          </DynamicMode>
+        </VoxelPlacement>
+    </Definition>
+
+    <Definition xsi:type="MyObjectBuilder_CraftingRecipeDefinition">
+        <Id Type="MyObjectBuilder_CraftingRecipeDefinition" Subtype="RailSwitchExternal" />
+        <DisplayName>Switch Controller</DisplayName>
+        <Icon>Textures\GUI\Icons\Equinox\RailSwitchExternal.dds</Icon>
+        <Category>MetalWorks</Category>
+        <Prerequisites>
+            <Item Tag="Timber" Amount="1" />
+            <Item Tag="Ingot" Amount="2" />
+            <Item Type="InventoryItem" Subtype="PartsMetal" Amount="5" />
+        </Prerequisites>
+        <Results>
+            <Item Amount="1" Type="CubeBlock" Subtype="RailSwitchExternal" />
+        </Results>
+        <CraftingTime Seconds="2" />
+    </Definition>
+
+    <Definition xsi:type="MyObjectBuilder_RailSwitchExternalComponentDefinition">
+        <Id Type="RailSwitchExternalComponent" Subtype="RailSwitchExternal" />
+
+        <Layer>TrainRail*</Layer>
+        <AllowDynamic>false</AllowDynamic>
+        <MaxAttachmentDistance>5</MaxAttachmentDistance>
+
+        <Animator Attachment="Flag">
+            <Rate>90</Rate>
+            <Amplify>2.5</Amplify>
+            <Axis x="0" y="1" z="0" />
+            <Arrow x="1" y="0" z="0" />
+        </Animator>
+    </Definition>
+
+    <Definition xsi:type="MyObjectBuilder_ContainerDefinition" Copy="Append">
+        <Id Type="CubeBlock" Subtype="RailSwitchExternal" />
+
+        <Component Type="RailSwitchExternalComponent" Subtype="RailSwitchExternal" />
+        <Component Type="ModelAttachmentComponent" Subtype="RailSwitchExternal" />
+        <Component Type="UseObjectsComponent" Subtype="RailSwitchExternal" />
+    </Definition>
+
+    <Definition xsi:type="MyObjectBuilder_UseObjectsComponentDefinition">
+        <Id Type="UseObjectsComponent" Subtype="RailSwitchExternal" />
+        <LoadFromModel>false</LoadFromModel>
+        <CustomUseObject Name="generic" Dummy="detector_switch" Scale="0.0" />
+    </Definition>
+
+    <Definition xsi:type="MyObjectBuilder_ModelAttachmentComponentDefinition">
+        <Id Type="ModelAttachmentComponent" Subtype="RailSwitchExternal" />
+        <Attachment Name="Flag">
+            <Offset x="0" y="0" z="0" />
+            <Rotation x="0" y="0" z="0" />
+            <DefaultEntity Type="EntityBase" Subtype="RailSwitchExternal_Flag" />
+        </Attachment>
+    </Definition>
+
+
+    <!-- the flag -->
+    <Definition xsi:type="MyObjectBuilder_ContainerDefinition" Copy="Append">
+        <Id Type="MyObjectBuilder_EntityBase" Subtype="RailSwitchExternal_Flag" />
+
+        <Component Type="ModelComponent" Subtype="RailSwitchExternal_Flag" />
+        <Component Type="PhysicsBodyComponent" Subtype="InteractableProxyBase" />
+        <Component Type="UseObjectsComponent" Subtype="InteractableProxyBase" />
+        <Component Type="RailSwitchImpactProxyComponent" />
+    </Definition>
+
+    <Definition xsi:type="MyObjectBuilder_ModelComponentDefinition">
+        <Id Type="ModelComponent" Subtype="RailSwitchExternal_Flag" />
+        <Model>Models/Equinox/RailsGaugeStandard/Steel/ExternalSwitchControl_Flag.mwm</Model>
+        <PhysicalMaterial>Wood</PhysicalMaterial>
+    </Definition>
+</Definitions>

@@ -3,7 +3,7 @@
     <Definition xsi:type="MyObjectBuilder_CubeBlockDefinition">
         <Id Type="CubeBlock" Subtype="RailSwitchRhsParallel" />
         <DisplayName>Right Hand Switch (Standard Gauge, Steel)</DisplayName>
-        <Icon>Textures\GUI\Icons\Equinox\RailSteelStraight.dds</Icon>
+        <Icon>Textures\GUI\Icons\Equinox\RailSwitchRhsParallel.dds</Icon>
         <Public>true</Public>
         
         <Model>Models\Equinox\RailsGaugeStandard\Steel\Switch_RightHand_Parallel.mwm</Model>
@@ -26,12 +26,19 @@
         </MountPoints>
 
         <Components>
-            <Component Tag="Timber" Count="10" /> <!-- ref value is 15 sleepers (15 timbers) -->
-            <Component Tag="Ingot" Count="4" /> <!-- ref value is 20m of rail @ 10kg/m, 40kg/ingot (5 ingots)-->
-            <Component Type="InventoryItem" Subtype="PartsMetal" Count="6" /> <!-- ref value 60 spikes @ 100g/spike, 1kg/part (6 parts)-->
+            <Component Tag="Timber" Count="20" />
+            <Component Tag="Ingot" Count="8" />
+            <Component Type="InventoryItem" Subtype="PartsMetal" Count="18" />
         </Components>
 
         <CriticalComponent Type="InventoryItem" Subtype="PartsMetal" Index="0" />
+
+
+        <BuildProgressModels>
+            <Model BuildPercentUpperBound="0.434" File="Models\Equinox\RailsGaugeStandard\Steel\Switch_RightHand_Parallel_Build1.mwm" /> <!-- planning stakes -->
+            <Model BuildPercentUpperBound="0.9" File="Models\Equinox\RailsGaugeStandard\Steel\Switch_RightHand_Parallel_Build2.mwm" /> <!-- sleepers -->
+            <Model BuildPercentUpperBound="1.1" File="Models\Equinox\RailsGaugeStandard\Steel\Switch_RightHand_Parallel.mwm" /> <!-- rails + spikes + hardware -->
+        </BuildProgressModels>
 
         <BuildTimeSeconds>20</BuildTimeSeconds>
         <MaxIntegrity>5000</MaxIntegrity>
@@ -70,35 +77,13 @@
         <MaxAngleDegrees>15</MaxAngleDegrees>
     </Definition>
 
-    <Definition xsi:type="MyObjectBuilder_RailSegmentDefinition">
-        <Id Type="MyObjectBuilder_RailSegmentComponent" Subtype="RailSwitchRhsParallel" />
-        <Capabilities>
-            <Capability ActivationLevel="0.95" Friction="1" MaxSpeed="30" Gauge="1.435" />
-        </Capabilities>
-
-        <Switchable Dummy="detector_switch">
-            <Intersection>0</Intersection>
-            <Destination>2</Destination>
-            <Destination>1</Destination>
-        </Switchable>
-    </Definition>
-
-    <Definition xsi:type="MyObjectBuilder_ContainerDefinition">
+    <Definition xsi:type="MyObjectBuilder_ContainerDefinition" Copy="Append">
         <Id Type="CubeBlock" Subtype="RailSwitchRhsParallel" />
+        <CopyFrom Type="CubeBlock" Subtype="RailSwitchBase" />
+
         <Component Type="BendyComponent" Subtype="RailSwitchRhsParallel" />
-        <Component Type="RailSegmentComponent" Subtype="RailSwitchRhsParallel" />
-        <Component Type="UseObjectsComponent" Subtype="RailSwitchRhsParallel" />
-        <Component Type="RailGradeComponent" Subtype="RailSteel"/>
         <Component Type="ModelAttachmentComponent" Subtype="RailSwitchRhsParallel" />
-
-        <Component Type="SkeletonComponent" />
         <Component Type="MyObjectBuilder_AnimationControllerComponent" Subtype="RailSwitchRhsParallelSkin" />
-    </Definition>
-
-    <Definition xsi:type="MyObjectBuilder_UseObjectsComponentDefinition">
-        <Id Type="UseObjectsComponent" Subtype="RailSwitchRhsParallel" />
-        <LoadFromModel>false</LoadFromModel>
-        <CustomUseObject Name="generic" Dummy="detector_switch" Scale="0.0" />
     </Definition>
 
     <Definition xsi:type="MyObjectBuilder_ModelAttachmentComponentDefinition">
@@ -127,26 +112,5 @@
         <Id Type="ModelComponent" Subtype="RailSwitchRhsParallelSkin" />
         <Model>Models\Equinox\RailsGaugeStandard\Steel\Switch_RightHand_Parallel_Skin.mwm</Model>
         <PhysicalMaterial>Wood</PhysicalMaterial>
-    </Definition>
-
-    <!-- the handle -->
-    <Definition xsi:type="MyObjectBuilder_ContainerDefinition" Copy="Append">
-        <Id Type="MyObjectBuilder_EntityBase" Subtype="RailSwitchHandle" />
-
-        <Component Type="ModelComponent" Subtype="RailSwitchHandle" />
-        <Component Type="UseObjectsComponent" Subtype="RailSwitchHandleDetector" />
-        <Component Type="PhysicsBodyComponent" Subtype="InteractableProxyBase" />
-    </Definition>
-
-    <Definition xsi:type="MyObjectBuilder_ModelComponentDefinition">
-        <Id Type="ModelComponent" Subtype="RailSwitchHandle" />
-        <Model>Models\Equinox\RailsGaugeStandard\Steel\Switch_Handle.mwm</Model>
-        <PhysicalMaterial>Wood</PhysicalMaterial>
-    </Definition>
-
-    <Definition xsi:type="MyObjectBuilder_UseObjectsComponentDefinition">
-        <Id Type="UseObjectsComponent" Subtype="RailSwitchHandleDetector" />
-        <LoadFromModel>false</LoadFromModel>
-        <CustomUseObject Name="proxy" Dummy="detector_switch" Scale="5.0" />
     </Definition>
 </Definitions>

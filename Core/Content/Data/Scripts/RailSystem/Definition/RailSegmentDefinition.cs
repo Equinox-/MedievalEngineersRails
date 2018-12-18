@@ -40,23 +40,7 @@ namespace Equinox76561198048419394.RailSystem.Definition
             }
         }
 
-        public struct RailSegmentSwitchable
-        {
-            public readonly int Intersection;
-            public readonly int[] Destinations;
-            public readonly string Dummy;
-
-            internal RailSegmentSwitchable(MyObjectBuilder_RailSegmentDefinition.RsObRailSwitchable ob)
-            {
-                Intersection = ob.Intersection;
-                Destinations = ob.Destinations ?? new int[0];
-                Dummy = ob.Dummy;
-            }
-        }
-
         private RailSegmentCaps[] _caps;
-        private readonly Dictionary<string, int> _switchablesByDummy = new Dictionary<string, int>();
-        public RailSegmentSwitchable[] Switchables { get; private set; }
 
         protected override void Init(MyObjectBuilder_DefinitionBase def)
         {
@@ -73,41 +57,6 @@ namespace Equinox76561198048419394.RailSystem.Definition
             for (var i = 0; i < ob.Capabilities.Length; i++)
                 _caps[i] = new RailSegmentCaps(ob.Capabilities[i]);
             Array.Sort(_caps, (a, b) => Comparer<float>.Default.Compare(a.ActivationLevel, b.ActivationLevel));
-
-            _switchablesByDummy.Clear();
-            if (ob.Switchables == null || ob.Switchables.Length == 0)
-            {
-                Switchables = new RailSegmentSwitchable[0];
-            }
-            else
-            {
-                Switchables = ob.Switchables.Select(x => new RailSegmentSwitchable(x)).ToArray();
-                for (var index = 0; index < Switchables.Length; index++)
-                {
-                    var k = Switchables[index];
-                    if (string.IsNullOrWhiteSpace(k.Dummy))
-                    {
-                        MyDefinitionErrors.Add(ob.ModContext, $"Switchable has no dummy name, will not be interactable", TErrorSeverity.Warning);
-                        continue;
-                    }
-
-                    if (_switchablesByDummy.ContainsKey(k.Dummy))
-                    {
-                        MyDefinitionErrors.Add(ob.ModContext, $"Switchable has duplicated dummy name, will not operate", TErrorSeverity.Error);
-                        continue;
-                    }
-
-                    _switchablesByDummy.Add(k.Dummy, index);
-                }
-            }
-        }
-
-        public int? FindSwitchableByDummy(string dummy)
-        {
-            int k;
-            if (_switchablesByDummy.TryGetValue(dummy, out k))
-                return k;
-            return null;
         }
 
         public RailSegmentCaps? CapabilitiesFor(float activationLevel)
@@ -146,20 +95,5 @@ namespace Equinox76561198048419394.RailSystem.Definition
 
         [XmlArrayItem("Capability")]
         public RsObRailSegmentCaps[] Capabilities;
-
-        [XmlElement("Switchable")]
-        public RsObRailSwitchable[] Switchables;
-
-        public class RsObRailSwitchable
-        {
-            [XmlAttribute("Dummy")]
-            public string Dummy;
-
-            [XmlElement("Intersection")]
-            public int Intersection;
-
-            [XmlElement("Destination")]
-            public int[] Destinations;
-        }
     }
 }

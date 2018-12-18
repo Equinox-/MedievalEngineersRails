@@ -2,12 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Serialization;
+using Equinox76561198048419394.Core.Controller;
 using Equinox76561198048419394.RailSystem.Bendy;
 using Equinox76561198048419394.RailSystem.Construction;
 using Equinox76561198048419394.RailSystem.Definition;
 using Equinox76561198048419394.RailSystem.Util;
 using Equinox76561198048419394.RailSystem.Util.Curve;
 using Sandbox.Engine.Physics;
+using Sandbox.Game.Entities;
 using Sandbox.Game.Entities.Entity.Stats;
 using Sandbox.Game.EntityComponents.Character;
 using Sandbox.Game.GameSystems;
@@ -122,7 +124,9 @@ namespace Equinox76561198048419394.RailSystem.Physics
         private static readonly MyDefinitionId SprintingEffect =
             new MyDefinitionId(typeof(MyObjectBuilder_CompositeEntityEffect), MyStringHash.GetOrCompute("Sprint"));
 
-        public const float SwitchingDistanceBias = 0.25f;
+        public const float SwitchingDistanceBias = 0.5f;
+        public const float AlignmentTangentBias = 0.025f;
+        public const float TotalBias = SwitchingDistanceBias + AlignmentTangentBias;
 
         [FixedUpdate]
         private void Simulate()
@@ -181,6 +185,7 @@ namespace Equinox76561198048419394.RailSystem.Physics
             var pivotWorld = Entity.PositionComp.WorldMatrix.Translation;
 
             var best = double.MaxValue;
+            var bestTangent = Vector3.Zero;
             Edge bestEdge = null;
             RailSegmentComponent bestEdgeSegment;
             RailSegmentDefinition.RailSegmentCaps? bestEdgeCaps = null;
@@ -188,9 +193,9 @@ namespace Equinox76561198048419394.RailSystem.Physics
             using (var e = Graph.Edges.SortedByDistance(pivotWorld))
                 while (e.MoveNext())
                 {
-                    if (e.Current.Value - SwitchingDistanceBias > best)
+                    if (Math.Sqrt(e.Current.DistanceSquared) - TotalBias > best)
                         break;
-                    var edge = Graph.Edges.GetUserData<Edge>(e.Current.Key);
+                    var edge = (Edge) e.Current.UserData;
                     if (edge.Curve == null)
                         continue;
                     var edgeSegment = edge.Owner.Entity.Components.Get<RailSegmentComponent>();
@@ -206,13 +211,30 @@ namespace Equinox76561198048419394.RailSystem.Physics
                     var t = t0 + (t1 - t0) * factor;
                     var pos = edge.Curve.Sample(t);
                     var dist = Vector3D.Distance(pos, pivotWorld);
-                    if (edgeSegment.IsSwitchedTo(edge, t))
-                        dist -= SwitchingDistanceBias;
+                    if (dist - TotalBias > best)
+                        continue;
+                    var tangent = (Vector3) edge.Curve.SampleDerivative(t);
+                    tangent.Normalize();
+
+                    const float switchingEpsilon = 0.125f;
+                    var switched = false;
+                    if (t < switchingEpsilon)
+                        switched = edge.From.IsSwitchedTo(edge.To);
+                    else if (t >= 1 - switchingEpsilon)
+                        switched = edge.To.IsSwitchedTo(edge.From);
+                    if (switched)
+                        dist -= SwitchingDistanceBias + AlignmentTangentBias;
+                    else
+                        dist -= AlignmentTangentBias * Math.Abs(Entity.PositionComp.WorldMatrix.Forward.Dot(tangent));
+
+                    if (RailConstants.Debug.DrawBogieEdges)
+                        edge.DebugDraw(0, 1, switched ? new Vector4(0, 1, 0, 1) : new Vector4(1, 0, 1, 1), 2);
 
                     // ReSharper disable once InvertIf
                     if (dist < best)
                     {
                         best = dist;
+                        bestTangent = tangent;
                         bestEdge = edge;
                         bestEdgeSegment = edgeSegment;
                         bestEdgeCaps = edgeCaps;
@@ -247,15 +269,13 @@ namespace Equinox76561198048419394.RailSystem.Physics
             }
 
             var up = (Vector3) Vector3D.Lerp(bestEdge.From.Up, bestEdge.To.Up, bestTime);
-            var tangent = (Vector3) bestEdge.Curve.SampleDerivative(bestTime);
-            if (Entity.PositionComp.WorldMatrix.Forward.Dot(tangent) < 0)
-                tangent = -tangent;
-            tangent.Normalize();
+            if (Entity.PositionComp.WorldMatrix.Forward.Dot(bestTangent) < 0)
+                bestTangent = -bestTangent;
             var position = bestEdge.Curve.Sample(bestTime) + up * Definition.VerticalOffset;
-            var normal = Vector3.Cross(tangent, up);
+            var normal = Vector3.Cross(bestTangent, up);
             normal.Normalize();
 
-            up = Vector3.Cross(normal, tangent);
+            up = Vector3.Cross(normal, bestTangent);
             up.Normalize();
 
             // a) spring joint along normal to get dot(normal, (pivot*matrix - position)) == 0
@@ -263,7 +283,7 @@ namespace Equinox76561198048419394.RailSystem.Physics
             var allowDeactivation = true;
             var err = (Vector3) (position - pivotWorld);
 
-            var effectiveMass = physics.Mass;
+            var effectiveMass = root.Physics.Mass;
             var inertiaTensor = CreateInertiaTensor(root);
 
             // preemptive up force to counteract gravity.
@@ -279,7 +299,7 @@ namespace Equinox76561198048419394.RailSystem.Physics
                 allowDeactivation = false;
 
             var qCurrent = Quaternion.CreateFromRotationMatrix(Entity.PositionComp.WorldMatrix);
-            var qDesired = Quaternion.CreateFromRotationMatrix(Matrix.CreateWorld(Vector3.Zero, tangent, up));
+            var qDesired = Quaternion.CreateFromRotationMatrix(Matrix.CreateWorld(Vector3.Zero, bestTangent, up));
 
 
             var qConj = Quaternion.Multiply(Quaternion.Conjugate(qCurrent), qDesired);
@@ -288,7 +308,7 @@ namespace Equinox76561198048419394.RailSystem.Physics
                 allowDeactivation = false;
             var desiredAngular = Vector3.Transform(localAngularDesired, qCurrent) * 2;
             var rotApply = desiredAngular;
-            desiredAngular -= 0.25f * physics.AngularVelocity;
+            desiredAngular -= 0.5f * physics.AngularVelocity;
 
             var angularImpulse = Vector3.TransformNormal(desiredAngular, inertiaTensor) * Definition.OrientationConvergenceFactor /
                                  MyEngineConstants.UPDATE_STEP_SIZE_IN_SECONDS;
@@ -298,7 +318,7 @@ namespace Equinox76561198048419394.RailSystem.Physics
             var braking = false;
             if (Definition.MaxVelocity > 0)
             {
-                var cvel = physics.LinearVelocity.Dot(tangent);
+                var cvel = physics.LinearVelocity.Dot(bestTangent);
                 var velocityMod = 0f;
 
                 // get nearest character
@@ -310,7 +330,7 @@ namespace Equinox76561198048419394.RailSystem.Physics
                     var component = player?.Get<MyCharacterMovementComponent>();
                     if (component == null)
                         continue;
-                    var control = Vector3.TransformNormal(component.MoveIndicator, player.WorldMatrix).Dot(tangent);
+                    var control = Vector3.TransformNormal(component.MoveIndicator, player.WorldMatrix).Dot(bestTangent);
                     totalControl += control;
                     controllers++;
 
@@ -326,9 +346,8 @@ namespace Equinox76561198048419394.RailSystem.Physics
 
                 if (controllers > 0)
                 {
-                    braking = Math.Sign(cvel) != Math.Sign(totalControl) && Math.Abs(cvel) > 0.01 &&
-                              Math.Abs(totalControl) > 0.01;
-
+                    braking |= Math.Sign(cvel) != Math.Sign(totalControl) && Math.Abs(cvel) > 0.01 &&
+                               Math.Abs(totalControl) > 0.01;
                     SetAnimVar(BrakingVar, braking ? 1 : 0);
                     _powerFactor = MathHelper.Clamp(_powerFactor * (1 - PowerSmooth) + totalControl * PowerSmooth, -1, 1);
                     if (Math.Abs(totalControl) < .01f)
@@ -347,7 +366,7 @@ namespace Equinox76561198048419394.RailSystem.Physics
                     if (dir != Math.Sign(cvel))
                         forceFactorBase = 1;
 
-                    var force = Definition.MaxForce * forceFactorControl * forceFactorBase * dir * tangent *
+                    var force = Definition.MaxForce * forceFactorControl * forceFactorBase * dir * bestTangent *
                                 MyEngineConstants.UPDATE_STEP_SIZE_IN_SECONDS;
                     physics.AddForce(MyPhysicsForceType.APPLY_WORLD_IMPULSE_AND_WORLD_ANGULAR_IMPULSE, force, com,
                         Vector3.Zero);
@@ -359,22 +378,23 @@ namespace Equinox76561198048419394.RailSystem.Physics
             {
                 var frictiveNormalForce = Math.Max(0, impulse.Dot(up) / MyEngineConstants.UPDATE_STEP_SIZE_IN_SECONDS);
 
-                var frictiveForce =
-                    Math.Max(Definition.CoefficientOfFriction, braking ? Definition.BrakingCoefficientOfFriction : 0) *
-                    (bestEdgeCaps?.Friction ?? 1) * frictiveNormalForce;
+                var frictiveCoefficient = Math.Max(Definition.CoefficientOfFriction, braking ? Definition.BrakingCoefficientOfFriction : 0);
+                if (physics.LinearVelocity.LengthSquared() > .01f)
+                    frictiveCoefficient *= 0.75f;
+                var frictiveForce = frictiveCoefficient * (bestEdgeCaps?.Friction ?? 1) * frictiveNormalForce;
 
                 // clamp frictive impulse to at-max stopping.
                 var tangentMomentumAfterUpdate =
-                    (physics.Mass * (physics.LinearVelocity + gravityHere * MyEngineConstants.UPDATE_STEP_SIZE_IN_SECONDS) + impulse).Dot(tangent);
+                    (physics.Mass * (physics.LinearVelocity + gravityHere * MyEngineConstants.UPDATE_STEP_SIZE_IN_SECONDS) + impulse).Dot(bestTangent);
 
                 var frictiveFloatImpulse = frictiveForce * MyEngineConstants.UPDATE_STEP_SIZE_IN_SECONDS;
 
                 if (frictiveFloatImpulse > Math.Abs(tangentMomentumAfterUpdate))
                     // Stationary, allow deactivation
-                    frictiveImpulse = -tangentMomentumAfterUpdate * tangent;
+                    frictiveImpulse = -tangentMomentumAfterUpdate * bestTangent;
                 else
                 {
-                    frictiveImpulse = -Math.Sign(tangentMomentumAfterUpdate) * frictiveFloatImpulse * tangent;
+                    frictiveImpulse = -Math.Sign(tangentMomentumAfterUpdate) * frictiveFloatImpulse * bestTangent;
                     allowDeactivation = false;
                 }
 
@@ -401,12 +421,13 @@ namespace Equinox76561198048419394.RailSystem.Physics
                     .01f);
             }
 
-//            if (allowDeactivation)
-//            {
+            if (allowDeactivation)
+            {
 //                physics.Sleep();
-//                if (physics.AngularAcceleration == Vector3.Zero && physics.LinearAcceleration == Vector3.Zero)
+//                if (physics.AngularAcceleration == Vector3.Zero && physics.LinearAcceleration == Vector3.Zero && physics.LinearVelocity.Equals(Vector3.Zero) &&
+//                    physics.AngularVelocity.Equals(Vector3.Zero))
 //                    return;
-//            }
+            }
 
             physics.AddForce(MyPhysicsForceType.APPLY_WORLD_IMPULSE_AND_WORLD_ANGULAR_IMPULSE, impulse, com,
                 angularImpulse);

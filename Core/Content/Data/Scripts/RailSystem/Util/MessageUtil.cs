@@ -15,7 +15,7 @@ namespace Equinox76561198048419394.RailSystem.Util
             if (player == MyAPIGateway.Session?.LocalHumanPlayer)
                 DispatchNotification(msg, timeMs, font, color);
             else
-                MyAPIGateway.Multiplayer?.RaiseStaticEvent(s => DispatchNotification, msg, timeMs, font, color, new EndpointId(player.SteamUserId));
+                MyMultiplayerModApi.Static.RaiseStaticEvent(s => DispatchNotification, msg, timeMs, font, color, new EndpointId(player.SteamUserId));
         }
 
         [Event]

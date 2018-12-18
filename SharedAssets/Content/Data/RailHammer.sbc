@@ -148,4 +148,21 @@
         <CraftingTime Seconds="10" />
         <HiddenWithoutPrereqs>true</HiddenWithoutPrereqs>
     </Definition>
+
+    <Definition xsi:type="MyObjectBuilder_CraftingRecipeDefinition">
+        <Id Type="MyObjectBuilder_CraftingRecipeDefinition" Subtype="MeltHammerRail_Unbroken" />
+        <DisplayName>Melt a steel railroader's sledgehammer into ingots</DisplayName>
+        <Icon>Textures\GUI\Icons\ToolsAndWeapons\RailSledgehammer.DDS</Icon>
+        <Icon>Textures\GUI\Icons\Overlay_Rail.DDS</Icon>
+        <Icon>Textures\GUI\Icons\SmeltIcon.dds</Icon>
+        <Category>Melting</Category>
+        <Prerequisites>
+            <Item Amount="1" Type="HandItem" Subtype="HammerRail" />
+        </Prerequisites>
+        <Results>
+            <Item Amount="2" Type="InventoryItem" Subtype="IngotSteel" />
+        </Results>
+        <CraftingTime Seconds="10" />
+        <HiddenWithoutPrereqs>true</HiddenWithoutPrereqs>
+    </Definition>
 </Definitions>
