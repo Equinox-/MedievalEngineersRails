@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <Definition xsi:type="MyObjectBuilder_ResearchNodeDefinition">
+        <Id Type="ResearchNodeDefinition" Subtype="RailSwitch" />
+        <DisplayName>Steel Railroading</DisplayName>
+        <Description>Basic skills to lay a low friction steel railway</Description>
+        <Icon>Textures\GUI\Icons\Equinox\RailSwitchResearch.dds</Icon>
+        <Parent Type="ResearchNodeDefinition" Subtype="RailSteel"/>
+        <Quest Type="QuestDefinition" Subtype="RailSwitch" />
+        <Research Type="ResearchDefinition" Subtype="RailSwitch" />
+    </Definition>
+
+    <Definition xsi:type="MyObjectBuilder_QuestDefinition">
+        <Id Type="QuestDefinition" Subtype="RailSwitch" />
+
+        <DisplayName>Steel Railroading</DisplayName>
+        <Description>Basic skills to lay a low friction steel railway</Description>
+        <Icon>Textures\GUI\Book\QuestBook_Quest_Thumbnail.png</Icon>
+        <Tag>Research</Tag>
+
+        <IsAbandonable>true</IsAbandonable>
+        <IsRepeatable>false</IsRepeatable>
+
+        <FailAction xsi:type="Quest.Actions.LockResearch" Type="CubeBlock" Subtype="RailSwitchExternal"/>
+        <FailAction xsi:type="Quest.Actions.LockResearch" Type="CraftingRecipeDefinition" Subtype="RailSwitchExternal"/>
+        <FailAction xsi:type="Quest.Actions.LockResearch" Type="CraftingRecipeDefinition" Subtype="SchematicRailSwitch"/>
+        <FailAction xsi:type="Quest.Actions.ShowNotification" Text="Description_ResearchQuest_Failed" SoundCueId="QuestCompleted" />
+
+        <SuccessCondition xsi:type="Quest.Conditions.ResearchUnlocked" Type="ResearchDefinition" Subtype="RailSwitch" />
+
+        <SuccessAction xsi:type="Quest.Actions.ShowNotification" Text="Description_ResearchQuest_Completed" SoundCueId="QuestCompleted" />
+        <SuccessAction xsi:type="Quest.Actions.UnlockResearch" Type="ResearchDefinition" Subtype="RailSwitch" />
+
+        <Step>
+            <FullDescription>The best way to get started with railway switches is the right hand switch.  Gather the materials for one.</FullDescription>
+            <Condition xsi:type="Quest.Conditions.Composite" Operator="AND">
+                <Condition xsi:type="Quest.Conditions.Gather" Tag="Timber" Amount="20" AreaInventory="Included" />
+                <Condition xsi:type="Quest.Conditions.Gather" Tag="Ingot" Amount="8" AreaInventory="Included" />
+                <Condition xsi:type="Quest.Conditions.Gather" Type="InventoryItem" Subtype="PartsMetal" Amount="18" AreaInventory="Included" />
+            </Condition>
+            <Action xsi:type="Quest.Actions.UnlockResearch" Type="CubeBlock" Subtype="RailSwitchRhsParallel" />
+            <Action xsi:type="Quest.Actions.ShowNotification" Text="Right hand switch unlocked!" SoundCueId="QuestStepCompleted" SoundDelay="300" />
+        </Step>
+        <Step>
+            <FullDescription>Place and construct the first switch in your network.</FullDescription>
+            <Condition xsi:type="Quest.Conditions.Composite" Operator="AND">
+                <Condition xsi:type="Quest.Conditions.PlaceBlock" Type="CubeBlock" Subtype="RailSwitchRhsParallel" Amount="1" />
+                <Condition xsi:type="Quest.Conditions.BuildBlock" Type="CubeBlock" Subtype="RailSwitchRhsParallel" Amount="1" />
+            </Condition>
+        </Step>
+        <Step>
+            <FullDescription>While the fully animated switch works for arbitrary turnout angles, wyes, and three way switches you'll need the external switch controller.  Gather materials for one.</FullDescription>
+            <Condition xsi:type="Quest.Conditions.Composite" Operator="AND">
+                <Condition xsi:type="Quest.Conditions.Gather" Tag="Timber" Amount="1" AreaInventory="Included" />
+                <Condition xsi:type="Quest.Conditions.Gather" Tag="Ingot" Amount="2" AreaInventory="Included" />
+                <Condition xsi:type="Quest.Conditions.Gather" Type="InventoryItem" Subtype="PartsMetal" Amount="5" AreaInventory="Included" />
+            </Condition>
+            <Action xsi:type="Quest.Actions.UnlockResearch" Type="CraftingRecipeDefinition" Subtype="RailSwitchExternal" />
+            <Action xsi:type="Quest.Actions.UnlockResearch" Type="CubeBlock" Subtype="RailSwitchExternal" />
+            <Action xsi:type="Quest.Actions.ShowNotification" Text="You've unlocked the external switch controller." SoundCueId="QuestStepCompleted" SoundDelay="300" />
+        </Step>
+        <Step>
+            <FullDescription>Craft an external switch controller.</FullDescription>
+            <Condition xsi:type="Quest.Conditions.Craft" Type="CubeBlock" Subtype="RailSwitchExternal" Amount="1" />
+        </Step>
+        <Step>
+            <FullDescription>Place the external switch controller within 5m of a junction point.  You can create junction points by attaching a bendy rail section onto existing track.</FullDescription>
+            <Condition xsi:type="Quest.Conditions.Composite" Operator="AND">
+                <Condition xsi:type="Quest.Conditions.PlaceBlock" Type="CubeBlock" Subtype="RailSwitchExternal" Amount="1" />
+            </Condition>
+        </Step>
+    </Definition>
+</Definitions>

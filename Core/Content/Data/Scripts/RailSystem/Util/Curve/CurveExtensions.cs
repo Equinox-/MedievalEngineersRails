@@ -1,4 +1,7 @@
 ﻿using System;
+using VRage.Components.Entity.Camera;
+using VRage.Game;
+using VRage.Utils;
 using VRageMath;
 
 namespace Equinox76561198048419394.RailSystem.Util.Curve
@@ -28,6 +31,47 @@ namespace Equinox76561198048419394.RailSystem.Util.Curve
             } while (++i < iterations);
         }
 
+        private static readonly MyStringId SquareMaterial = MyStringId.GetOrCompute("Square");
+
+        public static void Draw<T>(this T curve, Vector4 color, float tMin = 0f, float tMax = 1f, int segments = -1, float edgeWidth = 0.05f,
+            Vector3? upZero = null, Vector3? upOne = null, MyStringId? material = null) where T : ICurve
+        {
+            var cam = MyCameraComponent.ActiveCamera;
+            if (cam == null)
+                return;
+            if (segments < 1)
+            {
+                if (curve is LinearCurve)
+                    segments = 1;
+                else
+                {
+                    var camPos = cam.GetPosition();
+                    var tNearMin = tMin;
+                    var tNearMax = tMax;
+                    NearestPoint(curve, camPos, 10, ref tNearMin, ref tNearMax);
+
+                    var depth = Vector3D.Distance(camPos, curve.Sample((tNearMin + tNearMax) / 2));
+                    var lengthEst = Vector3D.Distance(curve.Sample(tMin), curve.Sample(tMax));
+                    var screenFactor = lengthEst / (.1f + depth);
+                    segments = (int) MathHelper.Clamp(screenFactor * 5, 1, 100);
+                }
+            }
+
+            var lastPos = default(Vector3D);
+            for (var t = 0; t <= segments; t++)
+            {
+                var time = MathHelper.Lerp(tMin, tMax, (t / (float) segments));
+                var pos = curve.Sample(time);
+                var pact = pos + Vector3D.Lerp(upZero ?? Vector3.Zero, upOne ?? Vector3.Zero, time);
+                if (t > 0)
+                {
+                    MySimpleObjectDraw.DrawLine(lastPos, pact, material ?? SquareMaterial, ref color, edgeWidth);
+                }
+
+                lastPos = pact;
+            }
+        }
+
         public static MatrixD BSpline(MatrixD a, MatrixD b, float t)
         {
             var up = Vector3D.Lerp(a.Up, b.Up, t);
@@ -55,7 +99,7 @@ namespace Equinox76561198048419394.RailSystem.Util.Curve
             }
         }
 
-        public static double Length<T>(this T t, int steps = 20) where T : struct, ICurve
+        public static double Length<T>(this T t, int steps = 20) where T : ICurve
         {
             var c = t.Sample(0);
             double len = 0;
@@ -69,18 +113,24 @@ namespace Equinox76561198048419394.RailSystem.Util.Curve
             return len;
         }
 
+        public static double LengthAuto<T>(this T t, double stepLength = 0.1) where T : ICurve
+        {
+            var initialEst = t.Length(8);
+            return t.Length((int) Math.Ceiling(initialEst / stepLength));
+        }
+
         public static Vector3D ExpandToCubic(Vector3D p0, Vector3D p0Ctl, Vector3D p1, float controlLimit)
         {
             // dist(p1Ctl, p1) == dist(p0Ctl, p0)
             // angle(p1Ctl, p1, p0) == angle(p0Ctl, p0, p1)
-            
+
             var cBias = p1 - p0;
             var lenC = cBias.Normalize();
             var aBias = p0Ctl - p0;
             if (cBias.Dot(aBias) < 0)
                 aBias = -aBias;
             var lenCtl = aBias.Normalize();
-            
+
             var controlAngle = Math.Acos(cBias.Dot(aBias));
             // Isosceles tri.  Define Q as the intersection of the bias vectors.
             // lenC^2 = 2*lenQP0^2*(1-cos(theta))

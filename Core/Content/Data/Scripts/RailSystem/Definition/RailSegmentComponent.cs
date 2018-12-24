@@ -65,13 +65,12 @@ namespace Equinox76561198048419394.RailSystem.Definition
         {
             if (((IMyUtilities) MyAPIUtilities.Static).IsDedicated)
                 return;
-            if (RailConstants.Debug.DrawSwitchControllers)
+            if (!RailConstants.Debug.DrawSwitchControllers)
+                return;
+            foreach (var node in _bendy.Nodes)
             {
-                foreach (var node in _bendy.Nodes)
-                {
-                    var data = node.Get<SwitchableNodeData>();
-                    data?.DebugDraw();
-                }
+                var data = node.Get<SwitchableNodeData>();
+                data?.DebugDraw();
             }
         }
 

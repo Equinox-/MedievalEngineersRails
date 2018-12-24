@@ -242,7 +242,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
                     if (Vector3D.DistanceSquared(currentMatrix.Translation, nextMatrix.Translation) > 30 * 30)
                     {
                         var curve = PrepareSphericalBez(currentMatrix, nextMatrix);
-                        DrawBez(currentMatrix.Up, nextMatrix.Up, curve, color, 100);
+                        curve.Draw(color);
                     }
                     else
                     {
@@ -250,7 +250,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
                                 Vector3D.DistanceSquared(cam.GetPosition(), currentVert.Position)) > 100 * 100)
                             continue;
                         var curve = PrepareNormalBez(currentMatrix, nextMatrix);
-                        DrawBez(currentMatrix.Up, nextMatrix.Up, curve, color);
+                        curve.Draw(color);
                     }
                 }
 
@@ -271,31 +271,6 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
             CurveExtensions.AlignFwd(ref m1, ref m2);
             return new CubicCurve(m1, m2);
         }
-
-        private static void DrawBez<T>(Vector3D up1, Vector3D up2, T bezCurve, Vector4 color, int? forcedLod = null)
-            where T : ICurve
-        {
-            var cam = MyCameraComponent.ActiveCamera;
-            if (cam == null)
-                return;
-            var first = bezCurve.Sample(0);
-            var last = bezCurve.Sample(1);
-            var center = (first + last) / 2;
-            var factor = Math.Sqrt(Vector3D.DistanceSquared(first, last) /
-                                   (1 + Vector3D.DistanceSquared(cam.GetPosition(), center)));
-            var count = forcedLod ?? MathHelper.Clamp(factor * 100, 1, 25);
-            var lastPos = default(Vector3D);
-            for (var t = 0; t <= count; t++)
-            {
-                var time = t / (float) count;
-                var pos = bezCurve.Sample(time);
-                var pact = pos + Vector3D.Lerp(up1, up2, time) * _edgeMarkerVertOffset;
-                if (t > 0)
-                    MySimpleObjectDraw.DrawLine(lastPos, pact, _squareMaterial, ref color, _edgeWidth);
-                lastPos = pact;
-            }
-        }
-
         #endregion
 
         private readonly List<string> _tmpMessages = new List<string>();
@@ -326,6 +301,8 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
                     if (!string.IsNullOrEmpty(err))
                         player.ShowNotification(err, 2000, null,
                             new Vector4(1, 0, 0, 1));
+                    if (_vertices.Count > 0 && Vector3D.DistanceSquared(_vertices[_vertices.Count - 1].Position, Target.Position) < 1)
+                        _vertices.RemoveAt(_vertices.Count - 1);
                     return false;
                 case MyHandItemActionEnum.Primary:
                     if (_vertices.Count == 1 && MyAPIGateway.Input.IsKeyDown(MyKeys.Shift))
@@ -369,7 +346,9 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
                             }
                         }
                         ComputeLong(_vertices[0], _vertices[1], curveData);
+                        _vertices.RemoveAt(_vertices.Count - 1);
                         _tmpMessages.Clear();
+                        player.ShowNotification($"Dividing into {_vertices.Count - 1} segments");
                         if (!ValidatePlace(_tmpMessages, true))
                         {
                             player.ShowNotification(string.Join("\n", _tmpMessages), 2000, null,
@@ -378,7 +357,6 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
                             _vertices.Add(originalStart);
                             return false;
                         }
-                        player.ShowNotification($"Divided into {_vertices.Count - 1} segments");
                         return false;
                     }
 
@@ -536,24 +514,11 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
                 M1 = epa.ComputeVertexMatrix(first, 0);
                 M2 = epa.ComputeVertexMatrix(last, 1);
                 Curve = PrepareSphericalBez(M1, M2);
-
-                var length = 0d;
-                var prev = default(Vector3D);
-                var chunks = (int) Vector3D.Distance(last.Position, first.Position) / 2.5f;
-                for (var t = 0; t < chunks; t++)
-                {
-                    var curr = Curve.Sample(t / (float) chunks);
-                    if (t > 0)
-                    {
-                        length += Vector3D.Distance(prev, curr);
-                    }
-
-                    prev = curr;
-                }
+                var length = Curve.LengthAuto(epa.PlacedDefinition.Distance.Min / 5);
                 Length = length;
 
-                var minCount = (int) Math.Ceiling(length / epa.PlacedDefinition.Distance.Min);
-                var maxCount = (int) Math.Floor(length / epa.PlacedDefinition.Distance.Max);
+                var minCount = (int) Math.Ceiling(length / epa.PlacedDefinition.Distance.Max);
+                var maxCount = (int) Math.Floor(length / epa.PlacedDefinition.Distance.Min);
                 var idealCount = (int) Math.Round(length / epa.PlacedDefinition.PreferredDistance);
                 Count = MathHelper.Clamp(idealCount, minCount, maxCount);
             }

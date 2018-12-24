@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Equinox76561198048419394.RailSystem.Util;
 using VRage.Collections;
+using VRage.Game.Entity;
 using VRage.Library.Logging;
 using VRageMath;
 

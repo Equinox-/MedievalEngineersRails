@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <Definition xsi:type="ResearchDefinition">
+        <Id Type="ResearchDefinition" Subtype="RailSwitch"/>
+        <DisplayName>Switches</DisplayName>
+                
+        <Entry Type="CubeBlock" Subtype="RailSwitchExternal"/>
+        <Entry Type="CraftingRecipeDefinition" Subtype="RailSwitchExternal"/>
+        <Entry Type="CraftingRecipeDefinition" Subtype="SchematicRailSwitch"/>
+    </Definition>
+
+    <Definition xsi:type="MyObjectBuilder_CraftingRecipeDefinition" Copy="Append">
+        <Id Type="MyObjectBuilder_CraftingRecipeDefinition" Subtype="SchematicRailSwitch"/>
+        <CopyFrom Type="MyObjectBuilder_CraftingRecipeDefinition" Subtype="SchematicBase"/>
+        <DisplayName>Schematic: Switches</DisplayName>
+        <Description>A document describing all the details of building switches.</Description>
+        <Icon>Textures\GUI\Icons\Schematics\ScrollBackground_1.dds</Icon>
+        <Icon>Textures\GUI\Icons\Equinox\RailSwitchResearch.dds</Icon>
+        <Icon>Textures\GUI\Icons\Schematics\ScrollBackground_2.dds</Icon>
+        <Icon>Textures\GUI\Icons\Schematics\OverlayScrollCivil.dds</Icon>
+        <Results>
+            <Item Amount="1" Type="SchematicItem" Subtype="SchematicRailSwitch"/>
+        </Results>
+    </Definition>
+
+    <Definition xsi:type="MyObjectBuilder_SchematicItemDefinition" Copy="Append">
+        <Id Type="SchematicItem" Subtype="SchematicRailSwitch"/>
+        <CopyFrom Type="SchematicItem" Subtype="SchematicBase"/>
+        <DisplayName>Schematic: Switches</DisplayName>
+        <Description>A document describing all the details of building switches.</Description>
+        <Icon>Textures\GUI\Icons\Schematics\ScrollBackground_1.dds</Icon>
+        <Icon>Textures\GUI\Icons\Equinox\RailSwitchResearch.dds</Icon>
+        <Icon>Textures\GUI\Icons\Schematics\ScrollBackground_2.dds</Icon>
+        <Icon>Textures\GUI\Icons\Schematics\OverlayScrollCivil.dds</Icon>
+        <Research Type="ResearchDefinition" Subtype="RailSwitch"/>
+    </Definition>
+</Definitions>

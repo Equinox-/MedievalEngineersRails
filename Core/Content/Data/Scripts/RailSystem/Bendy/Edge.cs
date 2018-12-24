@@ -177,30 +177,10 @@ namespace Equinox76561198048419394.RailSystem.Bendy
 
         public void DebugDraw(float tStart, float tEnd, Vector4 color, int verticalGroup = 0)
         {
-            var cam2 = MyCameraComponent.ActiveCamera;
-            if (cam2 == null || Curve == null)
+            if (Curve == null)
                 return;
-            var bezCurve = Curve;
-            var first = bezCurve.Sample(tStart);
-            var last = bezCurve.Sample(tEnd);
-            var center = (first + last) / 2;
-            var factor = Math.Sqrt(Vector3D.DistanceSquared(first, last) / (1 + Vector3D.DistanceSquared(cam2.GetPosition(), center)));
-            var count = (int) MathHelper.Clamp(factor * 5, 1, 25);
-            if (bezCurve is LinearCurve)
-                count = 1;
-            var lastPos = default(Vector3D);
-            for (var t = 0; t <= count; t++)
-            {
-                var time = MathHelper.Lerp(tStart, tEnd, (t / (float) count));
-                var pos = bezCurve.Sample(time);
-                var pact = pos + Vector3D.Lerp(From.Up, To.Up, time) * (EdgeMarkerVertOffset + verticalGroup * EdgeWidth * 8);
-                if (t > 0)
-                {
-                    MySimpleObjectDraw.DrawLine(lastPos, pact, SquareMaterial, ref color, EdgeWidth);
-                }
-
-                lastPos = pact;
-            }
+            var upOffset = EdgeMarkerVertOffset + verticalGroup * EdgeWidth * 8;
+            Curve.Draw(color, tStart, tEnd, edgeWidth: EdgeWidth, upZero: From.Up * upOffset, upOne: To.Up * upOffset);
         }
     }
 }
