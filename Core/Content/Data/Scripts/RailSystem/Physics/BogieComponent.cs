@@ -45,7 +45,6 @@ namespace Equinox76561198048419394.RailSystem.Physics
         {
             base.Init(definition);
             Definition = (BogieComponentDefinition) definition;
-            _powerObserver.RequiredPower = Definition.NeedsPower;
         }
 
         public override void OnAddedToContainer()
@@ -75,6 +74,7 @@ namespace Equinox76561198048419394.RailSystem.Physics
                     FixupSkinEntity(_attacher, e);
             }
             base.OnAddedToScene();
+            _powerObserver.RequiredPower = Definition.NeedsPower;
         }
 
         private void FixupSkinEntity(MyModelAttachmentComponent attacher, MyEntity entity)
@@ -330,7 +330,8 @@ namespace Equinox76561198048419394.RailSystem.Physics
             var com = physics.GetCenterOfMassWorld();
 
             var braking = false;
-            if (Definition.MaxVelocity > 0 && _powerObserver.IsPowered)
+            // Hack until I fix EquinoxCore
+            if (Definition.MaxVelocity > 0 && (_powerObserver.IsPowered || Definition.NeedsPower == PowerObserver.RequiredPowerEnum.None))
             {
                 var cvel = physics.LinearVelocity.Dot(bestTangent);
                 var velocityMod = 0f;
