@@ -39,24 +39,10 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
             return true;
         }
 
-        private struct VertexData
-        {
-            public Vector3D Position { get; private set; }
-            public Vector3D Up { get; private set; }
-            public Node Node { get; private set; }
-
-            public VertexData(Vector3D pos, Vector3D up, Node node)
-            {
-                Position = pos;
-                Up = up;
-                Node = node;
-            }
-        }
-
-        private readonly List<VertexData> _vertices = new List<VertexData>();
+        private readonly List<EdgePlacerSystem.AnnotatedNode> _vertices = new List<EdgePlacerSystem.AnnotatedNode>();
 
 
-        private VertexData CreateVertex(Vector3D worldPos)
+        private EdgePlacerSystem.AnnotatedNode CreateVertex(Vector3D worldPos)
         {
             var node = Graph.GetNode(worldPos);
             Vector3D up;
@@ -72,7 +58,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
                     up = Vector3D.Up;
             }
 
-            return new VertexData(worldPos, up, node);
+            return new EdgePlacerSystem.AnnotatedNode {Position = worldPos, Up = (Vector3) up, Existing = node, Tangent = node?.Tangent ?? Vector3.Zero};
         }
 
         private const float _edgeWidth = 0.05f;
@@ -110,17 +96,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
 
         private void NodesChanged(Node obj)
         {
-            for (var i = 0; i < _vertices.Count; i++)
-            {
-                var v = _vertices[i];
-                var newNode = Graph.GetNode(v.Position);
-                if (newNode == v.Node)
-                    continue;
-                if (newNode != null)
-                    _vertices[i] = new VertexData(newNode.Position, newNode.Up, newNode);
-                else
-                    _vertices[i] = new VertexData(v.Position, v.Up, null);
-            }
+            EdgePlacerSystem.AnnotateNodes(Graph, _vertices);
         }
 
         public override void Deactivate()
@@ -138,13 +114,13 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
 
         #region Rendering
 
-        private MatrixD ComputeVertexMatrix(VertexData vert, int index)
+        private MatrixD ComputeVertexMatrix(EdgePlacerSystem.AnnotatedNode vert, int index)
         {
-            if (vert.Node != null)
-                return vert.Node.Matrix;
+            if (vert.Existing != null)
+                return vert.Existing.Matrix;
 
-            var prevPos = (index - 1) >= 0 ? (VertexData?) _vertices[index - 1] : null;
-            var nextPos = (index + 1) < _vertices.Count ? (VertexData?) _vertices[index + 1] : null;
+            var prevPos = (index - 1) >= 0 ? (EdgePlacerSystem.AnnotatedNode?) _vertices[index - 1] : null;
+            var nextPos = (index + 1) < _vertices.Count ? (EdgePlacerSystem.AnnotatedNode?) _vertices[index + 1] : null;
 
             var tan = Vector3D.Zero;
             if (prevPos.HasValue)
@@ -162,15 +138,15 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
             if (prevPos.HasValue != nextPos.HasValue)
             {
                 // try Quadratic bez with control point equidistance from both nodes.
-                if (prevPos?.Node != null)
+                if (prevPos?.Existing != null)
                 {
-                    var pp = prevPos.Value.Node;
+                    var pp = prevPos.Value.Existing;
                     tan = CurveExtensions.ExpandToCubic(pp.Position, pp.Position + pp.Tangent, vert.Position,
                               RailConstants.LongBezControlLimit) - vert.Position;
                 }
-                else if (nextPos?.Node != null)
+                else if (nextPos?.Existing != null)
                 {
-                    var pp = nextPos.Value.Node;
+                    var pp = nextPos.Value.Existing;
                     tan = CurveExtensions.ExpandToCubic(pp.Position, pp.Position + pp.Tangent, vert.Position,
                               RailConstants.LongBezControlLimit) - vert.Position;
                 }
@@ -186,7 +162,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
         {
             // hackfix because OnTargetEntityChanged is only called when the actual entity changed.
             SetTarget();
-            
+
             var cam = MyCameraComponent.ActiveCamera;
             if (Graph == null || cam == null) return;
 
@@ -218,43 +194,35 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
             if (Holder == null) return;
 
             {
-                var myPosition = Holder.GetPosition();
-                var nextNode = CreateVertex(Target.Entity != null && Vector3D.DistanceSquared(myPosition, Target.Position) < ClickDistSq
-                    ? Target.Position
-                    : myPosition);
-                _vertices.Add(nextNode);
-
-                for (var i = 1; i < _vertices.Count; i++)
+                using (new TemporaryVertex(this))
                 {
-                    var nextVert = _vertices[i];
-                    var currentVert = _vertices[i - 1];
-                    var prevPos = i >= 2
-                        ? _vertices[i - 2].Position
-                        : currentVert.Node?.Opposition(nextVert.Position)?.Position;
-
-                    var nextMatrix = ComputeVertexMatrix(nextVert, i);
-                    var currentMatrix = ComputeVertexMatrix(currentVert, i - 1);
-
-                    var color = PlacedDefinition == null || EdgePlacerSystem.VerifyJoint(PlacedDefinition, prevPos,
-                                    currentVert.Position, nextVert.Position, null)
-                        ? _edgeColor
-                        : _edgeColorBad;
-                    if (Vector3D.DistanceSquared(currentMatrix.Translation, nextMatrix.Translation) > 30 * 30)
+                    for (var i = 1; i < _vertices.Count; i++)
                     {
-                        var curve = PrepareSphericalBez(currentMatrix, nextMatrix);
-                        curve.Draw(color);
-                    }
-                    else
-                    {
-                        if (Math.Min(Vector3D.DistanceSquared(cam.GetPosition(), nextVert.Position),
-                                Vector3D.DistanceSquared(cam.GetPosition(), currentVert.Position)) > 100 * 100)
-                            continue;
-                        var curve = PrepareNormalBez(currentMatrix, nextMatrix);
-                        curve.Draw(color);
+                        var nextVert = _vertices[i];
+                        var currentVert = _vertices[i - 1];
+
+                        var nextMatrix = ComputeVertexMatrix(nextVert, i);
+                        var currentMatrix = ComputeVertexMatrix(currentVert, i - 1);
+
+                        var color = PlacedDefinition == null || EdgePlacerSystem.VerifyEdge(PlacedDefinition, currentVert, nextVert, null)
+                            ? _edgeColor
+                            : _edgeColorBad;
+                        const float vertShift = .1f;
+                        if (Vector3D.DistanceSquared(currentMatrix.Translation, nextMatrix.Translation) > 30 * 30)
+                        {
+                            var curve = PrepareSphericalBez(currentMatrix, nextMatrix);
+                            curve.Draw(color, upZero: currentVert.Up * vertShift, upOne: nextVert.Up * vertShift);
+                        }
+                        else
+                        {
+                            if (Math.Min(Vector3D.DistanceSquared(cam.GetPosition(), nextVert.Position),
+                                    Vector3D.DistanceSquared(cam.GetPosition(), currentVert.Position)) > 100 * 100)
+                                continue;
+                            var curve = PrepareNormalBez(currentMatrix, nextMatrix);
+                            curve.Draw(color, upZero: currentVert.Up * vertShift, upOne: nextVert.Up * vertShift);
+                        }
                     }
                 }
-
-                _vertices.RemoveAt(_vertices.Count - 1);
             }
         }
 
@@ -271,11 +239,33 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
             CurveExtensions.AlignFwd(ref m1, ref m2);
             return new CubicCurve(m1, m2);
         }
+
         #endregion
 
         private readonly List<string> _tmpMessages = new List<string>();
 
         private const float ClickDistSq = 25 * 25;
+
+        private struct TemporaryVertex : IDisposable
+        {
+            private readonly EdgePlacerBehavior _behavior;
+
+            public TemporaryVertex(EdgePlacerBehavior be)
+            {
+                _behavior = be;
+                var target = _behavior.Target;
+                var myPosition = _behavior.Holder.GetPosition();
+                _behavior._vertices.Add(_behavior.CreateVertex(target.Entity != null && Vector3D.DistanceSquared(myPosition, target.Position) < ClickDistSq
+                    ? target.Position
+                    : myPosition));
+                EdgePlacerSystem.AnnotateNodes(_behavior.Graph, _behavior._vertices);
+            }
+
+            public void Dispose()
+            {
+                _behavior._vertices.RemoveAt(_behavior._vertices.Count - 1);
+            }
+        }
 
         protected override bool Start(MyHandItemActionEnum action)
         {
@@ -310,9 +300,9 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
                         var originalStart = _vertices[0];
                         var lastVertex = CreateVertex(Target.Position);
                         _vertices.Add(lastVertex);
+                        EdgePlacerSystem.AnnotateNodes(Graph, _vertices);
                         var curveData = new LongPlanData(this, _vertices[0], _vertices[1]);
-                        var jointData = EdgePlacerSystem.ComputeJointParameters(_vertices[0].Node?.Opposition(lastVertex.Position)?.Position,
-                            _vertices[0].Position, lastVertex.Position);
+                        var jointData = EdgePlacerSystem.ComputeEdgeParameters(_vertices[0], _vertices[_vertices.Count - 1]);
                         {
                             _tmpMessages.Clear();
                             if (jointData.BendRadians.HasValue)
@@ -348,7 +338,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
                         ComputeLong(_vertices[0], _vertices[1], curveData);
                         _vertices.RemoveAt(_vertices.Count - 1);
                         _tmpMessages.Clear();
-                        player.ShowNotification($"Dividing into {_vertices.Count - 1} segments");
+                        player.ShowNotification($"Dividing into {curveData.Count} segments");
                         if (!ValidatePlace(_tmpMessages, true))
                         {
                             player.ShowNotification(string.Join("\n", _tmpMessages), 2000, null,
@@ -357,6 +347,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
                             _vertices.Add(originalStart);
                             return false;
                         }
+
                         return false;
                     }
 
@@ -425,36 +416,36 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
                             sb.AppendLine("Can't place node on dynamic physics");
                         else
                         {
-                            var jointData = EdgePlacerSystem.ComputeJointParameters(
-                                _vertices.Count > 1
-                                    ? _vertices[_vertices.Count - 2].Position
-                                    : _vertices[0].Node?.Opposition(Target.Position)?.Position,
-                                _vertices[_vertices.Count - 1].Position, Target.Position);
-                            sb.Append($"Length {jointData.Length:F1} m");
-                            if (PlacedDefinition != null && jointData.Length > PlacedDefinition.Distance.Max)
-                                sb.AppendLine($" >= {PlacedDefinition.Distance.Max:F1} m");
-                            else if (PlacedDefinition != null && jointData.Length < PlacedDefinition.Distance.Min)
-                                sb.AppendLine($" <= {PlacedDefinition.Distance.Min:F1} m");
-                            else
-                                sb.AppendLine();
-                            if (jointData.BendRadians.HasValue)
+                            using (new TemporaryVertex(this))
+                            if (_vertices.Count >= 2)
                             {
-                                var b = jointData.BendRadians.Value;
-                                sb.Append($"Curve {b * 180 / Math.PI:F0}º");
-                                if (PlacedDefinition != null && b > PlacedDefinition.MaxAngleRadians)
-                                    sb.AppendLine($" >= {PlacedDefinition.MaxAngleDegrees}º");
+                                var jointData = EdgePlacerSystem.ComputeEdgeParameters(_vertices[_vertices.Count - 2], _vertices[_vertices.Count - 1]);
+                                sb.Append($"Length {jointData.Length:F1} m");
+                                if (PlacedDefinition != null && jointData.Length > PlacedDefinition.Distance.Max)
+                                    sb.AppendLine($" >= {PlacedDefinition.Distance.Max:F1} m");
+                                else if (PlacedDefinition != null && jointData.Length < PlacedDefinition.Distance.Min)
+                                    sb.AppendLine($" <= {PlacedDefinition.Distance.Min:F1} m");
                                 else
                                     sb.AppendLine();
-                            }
+                                if (jointData.BendRadians.HasValue)
+                                {
+                                    var b = jointData.BendRadians.Value;
+                                    sb.Append($"Curve {b * 180 / Math.PI:F0}º");
+                                    if (PlacedDefinition != null && b > PlacedDefinition.MaxAngleRadians)
+                                        sb.AppendLine($" >= {PlacedDefinition.MaxAngleDegrees}º");
+                                    else
+                                        sb.AppendLine();
+                                }
 
-                            if (jointData.Grade.HasValue)
-                            {
-                                var g = jointData.Grade.Value;
-                                sb.Append($"Grade {g * 100:F0}%");
-                                if (PlacedDefinition != null && Math.Abs(g) > PlacedDefinition.MaxGradeRatio)
-                                    sb.AppendLine($" {(g < 0 ? "<= -" : ">= ")}{PlacedDefinition.MaxGradeRatio * 100:F0}%");
-                                else
-                                    sb.AppendLine();
+                                if (jointData.Grade.HasValue)
+                                {
+                                    var g = jointData.Grade.Value;
+                                    sb.Append($"Grade {g * 100:F0}%");
+                                    if (PlacedDefinition != null && Math.Abs(g) > PlacedDefinition.MaxGradeRatio)
+                                        sb.AppendLine($" {(g < 0 ? "<= -" : ">= ")}{PlacedDefinition.MaxGradeRatio * 100:F0}%");
+                                    else
+                                        sb.AppendLine();
+                                }
                             }
                         }
 
@@ -506,7 +497,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
             public readonly int Count;
             public readonly double Length;
 
-            public LongPlanData(EdgePlacerBehavior epa, VertexData first, VertexData last)
+            public LongPlanData(EdgePlacerBehavior epa, EdgePlacerSystem.AnnotatedNode first, EdgePlacerSystem.AnnotatedNode last)
             {
                 epa._vertices.Clear();
                 epa._vertices.Add(first);
@@ -514,7 +505,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
                 M1 = epa.ComputeVertexMatrix(first, 0);
                 M2 = epa.ComputeVertexMatrix(last, 1);
                 Curve = PrepareSphericalBez(M1, M2);
-                var length = Curve.LengthAuto(epa.PlacedDefinition.Distance.Min / 5);
+                var length = Curve.LengthAuto(epa.PlacedDefinition.Distance.Min / 8);
                 Length = length;
 
                 var minCount = (int) Math.Ceiling(length / epa.PlacedDefinition.Distance.Max);
@@ -523,8 +514,8 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
                 Count = MathHelper.Clamp(idealCount, minCount, maxCount);
             }
         }
-        
-        private void ComputeLong(VertexData first, VertexData last, LongPlanData data)
+
+        private void ComputeLong(EdgePlacerSystem.AnnotatedNode first, EdgePlacerSystem.AnnotatedNode last, LongPlanData data)
         {
             var lenPerCount = data.Length / data.Count;
             _vertices.Clear();
@@ -590,20 +581,11 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
 
             if (_vertices.Count == 0)
                 return true;
-            var prev = _vertices[_vertices.Count - 1];
-            var prevPrevPos = _vertices.Count >= 2
-                ? _vertices[_vertices.Count - 2].Position
-                : prev.Node?.Opposition(vert.Position)?.Position;
-            if (!EdgePlacerSystem.VerifyJoint(PlacedDefinition, prevPrevPos, prev.Position, vert.Position, errors))
-                return false;
-            Array.Resize(ref _tempPositions, _vertices.Count + 1);
-            for (var i = 0; i < _vertices.Count; i++)
-                _tempPositions[i] = _vertices[i].Position;
-            _tempPositions[_tempPositions.Length - 1] = vert.Position;
-            return EdgePlacerSystem.ValidatePath(PlacedDefinition, Graph, _tempPositions, errors);
+            using (new TemporaryVertex(this))
+            {
+                return EdgePlacerSystem.ValidatePath(PlacedDefinition, Graph, _vertices, errors);
+            }
         }
-
-        private Vector3D[] _tempPositions;
 
         private bool ValidateDeconstruct(out string err, bool testPermission)
         {

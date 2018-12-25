@@ -3,6 +3,7 @@
     <Definition xsi:type="MyObjectBuilder_CubeBlockDefinition">
         <Id Type="CubeBlock" Subtype="RailSwitchExternal" />
         <DisplayName>Switch Controller</DisplayName>
+        <Description>Flag that can be used to control any railway junction by placing it nearby</Description>
         <Icon>Textures\GUI\Icons\Equinox\RailSwitchExternal.dds</Icon>
         <Public>true</Public>
         

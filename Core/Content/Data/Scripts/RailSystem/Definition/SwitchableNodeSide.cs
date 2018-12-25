@@ -124,8 +124,8 @@ namespace Equinox76561198048419394.RailSystem.Definition
             _tableDirty = true;
         }
 
-        private bool _dirty = false;
-        private bool _tableDirty = false;
+        private bool _dirty;
+        private bool _tableDirty;
 
         private void EnsureBuild()
         {
@@ -145,7 +145,7 @@ namespace Equinox76561198048419394.RailSystem.Definition
         private void RebuildTable()
         {
             // if removing SwitchedEdge we need to change the SwitchedEdge
-            var activeRemoved = !_edges.Contains(SwitchedEdge);
+            var activeRemoved = SwitchedEdge != null && !_edges.Contains(SwitchedEdge);
             var sampleIndex = activeRemoved ? _edgeTable.IndexOf(SwitchedEdge) : -1;
             _edgeTable.Clear();
             foreach (var k in _edges)
@@ -154,11 +154,9 @@ namespace Equinox76561198048419394.RailSystem.Definition
             {
                 var tangentA = Vector3.Normalize(a.Opposition(Junction).Position - Junction.Position);
                 var tangentB = Vector3.Normalize(b.Opposition(Junction).Position - Junction.Position);
-                var biasCheck = Vector3.Cross(Junction.Up, Junction.Tangent);
+                var biasCheck = Vector3.Cross(Junction.Up, Junction.Tangent); // keep this here to avoid capture
                 return biasCheck.Dot(tangentA).CompareTo(biasCheck.Dot(tangentB));
             });
-            if (!activeRemoved)
-                return;
             SwitchedEdge = _edgeTable.Count > 0 ? _edgeTable[(sampleIndex + _edgeTable.Count) % _edgeTable.Count] : null;
         }
 

@@ -275,11 +275,9 @@ namespace Equinox76561198048419394.RailSystem.Definition
                 if (_controller != null)
                 {
                     _controller.SwitchChanged += OnSwitchChanged;
+                    FlagAnimationWarp();
                     if (_controller.Target != null)
-                    {
-                        FlagAnimationWarp();
                         OnSwitchChanged(_controller, _controller.Junction, _controller.Target);
-                    }
                 }
             }
             // ReSharper disable once InvertIf

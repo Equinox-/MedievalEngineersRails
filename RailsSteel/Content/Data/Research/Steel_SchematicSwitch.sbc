@@ -2,8 +2,9 @@
 <Definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <Definition xsi:type="ResearchDefinition">
         <Id Type="ResearchDefinition" Subtype="RailSwitch"/>
-        <DisplayName>Switches</DisplayName>
+        <DisplayName>Railroad Switches</DisplayName>
                 
+        <Entry Type="CubeBlock" Subtype="RailSwitchRhsParallel" />
         <Entry Type="CubeBlock" Subtype="RailSwitchExternal"/>
         <Entry Type="CraftingRecipeDefinition" Subtype="RailSwitchExternal"/>
         <Entry Type="CraftingRecipeDefinition" Subtype="SchematicRailSwitch"/>
@@ -12,7 +13,7 @@
     <Definition xsi:type="MyObjectBuilder_CraftingRecipeDefinition" Copy="Append">
         <Id Type="MyObjectBuilder_CraftingRecipeDefinition" Subtype="SchematicRailSwitch"/>
         <CopyFrom Type="MyObjectBuilder_CraftingRecipeDefinition" Subtype="SchematicBase"/>
-        <DisplayName>Schematic: Switches</DisplayName>
+        <DisplayName>Schematic: Railroad Switches</DisplayName>
         <Description>A document describing all the details of building switches.</Description>
         <Icon>Textures\GUI\Icons\Schematics\ScrollBackground_1.dds</Icon>
         <Icon>Textures\GUI\Icons\Equinox\RailSwitchResearch.dds</Icon>
@@ -26,7 +27,7 @@
     <Definition xsi:type="MyObjectBuilder_SchematicItemDefinition" Copy="Append">
         <Id Type="SchematicItem" Subtype="SchematicRailSwitch"/>
         <CopyFrom Type="SchematicItem" Subtype="SchematicBase"/>
-        <DisplayName>Schematic: Switches</DisplayName>
+        <DisplayName>Schematic: Railroad Switches</DisplayName>
         <Description>A document describing all the details of building switches.</Description>
         <Icon>Textures\GUI\Icons\Schematics\ScrollBackground_1.dds</Icon>
         <Icon>Textures\GUI\Icons\Equinox\RailSwitchResearch.dds</Icon>

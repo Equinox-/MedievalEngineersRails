@@ -2,8 +2,8 @@
 <Definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <Definition xsi:type="MyObjectBuilder_ResearchNodeDefinition">
         <Id Type="ResearchNodeDefinition" Subtype="RailSwitch" />
-        <DisplayName>Steel Railroading</DisplayName>
-        <Description>Basic skills to lay a low friction steel railway</Description>
+        <DisplayName>Railroad Switches</DisplayName>
+        <Description>Basic skills to build railroad switches.</Description>
         <Icon>Textures\GUI\Icons\Equinox\RailSwitchResearch.dds</Icon>
         <Parent Type="ResearchNodeDefinition" Subtype="RailSteel"/>
         <Quest Type="QuestDefinition" Subtype="RailSwitch" />
@@ -13,8 +13,8 @@
     <Definition xsi:type="MyObjectBuilder_QuestDefinition">
         <Id Type="QuestDefinition" Subtype="RailSwitch" />
 
-        <DisplayName>Steel Railroading</DisplayName>
-        <Description>Basic skills to lay a low friction steel railway</Description>
+        <DisplayName>Railroad Switches</DisplayName>
+        <Description>Basic skills to build railroad switches.</Description>
         <Icon>Textures\GUI\Book\QuestBook_Quest_Thumbnail.png</Icon>
         <Tag>Research</Tag>
 

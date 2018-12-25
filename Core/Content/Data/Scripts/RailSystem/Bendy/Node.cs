@@ -112,41 +112,6 @@ namespace Equinox76561198048419394.RailSystem.Bendy
                 edge.To.Close();
         }
 
-        /// <summary>
-        /// Determines which node to connect to
-        /// </summary>
-        /// <param name="nPos">incoming node position</param>
-        /// <returns>outgoing node</returns>
-        public Node Opposition(Vector3D nPos)
-        {
-            var nd = Vector3D.Normalize(nPos - Position);
-            Node best = null;
-            double bestDot = 2;
-            foreach (var op in _neighbors.Keys)
-            {
-                if (Vector3D.DistanceSquared(op.Position, nPos) <= RailConstants.NodeMergeDistance * RailConstants.NodeMergeDistance)
-                    continue;
-                var od = Vector3D.Normalize(op.Position - Position);
-                var dot = nd.Dot(od);
-                if (dot >= bestDot)
-                    continue;
-                bestDot = dot;
-                best = op;
-            }
-
-            return best;
-        }
-
-        /// <summary>
-        /// Determines which node to connect to
-        /// </summary>
-        /// <param name="n">incoming node</param>
-        /// <returns>outgoing node</returns>
-        public Node Opposition(Node n)
-        {
-            return Opposition(n.Position);
-        }
-
         private bool _dirty;
 
         public void MarkDirty()
@@ -202,37 +167,20 @@ namespace Equinox76561198048419394.RailSystem.Bendy
                 return Tangent;
             if (_neighbors.Count == 0)
             {
-                var tmp = Vector3.CalculatePerpendicularVector(Up);
-                tmp.Normalize();
-                return tmp;
+                var alt = Vector3.CalculatePerpendicularVector(Up);
+                alt.Normalize();
+                return alt;
             }
 
-            // ReSharper disable once InvertIf
-            if (_neighbors.Count > 1)
+            var tan = Vector3.Zero;
+            foreach (var k in _neighbors.Keys)
             {
-                var tan = Vector3.Zero;
-                foreach (var k in _neighbors.Keys)
-                {
-                    var op = Opposition(k);
-
-                    var a = Vector3.Normalize(k.Position - Position);
-                    var b = Vector3.Normalize(op.Position - Position);
-                    var tanVec = a - b;
-                    var lenTmp = tanVec.Length();
-                    if (lenTmp > 1e-3f)
-                        tanVec /= lenTmp;
-                    if (tan.Dot(tanVec) < 0)
-                        tan -= tanVec;
-                    else
-                        tan += tanVec;
-                }
-
-                var len = tan.Length();
-                if (len > 1e-3f)
-                    return tan / len;
+                var t = Vector3.Normalize(k.Position - Position);
+                if (t.Dot(tan) < 0)
+                    t = -t;
+                tan += t;
             }
-
-            return Vector3.Normalize(_neighbors.First().Key.Position - Position);
+            return Vector3.Normalize(tan);
         }
 
 

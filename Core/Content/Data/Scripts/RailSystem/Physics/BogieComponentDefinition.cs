@@ -1,4 +1,5 @@
 ﻿using System.Xml.Serialization;
+using Equinox76561198048419394.Core.Util;
 using VRage.Game;
 using VRage.Game.Definitions;
 using VRage.ObjectBuilders;
@@ -14,6 +15,9 @@ namespace Equinox76561198048419394.RailSystem.Physics
         public float MaxForce { get; private set; }
         public float CoefficientOfFriction { get; private set; }
         public float BrakingCoefficientOfFriction { get; private set; }
+        
+        public PowerObserver.RequiredPowerEnum NeedsPower { get; private set; }
+        
         private float _detachDistance;
 
         public float DetachDistance
@@ -50,6 +54,7 @@ namespace Equinox76561198048419394.RailSystem.Physics
             DetachDistance = ob.DetachDistance ?? 1.5f;
             CoefficientOfFriction = ob.CoefficientOfFriction ?? 0.01f;
             OrientationConvergenceFactor = ob.OrientationConvergenceFactor ?? 1f;
+            NeedsPower = ob.NeedsPower ?? PowerObserver.RequiredPowerEnum.None;
         }
     }
 
@@ -68,5 +73,7 @@ namespace Equinox76561198048419394.RailSystem.Physics
         public float? DetachDistance;
 
         public float? OrientationConvergenceFactor;
+
+        public PowerObserver.RequiredPowerEnum? NeedsPower;
     }
 }

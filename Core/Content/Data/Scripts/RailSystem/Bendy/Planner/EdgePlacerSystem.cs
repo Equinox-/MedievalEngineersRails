@@ -67,28 +67,26 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
             public double? Grade;
         }
 
-        public static JointParameters ComputeJointParameters(Vector3D? prev, Vector3D here, Vector3D next)
+        public static JointParameters ComputeEdgeParameters(AnnotatedNode from, AnnotatedNode to)
         {
             var result = new JointParameters();
 
-            var dirNext = next - here;
+            var dirNext = to.Position - from.Position;
             result.Length = dirNext.Normalize();
 
-            if (prev.HasValue)
-            {
-                var dirPrev = here - prev.Value;
-                dirPrev.Normalize();
-                result.BendRadians = Math.Acos(Math.Abs(dirPrev.Dot(dirNext)));
-            }
+            var dotFrom = Math.Abs(Vector3.Normalize(from.Tangent).Dot((Vector3) dirNext));
+            var dotTo = Math.Abs(Vector3.Normalize(to.Tangent).Dot((Vector3) dirNext));
+            
+            result.BendRadians = Math.Acos(Math.Min(dotFrom, dotTo));
 
-            var planet = MyGamePruningStructure.GetClosestPlanet(here);
+            var planet = MyGamePruningStructure.GetClosestPlanet(@from.Position);
             // ReSharper disable once InvertIf
             if (planet?.PositionComp != null)
             {
                 var center = planet.PositionComp.WorldVolume.Center;
-                var elevationHere = Vector3D.Distance(here, center);
-                var elevationNext = Vector3D.Distance(next, center);
-                var deltaElevation = elevationNext - elevationHere;
+                var elevationA = Vector3D.Distance(from.Position, center);
+                var elevationB = Vector3D.Distance(to.Position, center);
+                var deltaElevation = elevationB - elevationA;
                 var grade = deltaElevation / result.Length;
                 result.Grade = grade;
             }
@@ -100,15 +98,13 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
         /// Verifies the given joint against the given definition's constraints.
         /// </summary>
         /// <param name="def">Constraint source</param>
-        /// <param name="prev">Previous position, or null to skip angle check</param>
-        /// <param name="here">Position of joint</param>
-        /// <param name="next">Next position</param>
+        /// <param name="from">Point one of the edge</param>
+        /// <param name="to">Point two of the edge</param>
         /// <param name="errors">destination for all errors that occurred, or null</param>
         /// <returns>true if the joint is valid</returns>
-        public static bool VerifyJoint(BendyComponentDefinition def, Vector3D? prev, Vector3D here, Vector3D next,
-            IList<string> errors)
+        public static bool VerifyEdge(BendyComponentDefinition def, AnnotatedNode from, AnnotatedNode to, IList<string> errors)
         {
-            var jointData = ComputeJointParameters(prev, here, next);
+            var jointData = ComputeEdgeParameters(from, to);
 
             if (jointData.Length > def.Distance.Max)
             {
@@ -158,37 +154,87 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
         /// <param name="nodes">Nodes in path</param>
         /// <param name="errors">Destination for all errors that occurred, or null</param>
         /// <returns>true if the path is valid</returns>
-        public static bool ValidatePath(BendyComponentDefinition def, BendyLayer layer, Vector3D[] nodes,
+        public static bool ValidatePath(BendyComponentDefinition def, BendyLayer layer, IList<AnnotatedNode> nodes,
             IList<string> errors)
         {
-            if (nodes.Length <= 1)
+            if (nodes.Count <= 1)
             {
                 errors?.Add("Not enough points to form a path");
                 return false;
             }
 
-            if (nodes.Length >= RailConstants.MaxNodesPlaced)
+            if (nodes.Count >= RailConstants.MaxNodesPlaced)
             {
                 errors?.Add($"Can't place more than {RailConstants.MaxNodesPlaced} nodes at once");
                 return false;
             }
 
-            Vector3D? prevPos = null;
-            for (var i = 0; i < nodes.Length; i++)
+            for (var i = 1; i < nodes.Count; i++)
             {
-                var here = layer?.GetNode(nodes[i]);
-                var herePos = here?.Position ?? nodes[i];
-                if (i > 0)
-                {
-                    var nextPos = i + 1 < nodes.Length ? nodes[i + 1] : here?.Opposition(nodes[i - 1])?.Position;
-                    if (nextPos.HasValue && !VerifyJoint(def, prevPos, herePos, nextPos.Value, errors) && errors == null)
-                        return false;
-                }
-
-                prevPos = herePos;
+                if (!VerifyEdge(def, nodes[i-1], nodes[i], errors) && errors == null)
+                    return false;
             }
 
             return errors == null || errors.Count == 0;
+        }
+
+        public struct AnnotatedNode
+        {
+            public Vector3D Position;
+            public Vector3 Up;
+            public Vector3 Tangent;
+            public Node Existing;
+        }
+
+        public static AnnotatedNode[] AnnotateNodes(BendyLayer layer, Vector3D[] nodes)
+        {
+            var res = new AnnotatedNode[nodes.Length];
+            for (var i = 0; i < nodes.Length; i++)
+                res[i] = new AnnotatedNode {Position = nodes[i]};
+            AnnotateNodes(layer, res);
+            return res;
+        }
+
+        public static void AnnotateNodes(BendyLayer layer, IList<AnnotatedNode> nodes)
+        {
+            for (var i = 0; i < nodes.Count; i++)
+            {
+                var here = layer?.GetNode(nodes[i].Position);
+                var tmp = nodes[i];
+                tmp.Position = here?.Position ?? nodes[i].Position;
+                tmp.Existing = here;
+                tmp.Up = here?.Up ?? nodes[i].Up;
+                nodes[i] = tmp;
+            }
+
+            for (var i = 0; i < nodes.Count; i++)
+            {
+                var a = nodes[i];
+                var tanHere = Vector3.Zero;
+                if (a.Existing != null)
+                    tanHere = a.Existing.Tangent * a.Existing.Neighbors.Count();
+                
+                if (i > 0 && (nodes[i - 1].Existing == null || a.Existing?.ConnectionTo(nodes[i - 1].Existing) == null))
+                {
+                    var tP = Vector3.Normalize(nodes[i - 1].Position - a.Position);
+                    if (tP.Dot(tanHere) < 0)
+                        tP = -tP;
+                    tanHere += tP;
+                }
+                
+                // ReSharper disable once InvertIf
+                if (i + 1 < nodes.Count && (nodes[i + 1].Existing == null || a.Existing?.ConnectionTo(nodes[i + 1].Existing) == null))
+                {
+                    var tP = Vector3.Normalize(nodes[i + 1].Position - a.Position);
+                    if (tP.Dot(tanHere) < 0)
+                        tP = -tP;
+                    tanHere += tP;
+                }
+
+                a.Tangent = Vector3.Normalize(tanHere.LengthSquared() > 0 ? tanHere : Vector3.CalculatePerpendicularVector(nodes[i].Up));
+                nodes[i] = a;
+            }
+            
         }
 
         public static void RaisePlaceEdge(EdgePlacerConfig cfg, Vector3D[] segments)
@@ -262,8 +308,9 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
                 }
 
                 var layer = MySession.Static.Components.Get<BendyController>().GetOrCreateLayer(def.Layer);
+                var annotated = AnnotateNodes(layer, segments);
                 var tmp = new List<string>();
-                if (!ValidatePath(def, layer, segments, tmp))
+                if (!ValidatePath(def, layer, annotated, tmp))
                 {
                     holderPlayer.ShowNotification(string.Join("\n", tmp));
                     MyEventContext.ValidationFailed();

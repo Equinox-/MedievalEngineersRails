@@ -7,12 +7,6 @@
         <Entry Type="CubeBlock" Subtype="RailSteelStraight"/>
         <Entry Type="HandItem" Subtype="RailSteelPlanner"/>
         <Entry Type="CraftingRecipeDefinition" Subtype="RailSteelPlanner"/>
-
-        <Entry Type="CubeBlock" Subtype="RailSwitchRhsParallel" />
-        
-        <Entry Type="CubeBlock" Subtype="RailSwitchExternal"/>
-        <Entry Type="CraftingRecipeDefinition" Subtype="RailSwitchExternal"/>
-
         <Entry Type="CraftingRecipeDefinition" Subtype="SchematicRailSteel"/>
     </Definition>
 

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Serialization;
 using Equinox76561198048419394.Core.Controller;
+using Equinox76561198048419394.Core.Util;
 using Equinox76561198048419394.RailSystem.Bendy;
 using Equinox76561198048419394.RailSystem.Construction;
 using Equinox76561198048419394.RailSystem.Definition;
@@ -38,11 +39,25 @@ namespace Equinox76561198048419394.RailSystem.Physics
     public class BogieComponent : MyEntityComponent
     {
         public BogieComponentDefinition Definition { get; private set; }
+        private readonly PowerObserver _powerObserver = new PowerObserver();
 
         public override void Init(MyEntityComponentDefinition definition)
         {
             base.Init(definition);
             Definition = (BogieComponentDefinition) definition;
+            _powerObserver.RequiredPower = Definition.NeedsPower;
+        }
+
+        public override void OnAddedToContainer()
+        {
+            base.OnAddedToContainer();
+            _powerObserver.OnAddedToContainer(Container);
+        }
+
+        public override void OnBeforeRemovedFromContainer()
+        {
+            _powerObserver.OnRemovedFromContainer();
+            base.OnBeforeRemovedFromContainer();
         }
 
         private BendyLayer Graph;
@@ -59,7 +74,6 @@ namespace Equinox76561198048419394.RailSystem.Physics
                 foreach (var e in _attacher.GetAttachedEntities(SkinHash))
                     FixupSkinEntity(_attacher, e);
             }
-
             base.OnAddedToScene();
         }
 
@@ -316,7 +330,7 @@ namespace Equinox76561198048419394.RailSystem.Physics
             var com = physics.GetCenterOfMassWorld();
 
             var braking = false;
-            if (Definition.MaxVelocity > 0)
+            if (Definition.MaxVelocity > 0 && _powerObserver.IsPowered)
             {
                 var cvel = physics.LinearVelocity.Dot(bestTangent);
                 var velocityMod = 0f;

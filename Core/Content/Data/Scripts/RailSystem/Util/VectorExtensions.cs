@@ -9,12 +9,24 @@ namespace Equinox76561198048419394.RailSystem.Util
         {
             return new Vector3D(v.Y, v.Z, v.X);
         }
+        public static Vector3 Shifted(this Vector3 v)
+        {
+            return new Vector3(v.Y, v.Z, v.X);
+        }
 
         public static Vector3D SafeNormalized(this Vector3D v)
         {
             var len = v.Length();
             if (len < 1e-3f)
                 return Vector3D.Zero;
+            return v / len;
+        }
+        
+        public static Vector3 SafeNormalized(this Vector3 v)
+        {
+            var len = v.Length();
+            if (len < 1e-3f)
+                return Vector3.Zero;
             return v / len;
         }
 
