@@ -65,10 +65,8 @@ namespace Equinox76561198048419394.RailSystem.Voxel
             {
                 if (_excavationCache != null) return _excavationCache;
                 if (_bendy == null || _bendy.Edges.Length == 0 || !Definition.Excavate.HasValue) return _excavationCache;
-                var s = Definition.Excavate.Value;
-                return _excavationCache = CompositeGradeShape.Composite(
-                    _bendy.Edges.Select(e => new RailGradeShape(new EdgeBlit(e), s.Width, s.RelaxAngleRadians, s.VerticalOffset, s.Segments, -s.Height, s.EndPadding))
-                        .ToArray());
+                return _excavationCache =
+                    CompositeGradeShape.Composite(_bendy.Edges.Select(e => Definition.Excavate.Value.CreateShape(new EdgeBlit(e), true)).ToArray());
             }
         }
 
@@ -80,12 +78,10 @@ namespace Equinox76561198048419394.RailSystem.Voxel
             {
                 if (_supportCache != null) return _supportCache;
                 if (_bendy == null || _bendy.Edges.Length == 0 || !Definition.Support.HasValue) return _supportCache;
-                var s = Definition.Support.Value;
-                return _supportCache = CompositeGradeShape.Composite(
-                    _bendy.Edges.Select(e => new RailGradeShape(new EdgeBlit(e), s.Width, s.RelaxAngleRadians, s.VerticalOffset, s.Segments, s.Height, s.EndPadding))
-                        .ToArray());
+                return _supportCache = CompositeGradeShape.Composite(_bendy.Edges.Select(e => Definition.Support.Value.CreateShape(new EdgeBlit(e), false)).ToArray());
             }
         }
+
 
         public override bool IsSerialized => false;
 
@@ -214,7 +210,7 @@ namespace Equinox76561198048419394.RailSystem.Voxel
                 return _isComplete;
             }
         }
-        
+
         public bool IsValid => _bendy?.Edges != null && Definition != null;
 
         public RailGradeComponentBlit Blit()
@@ -250,14 +246,14 @@ namespace Equinox76561198048419394.RailSystem.Voxel
             {
                 var s = def.Support.Value;
                 fillShape = CompositeGradeShape.Composite(Edges
-                    .Select(e => new RailGradeShape(e, s.Width, s.RelaxAngleRadians, s.VerticalOffset, s.Segments, s.Height, s.EndPadding)).ToArray());
+                    .Select(e => def.Support.Value.CreateShape(e, false)).ToArray());
             }
 
             if (def.Excavate.HasValue)
             {
                 var s = def.Excavate.Value;
                 excavateShape = CompositeGradeShape.Composite(Edges
-                    .Select(e => new RailGradeShape(e, s.Width, s.RelaxAngleRadians, s.VerticalOffset, s.Segments, -s.Height, s.EndPadding)).ToArray());
+                    .Select(e => def.Excavate.Value.CreateShape(e, true)).ToArray());
             }
         }
     }

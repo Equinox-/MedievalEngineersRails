@@ -5,9 +5,12 @@ using Equinox76561198048419394.RailSystem.Util;
 using Equinox76561198048419394.RailSystem.Util.Curve;
 using VRage.Components.Entity.Camera;
 using VRage.Game;
+using VRage.Generics;
+using VRage.Library.Collections;
 using VRage.Library.Utils;
 using VRage.Utils;
 using VRageMath;
+using PoolManager = Equinox76561198048419394.RailSystem.Util.PoolManager;
 
 namespace Equinox76561198048419394.RailSystem.Voxel
 {
@@ -15,6 +18,8 @@ namespace Equinox76561198048419394.RailSystem.Voxel
     {
         float GetDensity(ref Vector3D worldCoord);
         bool IsInside(Vector3D targetPosition);
+
+        void Draw(MyStringId material);
     }
 
     public static class GradeShapeHelpers
@@ -53,31 +58,25 @@ namespace Equinox76561198048419394.RailSystem.Voxel
 
     public class CompositeGradeShape : IGradeShape
     {
-        private readonly RailGradeShape[] _components;
+        private readonly MeshGradeShape[] _components;
 
-        private CompositeGradeShape(params RailGradeShape[] components)
+        private CompositeGradeShape(params MeshGradeShape[] components)
         {
             _components = components;
         }
 
-        public static IGradeShape Composite(params RailGradeShape[] shapes)
+        public static IGradeShape Composite(params MeshGradeShape[] shapes)
         {
             return shapes.Length == 1 ? (IGradeShape) shapes[0] : new CompositeGradeShape(shapes);
         }
 
-        private static readonly ConcurrentStack<List<RailGradeShape>> _maskedBorrow = new ConcurrentStack<List<RailGradeShape>>();
-        private static readonly ConcurrentStack<List<List<int>>> _stackBorrow = new ConcurrentStack<List<List<int>>>();
-
         public float GetDensity(ref Vector3D worldCoord)
         {
-            List<RailGradeShape> maskedBorrow;
-            if (!_maskedBorrow.TryPop(out maskedBorrow))
-                maskedBorrow = new List<RailGradeShape>();
-            else
-                maskedBorrow.Clear();
-            try
+            
+            List<MeshGradeShape> maskedBorrow;
+            using (PoolManager.Get(out maskedBorrow))
             {
-                const int iterations = RailGradeShape.DefaultDensityIterations;
+                const int iterations = MeshGradeShape.DefaultDensityIterations;
                 var intersectsSurface = false;
                 foreach (var c in _components)
                     if (c.IntersectsSurface(ref worldCoord))
@@ -92,9 +91,7 @@ namespace Equinox76561198048419394.RailSystem.Voxel
                     return 0f;
 
                 List<List<int>> borrowed;
-                if (!_stackBorrow.TryPop(out borrowed))
-                    borrowed = new List<List<int>>();
-                try
+                using (PoolManager.Get(out borrowed))
                 {
                     foreach (var k in borrowed)
                         k.Clear();
@@ -102,7 +99,7 @@ namespace Equinox76561198048419394.RailSystem.Voxel
                         borrowed.Add(new List<int>());
 
                     var inflatedBox = new BoundingBoxD(worldCoord - 0.5f, worldCoord + 0.5f);
-                    var queryBox = new BoundingBoxD(inflatedBox.Min - 0.1f, inflatedBox.Max + 0.1f + RailGradeShape.QueryDir * 1000);
+                    var queryBox = new BoundingBoxD(inflatedBox.Min - 0.1f, inflatedBox.Max + 0.1f + MeshGradeShape.QueryDir * 1000);
                     for (var i = 0; i < maskedBorrow.Count; i++)
                         maskedBorrow[i].QueryTriangles(queryBox, borrowed[i]);
 
@@ -121,15 +118,6 @@ namespace Equinox76561198048419394.RailSystem.Voxel
 
                     return hit / (float) ((iterations + 1) * (iterations + 1) * (iterations + 1));
                 }
-                finally
-                {
-                    _stackBorrow.Push(borrowed);
-                }
-            }
-            finally
-            {
-                maskedBorrow.Clear();
-                _maskedBorrow.Push(maskedBorrow);
             }
         }
 
@@ -140,43 +128,174 @@ namespace Equinox76561198048419394.RailSystem.Voxel
                     return true;
             return false;
         }
+
+        public void Draw(MyStringId material)
+        {
+            foreach (var c in _components)
+                c.Draw(material);
+        }
     }
 
-    public class RailGradeShape : IGradeShape
+    public class MeshGradeShape : IGradeShape
     {
         public const int DefaultDensityIterations = 3;
 
         private readonly EdgeBlit _edge;
         private readonly ICurve _curve;
-        private readonly float _width;
-        private readonly float _relaxAngle;
-
         private readonly TriangleUtil.Triangle[] _tris;
         public readonly BoundingBoxD Box;
 
-        public RailGradeShape(EdgeBlit edge, float width, float relaxAngle, float shiftUp, int segments, float maxDepth, float endPadding)
+        public MeshGradeShape(EdgeBlit edge, ICurve curve, TriangleUtil.Triangle[] tri)
         {
+            var box = BoundingBoxD.CreateInvalid();
+            foreach (var k in tri)
+            {
+               box.Include(k.Origin);
+               box.Include(k.Origin + k.Edge1);
+               box.Include(k.Origin + k.Edge2);
+            }
+
+            Box = box.Inflate(0.5f);
+            _tris = tri;
             _edge = edge;
-            _curve = edge.Curve.Convert();
-            _width = width;
-            _relaxAngle = relaxAngle;
+            _curve = curve;
+        }
+
+        public static MeshGradeShape CreateTunnelShape(EdgeBlit edge, float width, float relaxAngle, float shiftUp, int segments, float height, float endPadding)
+        {
+            var curve = edge.Curve.Convert();
 
             var tris = new List<TriangleUtil.Triangle>();
-            var lastCross = new Vector3D[4];
-            var currCross = new Vector3D[4];
-            var box = BoundingBoxD.CreateInvalid();
+            // {-Level, -OuterEdge, -Ceiling, +Level, +OuterEdge, +Ceiling}
+            var lastCross = new Vector3D[6];
+            var currCross = new Vector3D[6];
+            var halfHeight = height / 2;
+            var dropTop = height / 5;
+            var ceilingPrevious = Vector3D.Zero;
 
             for (var i = 0; i <= segments; i++)
             {
                 var t = i / (float) segments;
-                var loc = _curve.Sample(t);
-                var tangent = (Vector3) _curve.SampleDerivative(t);
+                var loc = curve.Sample(t);
+                var tangent = (Vector3) curve.SampleDerivative(t);
                 tangent.Normalize();
                 if (i == 0)
                     loc -= tangent * endPadding;
                 if (i == segments)
                     loc += tangent * endPadding;
-                var up = Vector3.Lerp(_edge.FromUp, _edge.ToUp, t);
+                var up = Vector3.Lerp(edge.FromUp, edge.ToUp, t);
+                up.Normalize();
+                loc += shiftUp * up;
+                var ceilingTotal = loc - up * height;
+
+                var normal = Vector3.Cross(up, tangent);
+                normal.Normalize();
+
+
+                var perturbLow = Vector3.Zero;
+                if (i == 0 || i == segments)
+                {
+                    var n = i == 0 ? -tangent : tangent;
+                    perturbLow = (float) Math.Cos(relaxAngle) * n * Math.Abs(halfHeight);
+                }
+
+                for (var j = -1; j <= 1; j += 2)
+                {
+                    var offset = (j + 1) * 3 / 2;
+
+                    var origin = loc + (width / 2) * j * normal;
+                    var rot = Matrix.CreateFromAxisAngle(tangent, -j * Math.Sign(halfHeight) * relaxAngle);
+                    var pnorm = Vector3.TransformNormal(up, rot);
+
+                    var cotan = Vector3.Cross(pnorm, tangent);
+                    cotan.Normalize();
+                    cotan *= -Math.Sign(Vector3.Dot(cotan, up));
+                    var p2 = origin + halfHeight * cotan + perturbLow;
+
+                    var ceilingEdge = origin - up * (height - dropTop);
+
+                    if (i > 0)
+                    {
+                        // side faces, lower
+                        tris.Add(new TriangleUtil.Triangle(origin, lastCross[offset], lastCross[offset + 1], pnorm));
+                        
+                        var dissolvedOuterEdge = (p2 - lastCross[offset + 1]).Dot(tangent) <= 0; 
+                        if (dissolvedOuterEdge)
+                            p2 = lastCross[offset + 1];
+                        else
+                            tris.Add(new TriangleUtil.Triangle(origin, lastCross[offset + 1], p2, pnorm));
+
+                        var dissolvedCeilingEdge = (ceilingEdge - lastCross[offset + 2]).Dot(tangent) <= 0;
+                        if (dissolvedCeilingEdge)
+                            ceilingEdge = lastCross[offset + 2];
+                        
+                        // side faces, upper:
+                        if (!dissolvedCeilingEdge)
+                            tris.Add(new TriangleUtil.Triangle(lastCross[offset + 1], lastCross[offset + 2], ceilingEdge, pnorm));
+                        if (!dissolvedOuterEdge)
+                            tris.Add(new TriangleUtil.Triangle(lastCross[offset + 1],  p2, ceilingEdge, pnorm));
+                    }
+
+                    currCross[offset] = origin;
+                    currCross[offset + 1] = p2;
+                    currCross[offset + 2] = ceilingEdge;
+                }
+
+                if (i > 0)
+                {
+                    // top
+                    tris.Add(new TriangleUtil.Triangle(currCross[0], lastCross[0], lastCross[3], -up));
+                    tris.Add(new TriangleUtil.Triangle(currCross[0], lastCross[3], currCross[3], -up));
+
+                    // bottom
+                    tris.Add(new TriangleUtil.Triangle(currCross[2], lastCross[2], ceilingPrevious, up));
+                    tris.Add(new TriangleUtil.Triangle(currCross[2], ceilingPrevious, ceilingTotal, up));
+                    
+                    tris.Add(new TriangleUtil.Triangle(currCross[5], lastCross[5], ceilingPrevious, up));
+                    tris.Add(new TriangleUtil.Triangle(currCross[5], ceilingPrevious, ceilingTotal, up));
+                }
+
+                // end caps
+                if (i == 0 || i == segments)
+                {
+                    var n = i == 0 ? -tangent : tangent;
+                    var avg = (currCross[0] + currCross[1] + currCross[2] + currCross[3] + currCross[4] + currCross[5]) / 6;
+                    tris.Add(new TriangleUtil.Triangle(currCross[0], currCross[1], avg, n));
+                    tris.Add(new TriangleUtil.Triangle(currCross[1], currCross[2], avg, n));
+                    tris.Add(new TriangleUtil.Triangle(currCross[2], ceilingTotal, avg, n));
+                    tris.Add(new TriangleUtil.Triangle(ceilingTotal, currCross[5], avg, n));
+                    tris.Add(new TriangleUtil.Triangle(currCross[5], currCross[4], avg, n));
+                    tris.Add(new TriangleUtil.Triangle(currCross[4], currCross[3], avg, n));
+                    tris.Add(new TriangleUtil.Triangle(currCross[3], currCross[0], avg, n));
+                }
+                var tmp = lastCross;
+                lastCross = currCross;
+                currCross = tmp;
+                ceilingPrevious = ceilingTotal;
+            }
+
+            return new MeshGradeShape(edge, curve, tris.ToArray());
+        }
+        
+        public static MeshGradeShape CreateGradeShape(EdgeBlit edge, float width, float relaxAngle, float shiftUp, int segments, float maxDepth, float endPadding)
+        {
+            var curve = edge.Curve.Convert();
+
+            var tris = new List<TriangleUtil.Triangle>();
+            var lastCross = new Vector3D[4];
+            var currCross = new Vector3D[4];
+
+            for (var i = 0; i <= segments; i++)
+            {
+                var t = i / (float) segments;
+                var loc = curve.Sample(t);
+                var tangent = (Vector3) curve.SampleDerivative(t);
+                tangent.Normalize();
+                if (i == 0)
+                    loc -= tangent * endPadding;
+                if (i == segments)
+                    loc += tangent * endPadding;
+                var up = Vector3.Lerp(edge.FromUp, edge.ToUp, t);
                 up.Normalize();
                 loc += shiftUp * up;
 
@@ -232,16 +351,12 @@ namespace Equinox76561198048419394.RailSystem.Voxel
                     tris.Add(new TriangleUtil.Triangle(currCross[0], currCross[2], currCross[3], n));
                     tris.Add(new TriangleUtil.Triangle(currCross[0], currCross[3], currCross[1], n));
                 }
-
-                for (var j = 0; j < currCross.Length; j++)
-                    box = box.Include(currCross[j]);
                 var tmp = lastCross;
                 lastCross = currCross;
                 currCross = tmp;
             }
 
-            _tris = tris.ToArray();
-            Box = box.Inflate(0.5f);
+            return new MeshGradeShape(edge, curve, tris.ToArray());
         }
 
         public float GetDensity(ref Vector3D worldCoord)

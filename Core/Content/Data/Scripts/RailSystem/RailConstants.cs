@@ -11,12 +11,13 @@
             public bool DrawBendyPhysics;
             public bool DrawSwitchControllers;
             public bool DrawBogieEdges;
+            public bool DrawGradingShapes;
         }
 
 //        public static DebugOptions Debug = new DebugOptions
 //        {
 //            AssertsWithStacks = false, DrawGraphEdges = false, DrawGraphNodes = false, DrawBogiePhysics = false,
-//            DrawBendyPhysics = false, DrawSwitchControllers = true, DrawBogieEdges = false
+//            DrawBendyPhysics = false, DrawSwitchControllers = true, DrawBogieEdges = true, DrawGradingShapes = true
 //        };
         public static DebugOptions Debug = default(DebugOptions);
 

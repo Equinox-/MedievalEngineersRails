@@ -1,6 +1,7 @@
 using System;
 using System.ComponentModel;
 using System.Xml.Serialization;
+using Equinox76561198048419394.RailSystem.Bendy;
 using VRage.Game;
 using VRage.Game.Definitions;
 using VRage.ObjectBuilders;
@@ -20,6 +21,7 @@ namespace Equinox76561198048419394.RailSystem.Voxel
             public readonly float EndPadding;
             public readonly int Segments;
             public readonly float Height;
+            public readonly MyObjectBuilder_RailGradeComponentDefinition.Shape.GradeType Type;
 
             public ImmutableShape(MyObjectBuilder_RailGradeComponentDefinition.Shape s)
             {
@@ -28,7 +30,23 @@ namespace Equinox76561198048419394.RailSystem.Voxel
                 VerticalOffset = s.VerticalOffset;
                 Segments = s.Segments <= 0 ? MyObjectBuilder_RailGradeComponentDefinition.Shape.DefaultSegments : s.Segments;
                 Height = s.Height;
-                EndPadding = s.EndPadding ?? 0.5f;
+                EndPadding = s.EndPadding;
+                Type = s.Type;
+            }
+
+            public MeshGradeShape CreateShape(EdgeBlit e, bool invertHeight)
+            {
+                var h = Height;
+                if (invertHeight)
+                    h *= -1;
+                switch (Type)
+                {
+                    case MyObjectBuilder_RailGradeComponentDefinition.Shape.GradeType.Tunnel:
+                        return MeshGradeShape.CreateTunnelShape(e, Width, RelaxAngleRadians, VerticalOffset, Segments, h, EndPadding);
+                    case MyObjectBuilder_RailGradeComponentDefinition.Shape.GradeType.Grade:
+                    default:
+                        return MeshGradeShape.CreateGradeShape(e, Width, RelaxAngleRadians, VerticalOffset, Segments, h, EndPadding);
+                }
             }
         }
 
@@ -67,10 +85,12 @@ namespace Equinox76561198048419394.RailSystem.Voxel
             [XmlIgnore]
             public float RelaxAngleRadians;
 
-            [XmlElement]
-            public float? EndPadding;
+            [XmlAttribute]
+            [DefaultValue(0.5f)]
+            public float EndPadding;
 
-            [XmlElement]
+            [XmlAttribute]
+            [DefaultValue(0f)]
             public float VerticalOffset;
 
             [XmlAttribute]
@@ -79,6 +99,15 @@ namespace Equinox76561198048419394.RailSystem.Voxel
 
             [XmlAttribute]
             public float Height;
+
+            [XmlAttribute]
+            [DefaultValue(GradeType.Grade)]
+            public GradeType Type;
+            
+            public enum GradeType
+            {
+                Grade, Tunnel
+            }
         }
 
         [XmlElement]

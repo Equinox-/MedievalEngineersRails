@@ -14,8 +14,8 @@
         <ModelOffset x="0" y="0" z="0" />
         <Model>Models/Equinox/RailsGaugeStandard/Steel/ExternalSwitchControl.mwm</Model>
 
-        <Direction>Horizontal</Direction>
-        <Rotation>Vertical</Rotation>
+        <Direction>Both</Direction>
+        <Rotation>Both</Rotation>
         <BuildType>Cube</BuildType>
         <PhysicalMaterial>Iron</PhysicalMaterial>
         <NavigationDefinition>Default</NavigationDefinition>

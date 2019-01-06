@@ -138,8 +138,8 @@ namespace Equinox76561198048419394.RailSystem.Physics
         private static readonly MyDefinitionId SprintingEffect =
             new MyDefinitionId(typeof(MyObjectBuilder_CompositeEntityEffect), MyStringHash.GetOrCompute("Sprint"));
 
-        public const float SwitchingDistanceBias = 0.5f;
-        public const float AlignmentTangentBias = 0.025f;
+        public const float SwitchingDistanceBias = 0.33f;
+        public const float AlignmentTangentBias = 0.0125f;
         public const float TotalBias = SwitchingDistanceBias + AlignmentTangentBias;
 
         [FixedUpdate]
@@ -230,7 +230,7 @@ namespace Equinox76561198048419394.RailSystem.Physics
                     var tangent = (Vector3) edge.Curve.SampleDerivative(t);
                     tangent.Normalize();
 
-                    const float switchingEpsilon = 0.125f;
+                    const float switchingEpsilon = 0.25f;
                     var switched = false;
                     if (t < switchingEpsilon)
                         switched = edge.From.IsSwitchedTo(edge.To);
@@ -283,22 +283,38 @@ namespace Equinox76561198048419394.RailSystem.Physics
             }
 
             var up = (Vector3) Vector3D.Lerp(bestEdge.From.Up, bestEdge.To.Up, bestTime);
+            // Not aligned vertically, abort
+            if (Entity.PositionComp.WorldMatrix.Up.Dot(up) < 0.5) {
+                return;
+            }
             if (Entity.PositionComp.WorldMatrix.Forward.Dot(bestTangent) < 0)
                 bestTangent = -bestTangent;
-            var position = bestEdge.Curve.Sample(bestTime) + up * Definition.VerticalOffset;
+            var curvePosition = bestEdge.Curve.Sample(bestTime) + up * Definition.VerticalOffset;
             var normal = Vector3.Cross(bestTangent, up);
             normal.Normalize();
 
             up = Vector3.Cross(normal, bestTangent);
             up.Normalize();
 
-            // a) spring joint along normal to get dot(normal, (pivot*matrix - position)) == 0
             var impulse = Vector3.Zero;
             var allowDeactivation = true;
-            var err = (Vector3) (position - pivotWorld);
-
             var effectiveMass = root.Physics.Mass;
             var inertiaTensor = CreateInertiaTensor(root);
+            
+            var qCurrent = Quaternion.CreateFromRotationMatrix(Entity.PositionComp.WorldMatrix);
+            var qDesired = Quaternion.CreateFromRotationMatrix(Matrix.CreateWorld(Vector3.Zero, bestTangent, up));
+            var qConj = Quaternion.Multiply(Quaternion.Conjugate(qCurrent), qDesired);
+            var localAngularDesired = 2 * qConj.W * new Vector3(qConj.X, qConj.Y, qConj.Z);
+            if (localAngularDesired.LengthSquared() > .01f)
+                allowDeactivation = false;
+            var desiredAngular = Vector3.Transform(localAngularDesired, qCurrent) * 2;
+            var rotApply = desiredAngular;
+            var angularImpulse = Vector3.TransformNormal(desiredAngular - 0.25f * physics.AngularVelocity, inertiaTensor) * Definition.OrientationConvergenceFactor /
+                                 MyEngineConstants.UPDATE_STEP_SIZE_IN_SECONDS;
+            var com = physics.GetCenterOfMassWorld();
+            
+            // a) spring joint along normal to get dot(normal, (pivot*matrix - position)) == 0
+            var err = (Vector3) (curvePosition - pivotWorld);
 
             // preemptive up force to counteract gravity.
             var gravityHere = MyGravityProviderSystem.CalculateTotalGravityInPoint(pivotWorld);
@@ -311,23 +327,6 @@ namespace Equinox76561198048419394.RailSystem.Physics
 
             if (err.LengthSquared() > .01f)
                 allowDeactivation = false;
-
-            var qCurrent = Quaternion.CreateFromRotationMatrix(Entity.PositionComp.WorldMatrix);
-            var qDesired = Quaternion.CreateFromRotationMatrix(Matrix.CreateWorld(Vector3.Zero, bestTangent, up));
-
-
-            var qConj = Quaternion.Multiply(Quaternion.Conjugate(qCurrent), qDesired);
-            var localAngularDesired = 2 * qConj.W * new Vector3(qConj.X, qConj.Y, qConj.Z);
-            if (localAngularDesired.LengthSquared() > .01f)
-                allowDeactivation = false;
-            var desiredAngular = Vector3.Transform(localAngularDesired, qCurrent) * 2;
-            var rotApply = desiredAngular;
-            desiredAngular -= 0.5f * physics.AngularVelocity;
-
-            var angularImpulse = Vector3.TransformNormal(desiredAngular, inertiaTensor) * Definition.OrientationConvergenceFactor /
-                                 MyEngineConstants.UPDATE_STEP_SIZE_IN_SECONDS;
-
-            var com = physics.GetCenterOfMassWorld();
 
             var braking = false;
             // Hack until I fix EquinoxCore
@@ -420,7 +419,7 @@ namespace Equinox76561198048419394.RailSystem.Physics
             {
                 var drawPivot = pivotWorld + 4 * up;
                 var colorTarget = Vector4.One;
-                MySimpleObjectDraw.DrawLine(pivotWorld, position, DebugMtl, ref colorTarget,
+                MySimpleObjectDraw.DrawLine(pivotWorld, curvePosition, DebugMtl, ref colorTarget,
                     .01f);
 
                 var colorMarker = new Vector4(0, 1, 0, 1);
@@ -444,8 +443,7 @@ namespace Equinox76561198048419394.RailSystem.Physics
 //                    return;
             }
 
-            physics.AddForce(MyPhysicsForceType.APPLY_WORLD_IMPULSE_AND_WORLD_ANGULAR_IMPULSE, impulse, com,
-                angularImpulse);
+            physics.AddForce(MyPhysicsForceType.APPLY_WORLD_IMPULSE_AND_WORLD_ANGULAR_IMPULSE, impulse, com, angularImpulse);
         }
 
         private const float _edgeWidth = 0.05f;
@@ -473,7 +471,7 @@ namespace Equinox76561198048419394.RailSystem.Physics
         {
             var scale = e.PositionComp.LocalAABB.Size;
             scale *= scale;
-            float sv = e.Physics.Mass / 12;
+            var sv = e.Physics.Mass / 12;
 
             var m = Matrix.CreateScale(sv * (scale.Y + scale.Z), sv * (scale.X + scale.Z), sv * (scale.X + scale.Y));
             return (Matrix) e.PositionComp.WorldMatrixInvScaled.GetOrientation() * m *

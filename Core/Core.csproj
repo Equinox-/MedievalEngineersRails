@@ -251,6 +251,7 @@
     <Compile Include="Content\Data\Scripts\RailSystem\Util\MemStream.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Util\MessageUtil.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Util\MiscExtensions.cs" />
+    <Compile Include="Content\Data\Scripts\RailSystem\Util\PoolManager.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Util\Range.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Util\ReadonlyList.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Util\ShellEnumerator.cs" />

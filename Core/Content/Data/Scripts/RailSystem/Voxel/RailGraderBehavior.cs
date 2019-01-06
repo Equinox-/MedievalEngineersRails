@@ -24,6 +24,7 @@ using VRage.Network;
 using VRage.ObjectBuilders;
 using VRage.ObjectBuilders.Definitions.Equipment;
 using VRage.Session;
+using VRage.Systems;
 using VRage.Utils;
 using VRageMath;
 
@@ -51,10 +52,10 @@ namespace Equinox76561198048419394.RailSystem.Voxel
 
         private Vector3D _cachedTargetDirection;
 
-        private void FillGradeComponents(MyEntity e)
+        private void FillGradeComponents(Vector3D pos, MyEntity e)
         {
             foreach (var k in e.Components.GetComponents<RailGradeComponent>())
-                if ((k.Excavation != null && k.Excavation.IsInside(Target.Position, 1f)) || (k.Support != null && k.Support.IsInside(Target.Position, 1f)))
+                if ((k.Excavation != null && k.Excavation.IsInside(pos, 2f)) || (k.Support != null && k.Support.IsInside(pos, 2f)))
                     _gradeComponents.Add(k);
         }
 
@@ -63,21 +64,7 @@ namespace Equinox76561198048419394.RailSystem.Voxel
             if (Vector3D.DistanceSquared(_cachedTargetDirection, Target.Position) < 1)
                 return _gradeComponents.Count > 0;
 
-            _gradeComponents.Clear();
-            var sphere = new BoundingSphereD(Target.Position, GRADE_SCAN_DISTANCE);
-            foreach (var e in MyEntities.GetEntitiesInSphere(ref sphere))
-            {
-                FillGradeComponents(e);
-                var compound = e as MyCompoundCubeBlock;
-                if (compound != null)
-                {
-                    using (var itr = compound.GetFatBlocks())
-                    {
-                        while (itr.MoveNext())
-                            FillGradeComponents(itr.Current);
-                    }
-                }
-            }
+            GatherGradeComponents(Target.Position);
 
             _cachedTargetDirection = Target.Position;
             return _gradeComponents.Count > 0;
@@ -239,6 +226,51 @@ namespace Equinox76561198048419394.RailSystem.Voxel
             if (player == null)
                 return false;
             return MyAreaPermissionSystem.Static == null || MyAreaPermissionSystem.Static.HasPermission(player.IdentityId, Target.Position, id);
+        }
+
+        public override void Activate()
+        {
+            if (IsLocallyControlled && RailConstants.Debug.DrawGradingShapes)
+                MySession.Static.Components.Get<MyUpdateComponent>().AddFixedUpdate(DebugDraw);
+            base.Activate();
+        }
+
+        public override void Deactivate()
+        {
+            MySession.Static?.Components.Get<MyUpdateComponent>().RemoveFixedUpdate(DebugDraw);
+            base.Deactivate();
+        }
+
+        private void GatherGradeComponents(Vector3D pos)
+        {
+            _gradeComponents.Clear();
+            var sphere = new BoundingSphereD(pos, GRADE_SCAN_DISTANCE);
+            foreach (var e in MyEntities.GetEntitiesInSphere(ref sphere))
+            {
+                FillGradeComponents(pos, e);
+                var compound = e as MyCompoundCubeBlock;
+                if (compound == null)
+                    continue;
+                using (var itr = compound.GetFatBlocks())
+                {
+                    while (itr.MoveNext())
+                        FillGradeComponents(pos, itr.Current);
+                }
+            }
+        }
+
+        private static readonly MyStringId _fillColor = MyStringId.GetOrCompute("RailGradeFill");
+        private static readonly MyStringId _excavateColor = MyStringId.GetOrCompute("RailGradeExcavate");
+        private void DebugDraw()
+        {
+            if (Holder == null)
+                return;
+            GatherGradeComponents(Holder.GetPosition());
+            foreach (var gradeComp in _gradeComponents)
+            {
+                gradeComp.Support.Draw(_fillColor);
+                gradeComp.Excavation.Draw(_excavateColor);
+            }
         }
 
         private readonly List<RailGradeComponent> _gradeComponents = new List<RailGradeComponent>();

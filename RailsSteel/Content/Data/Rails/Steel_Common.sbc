@@ -10,8 +10,8 @@
     <Definition xsi:type="MyObjectBuilder_RailGradeComponentDefinition">
         <Id Type="MyObjectBuilder_RailGradeComponent" Subtype="RailSteel" />
 
-        <Support Width="4" VerticalOffset="0.2" Height="10" RelaxAngleDegrees="60" />
-        <Excavate Width="4" VerticalOffset="0.225" Height="5" RelaxAngleDegrees="75" />
+        <Support Width="4" VerticalOffset="0.05" Height="10" RelaxAngleDegrees="60" EndPadding="0.5" />
+        <Excavate Width="4.75" VerticalOffset="0.1" Height="5" RelaxAngleDegrees="90" Type="Tunnel" EndPadding="1.5" />
 
         <RequiredSupport Width="0.25" VerticalOffset="0" />
     </Definition>
