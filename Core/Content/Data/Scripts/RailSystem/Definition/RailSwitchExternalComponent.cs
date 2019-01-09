@@ -102,8 +102,11 @@ namespace Equinox76561198048419394.RailSystem.Definition
         }
 
         private bool _dirty;
+
         private void MarkDirty()
         {
+            if (Entity == null || !Entity.InScene)
+                return;
             if (!_dirty)
                 AddScheduledCallback((dt) =>
                 {
@@ -144,8 +147,6 @@ namespace Equinox76561198048419394.RailSystem.Definition
         {
             if (((IMyUtilities) MyAPIUtilities.Static).IsDedicated)
                 return;
-            if (MyAPIGateway.Input != null && MyAPIGateway.Input.IsKeyDown(MyKeys.U))
-                MarkDirty();
             const float vertOffset = 1f;
             if (Entity == null || !Entity.InScene)
                 return;
@@ -163,9 +164,15 @@ namespace Equinox76561198048419394.RailSystem.Definition
 
         private void CheckNode()
         {
+            if (Entity == null || !Entity.InScene)
+            {
+                BindController(null);
+                return;
+            }
+
             if (!Definition.AllowDynamic)
             {
-                var phys = Entity?.ParentedPhysics();
+                var phys = Entity.ParentedPhysics();
                 if (phys != null && !phys.IsStatic)
                 {
                     BindController(null);
@@ -265,7 +272,7 @@ namespace Equinox76561198048419394.RailSystem.Definition
             }
 
             var newJunction = newController?.Junction;
-            
+
 
             if (newController != _controller)
             {
@@ -280,6 +287,7 @@ namespace Equinox76561198048419394.RailSystem.Definition
                         OnSwitchChanged(_controller, _controller.Junction, _controller.Target);
                 }
             }
+
             // ReSharper disable once InvertIf
             if (newJunction != _controllerJunction)
             {
