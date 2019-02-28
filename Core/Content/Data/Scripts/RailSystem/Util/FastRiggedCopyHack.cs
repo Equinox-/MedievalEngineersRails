@@ -2,15 +2,11 @@ using System;
 using System.Xml.Serialization;
 using VRage.Components;
 using VRage.Components.Entity.Animations;
-using VRage.Factory;
-using VRage.Game;
 using VRage.Game.Components;
 using VRage.Game.Entity;
 using VRage.Game.ObjectBuilders.ComponentSystem;
-using VRage.Library.Logging;
 using VRage.ObjectBuilders;
 using VRageMath;
-using VRageRender.Animations;
 
 namespace Equinox76561198048419394.RailSystem.Util
 {
@@ -21,10 +17,10 @@ namespace Equinox76561198048419394.RailSystem.Util
         public override void OnAddedToScene()
         {
             base.OnAddedToScene();
-            Entity.Hierarchy.OnParentChanged += ParentChanged;
             _mySkeleton = Entity.Get<MySkeletonComponent>();
             _mySkeleton.OnReloadBones += InvalidateBoneMapping;
-            ParentChanged(Entity.Hierarchy.Parent?.Entity);
+            Entity.Hierarchy.ParentChanged += ParentChanged;
+            ParentChanged(Entity.Hierarchy, null, Entity.Hierarchy.Parent);
         }
 
         public override void OnRemovedFromScene()
@@ -32,10 +28,8 @@ namespace Equinox76561198048419394.RailSystem.Util
             base.OnRemovedFromScene();
             if (_mySkeleton != null)
                 _mySkeleton.OnReloadBones -= InvalidateBoneMapping;
-            var h = Entity?.Hierarchy;
-            if (h != null)
-                h.OnParentChanged -= ParentChanged;
-            ParentChanged(null);
+            Entity.Hierarchy.ParentChanged -= ParentChanged;
+            ParentChanged(Entity.Hierarchy, Entity.Hierarchy.Parent, null);
             _mySkeleton = null;
         }
 
@@ -43,8 +37,9 @@ namespace Equinox76561198048419394.RailSystem.Util
         private MyEntity _parentCache;
         private MySkeletonComponent _parentSkeleton;
 
-        private void ParentChanged(MyEntity obj)
+        private void ParentChanged(MyHierarchyComponent target, MyHierarchyComponent oldParent, MyHierarchyComponent newParent)
         {
+            var obj = newParent?.Entity;
             if (obj == _parentCache)
                 return;
             if (_parentCache != null)
@@ -92,7 +87,7 @@ namespace Equinox76561198048419394.RailSystem.Util
 
         private void InvalidateBoneMapping(MySkeletonComponent skeleton)
         {
-            if (_parentSkeleton == null)
+            if (_parentSkeleton?.CharacterBones == null)
                 return;
             Array.Resize(ref _boneMapping, _mySkeleton.CharacterBones.Length);
             for (var i = 0; i < _mySkeleton.CharacterBones.Length; i++)

@@ -7,6 +7,7 @@ using Equinox76561198048419394.RailSystem.Util;
 using VRage;
 using VRage.Game;
 using VRage.Game.Definitions;
+using VRage.Logging;
 using VRage.ObjectBuilders;
 using VRageMath;
 
@@ -113,9 +114,9 @@ namespace Equinox76561198048419394.RailSystem.Bendy
 
             Layer = def.Layer;
             if (string.IsNullOrWhiteSpace(Layer))
-                MyDefinitionErrors.Add(def.ModContext,
+                MyDefinitionErrors.Add(def.Package,
                     $"{nameof(BendyComponentDefinition)} {builder.GetId()} has {nameof(Layer)} that is null or whitespace",
-                    TErrorSeverity.Error);
+                    LogSeverity.Error);
 
             var nodes = new ImmutableNode[def.Nodes?.Length ?? 0];
             if (def.Nodes != null)
@@ -124,17 +125,17 @@ namespace Equinox76561198048419394.RailSystem.Bendy
                     var n = def.Nodes[i];
                     var m = Matrix.CreateWorld(n.Position, n.Forward, n.Up);
                     if (Vector3.IsZero(m.Forward))
-                        MyDefinitionErrors.Add(def.ModContext,
+                        MyDefinitionErrors.Add(def.Package,
                             $"{nameof(BendyComponentDefinition)} {builder.GetId()} node {i} has an invalid matrix forward",
-                            TErrorSeverity.Error);
+                            LogSeverity.Error);
                     if (Vector3.IsZero(m.Up))
-                        MyDefinitionErrors.Add(def.ModContext,
+                        MyDefinitionErrors.Add(def.Package,
                             $"{nameof(BendyComponentDefinition)} {builder.GetId()} node {i} has an invalid matrix up",
-                            TErrorSeverity.Error);
+                            LogSeverity.Error);
                     if (Math.Abs(m.Forward.Dot(m.Up)) > 1e-3f)
-                        MyDefinitionErrors.Add(def.ModContext,
+                        MyDefinitionErrors.Add(def.Package,
                             $"{nameof(BendyComponentDefinition)} {builder.GetId()} node {i} has an invalid matrix",
-                            TErrorSeverity.Error);
+                            LogSeverity.Error);
                     nodes[i] = new ImmutableNode(m, n.Movable);
                 }
 
@@ -148,13 +149,13 @@ namespace Equinox76561198048419394.RailSystem.Bendy
                     var n0 = MathHelper.Clamp((int) e.From, 0, nodes.Length - 1);
                     var n1 = MathHelper.Clamp((int) e.To, 0, nodes.Length - 1);
                     if (n0 != e.From)
-                        MyDefinitionErrors.Add(def.ModContext,
+                        MyDefinitionErrors.Add(def.Package,
                             $"{nameof(BendyComponentDefinition)} {builder.GetId()} edge {i} refers to an invalid from",
-                            TErrorSeverity.Error);
+                            LogSeverity.Error);
                     if (n1 != e.To)
-                        MyDefinitionErrors.Add(def.ModContext,
+                        MyDefinitionErrors.Add(def.Package,
                             $"{nameof(BendyComponentDefinition)} {builder.GetId()} edge {i} refers to an invalid to",
-                            TErrorSeverity.Error);
+                            LogSeverity.Error);
 
                     var bones = e.Bones?.Split(null).Where(x => !string.IsNullOrWhiteSpace(x)).ToArray();
                     edges[i] = new ImmutableEdge((uint) n0, (uint) n1, e.Mode, bones != null ? new ReadOnlyList<string>(bones) : null, e.Control1, e.Control2);
@@ -203,20 +204,20 @@ namespace Equinox76561198048419394.RailSystem.Bendy
             Distance = def.Distance?.Immutable() ??
                        new ImmutableRange<float>(RailConstants.DefaultMinLength, RailConstants.DefaultMaxLength);
             if (Distance.Min > Distance.Max)
-                MyDefinitionErrors.Add(def.ModContext,
+                MyDefinitionErrors.Add(def.Package,
                     $"{nameof(BendyComponentDefinition)} {builder.GetId()} distance has min > max",
-                    TErrorSeverity.Error);
+                    LogSeverity.Error);
             PreferredDistance = def.PreferredDistance ?? ((Distance.Max + Distance.Min) / 2);
             MaxAngleDegrees = def.MaxAngleDegrees ?? RailConstants.DefaultMaxAngleDegrees;
             if (MaxAngleDegrees < 0)
-                MyDefinitionErrors.Add(def.ModContext,
+                MyDefinitionErrors.Add(def.Package,
                     $"{nameof(BendyComponentDefinition)} {builder.GetId()} max angle is less than zero",
-                    TErrorSeverity.Error);
+                    LogSeverity.Error);
             MaxGradeRatio = def.MaxGradeRatio ?? RailConstants.DefaultMaxGradeRatio;
             if (MaxGradeRatio < 0)
-                MyDefinitionErrors.Add(def.ModContext,
+                MyDefinitionErrors.Add(def.Package,
                     $"{nameof(BendyComponentDefinition)} {builder.GetId()} max grade ratio is less than zero",
-                    TErrorSeverity.Error);
+                    LogSeverity.Error);
 
             #endregion
         }

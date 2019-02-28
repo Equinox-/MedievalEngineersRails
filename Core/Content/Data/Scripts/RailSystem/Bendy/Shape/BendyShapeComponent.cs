@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Sandbox.ModAPI;
+using VRage.Components;
 using VRage.Components.Entity.Camera;
 using VRage.Game;
 using VRage.Game.Components;
@@ -10,7 +11,7 @@ using VRageMath;
 
 namespace Equinox76561198048419394.RailSystem.Bendy.Shape
 {
-    public abstract class BendyShapeComponent : MyEntityComponent
+    public abstract class BendyShapeComponent : MyEntityComponent, IComponentDebugDraw
     {
         private BendyComponent _bendyDynamicComponent;
         public BendyShapeComponentDefinition Definition { get; private set; }
@@ -36,6 +37,8 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Shape
         public void DebugDraw()
         {
             if (((IMyUtilities) MyAPIUtilities.Static).IsDedicated)
+                return;
+            if (!RailConstants.Debug.DrawBendyPhysics)
                 return;
             foreach (var k in _boxes)
             {
@@ -73,15 +76,6 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Shape
         {
             base.OnAddedToScene();
             ScheduleCalcShape();
-            if (RailConstants.Debug.DrawBendyPhysics && !((IMyUtilities) MyAPIUtilities.Static).IsDedicated)
-                AddFixedUpdate(DebugDraw);
-        }
-
-        public override void OnRemovedFromScene()
-        {
-            if (RailConstants.Debug.DrawBendyPhysics)
-                RemoveFixedUpdate(DebugDraw);
-            base.OnRemovedFromScene();
         }
 
         protected abstract void BoxesUpdated(List<OrientedBoundingBox> boxes);
@@ -92,11 +86,13 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Shape
         {
             if (_calcScheduled)
                 return;
-            AddScheduledCallback(CalcShape);
+            ScheduleCalc();
             _calcScheduled = true;
         }
 
-        private void CalcShape(long ticks)
+        protected abstract void ScheduleCalc();
+
+        protected void CalcShape()
         {
             if (!_calcScheduled || _bendyDynamicComponent?.Edges == null)
                 return;

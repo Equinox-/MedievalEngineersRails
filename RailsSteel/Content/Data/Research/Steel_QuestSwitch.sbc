@@ -21,7 +21,7 @@
         <IsAbandonable>true</IsAbandonable>
         <IsRepeatable>false</IsRepeatable>
 
-        <FailAction xsi:type="Quest.Actions.LockResearch" Type="CubeBlock" Subtype="RailSwitchExternal"/>
+        <FailAction xsi:type="Quest.Actions.LockResearch" Type="Block" Subtype="RailSwitchExternal"/>
         <FailAction xsi:type="Quest.Actions.LockResearch" Type="CraftingRecipeDefinition" Subtype="RailSwitchExternal"/>
         <FailAction xsi:type="Quest.Actions.LockResearch" Type="CraftingRecipeDefinition" Subtype="SchematicRailSwitch"/>
         <FailAction xsi:type="Quest.Actions.ShowNotification" Text="Description_ResearchQuest_Failed" SoundCueId="QuestCompleted" />
@@ -38,14 +38,14 @@
                 <Condition xsi:type="Quest.Conditions.Gather" Tag="Ingot" Amount="8" AreaInventory="Included" />
                 <Condition xsi:type="Quest.Conditions.Gather" Type="InventoryItem" Subtype="PartsMetal" Amount="18" AreaInventory="Included" />
             </Condition>
-            <Action xsi:type="Quest.Actions.UnlockResearch" Type="CubeBlock" Subtype="RailSwitchRhsParallel" />
+            <Action xsi:type="Quest.Actions.UnlockResearch" Type="Block" Subtype="RailSwitchRhsParallel" />
             <Action xsi:type="Quest.Actions.ShowNotification" Text="Right hand switch unlocked!" SoundCueId="QuestStepCompleted" SoundDelay="300" />
         </Step>
         <Step>
             <FullDescription>Place and construct the first switch in your network.</FullDescription>
             <Condition xsi:type="Quest.Conditions.Composite" Operator="AND">
-                <Condition xsi:type="Quest.Conditions.PlaceBlock" Type="CubeBlock" Subtype="RailSwitchRhsParallel" Amount="1" />
-                <Condition xsi:type="Quest.Conditions.BuildBlock" Type="CubeBlock" Subtype="RailSwitchRhsParallel" Amount="1" />
+                <Condition xsi:type="Quest.Conditions.PlaceBlock" Type="Block" Subtype="RailSwitchRhsParallel" Amount="1" />
+                <Condition xsi:type="Quest.Conditions.BuildBlock" Type="Block" Subtype="RailSwitchRhsParallel" Amount="1" />
             </Condition>
         </Step>
         <Step>
@@ -56,17 +56,17 @@
                 <Condition xsi:type="Quest.Conditions.Gather" Type="InventoryItem" Subtype="PartsMetal" Amount="5" AreaInventory="Included" />
             </Condition>
             <Action xsi:type="Quest.Actions.UnlockResearch" Type="CraftingRecipeDefinition" Subtype="RailSwitchExternal" />
-            <Action xsi:type="Quest.Actions.UnlockResearch" Type="CubeBlock" Subtype="RailSwitchExternal" />
+            <Action xsi:type="Quest.Actions.UnlockResearch" Type="Block" Subtype="RailSwitchExternal" />
             <Action xsi:type="Quest.Actions.ShowNotification" Text="You've unlocked the external switch controller." SoundCueId="QuestStepCompleted" SoundDelay="300" />
         </Step>
         <Step>
             <FullDescription>Craft an external switch controller.</FullDescription>
-            <Condition xsi:type="Quest.Conditions.Craft" Type="CubeBlock" Subtype="RailSwitchExternal" Amount="1" />
+            <Condition xsi:type="Quest.Conditions.Craft" Type="Block" Subtype="RailSwitchExternal" Amount="1" />
         </Step>
         <Step>
             <FullDescription>Place the external switch controller within 5m of a junction point.  You can create junction points by attaching a bendy rail section onto existing track.</FullDescription>
             <Condition xsi:type="Quest.Conditions.Composite" Operator="AND">
-                <Condition xsi:type="Quest.Conditions.PlaceBlock" Type="CubeBlock" Subtype="RailSwitchExternal" Amount="1" />
+                <Condition xsi:type="Quest.Conditions.PlaceBlock" Type="Block" Subtype="RailSwitchExternal" Amount="1" />
             </Condition>
         </Step>
     </Definition>

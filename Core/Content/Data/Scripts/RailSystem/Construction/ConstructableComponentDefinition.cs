@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Serialization;
 using Equinox76561198048419394.RailSystem.Util;
-using VRage.Definitions.Cube;
 using VRage.Game;
 using VRage.Game.Definitions;
+using VRage.Logging;
 using VRage.ObjectBuilders;
 using VRage.ObjectBuilders.Definitions;
 using VRage.ObjectBuilders.Definitions.Inventory;
@@ -31,12 +31,12 @@ namespace Equinox76561198048419394.RailSystem.Construction
 
         public struct CcBuildModel
         {
-            public readonly float BuildPercentUpperBound;
+            public readonly float UpperBound;
             public readonly string ModelFile;
 
             public CcBuildModel(MyObjectBuilder_ConstructableComponentDefinition.CcObBuildModel ob)
             {
-                BuildPercentUpperBound = ob.BuildPercentUpperBound;
+                UpperBound = ob.UpperBound;
                 ModelFile = ob.File;
             }
         }
@@ -56,30 +56,30 @@ namespace Equinox76561198048419394.RailSystem.Construction
             Components = new ReadOnlyList<CcComponent>(def.Components.Select(x => new CcComponent(x)).ToList());
             TotalComponents = Components.Sum(x => x.Count);
             if (TotalComponents == 0)
-                MyDefinitionErrors.Add(Context, $"{nameof(MyObjectBuilder_ConstructableComponentDefinition.BuildProgressModels)} has no values",
-                    TErrorSeverity.Critical);            
+                MyDefinitionErrors.Add(Package, $"{nameof(MyObjectBuilder_ConstructableComponentDefinition.BuildProgressModels)} has no values",
+                    LogSeverity.Critical);            
             
             var models = def.BuildProgressModels.Select(x => new CcBuildModel(x)).ToList();
-            models.Sort((a, b) => a.BuildPercentUpperBound.CompareTo(b.BuildPercentUpperBound));
+            models.Sort((a, b) => a.UpperBound.CompareTo(b.UpperBound));
             BuildModels = new ReadOnlyList<CcBuildModel>(models);
             if (BuildModels.Count == 0)
-                MyDefinitionErrors.Add(Context, $"{nameof(MyObjectBuilder_ConstructableComponentDefinition.BuildProgressModels)} has no values",
-                    TErrorSeverity.Critical);
+                MyDefinitionErrors.Add(Package, $"{nameof(MyObjectBuilder_ConstructableComponentDefinition.BuildProgressModels)} has no values",
+                    LogSeverity.Critical);
             
             if (!def.BuildTime.HasValue)
-                MyDefinitionErrors.Add(Context, $"{nameof(MyObjectBuilder_ConstructableComponentDefinition.BuildTime)} has no value", TErrorSeverity.Critical);
+                MyDefinitionErrors.Add(Package, $"{nameof(MyObjectBuilder_ConstructableComponentDefinition.BuildTime)} has no value", LogSeverity.Critical);
             BuildTime = def.BuildTime != null ? (TimeSpan) def.BuildTime.Value : TimeSpan.Zero;
             
             if (!def.MaxIntegrity.HasValue)
-                MyDefinitionErrors.Add(Context, $"{nameof(MyObjectBuilder_ConstructableComponentDefinition.MaxIntegrity)} has no value",
-                    TErrorSeverity.Critical);
+                MyDefinitionErrors.Add(Package, $"{nameof(MyObjectBuilder_ConstructableComponentDefinition.MaxIntegrity)} has no value",
+                    LogSeverity.Critical);
             MaxIntegrity = def.MaxIntegrity ?? 0;
         }
 
         public CcBuildModel BuildModelFor(float percent)
         {
             foreach (var k in BuildModels)
-                if (k.BuildPercentUpperBound >= percent)
+                if (k.UpperBound >= percent)
                     return k;
             return BuildModels.Last();
         }
@@ -125,7 +125,15 @@ namespace Equinox76561198048419394.RailSystem.Construction
         public class CcObBuildModel
         {
             [XmlAttribute]
-            public float BuildPercentUpperBound;
+            [Obsolete("Use UpperBound")]
+            public float BuildPercentUpperBound
+            {
+                get => UpperBound;
+                set => UpperBound = value;
+            }
+            
+            [XmlAttribute]
+            public float UpperBound;
 
             [XmlAttribute]
             public string File;

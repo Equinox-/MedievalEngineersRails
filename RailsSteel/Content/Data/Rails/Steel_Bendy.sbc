@@ -68,13 +68,13 @@
         </Components>
 
         <BuildProgressModels>
-            <Model BuildPercentUpperBound="0.075" File="Models\Equinox\RailsGaugeStandard\Steel\Bendy_10m_Build1.mwm" /> <!-- planning stakes -->
-            <Model BuildPercentUpperBound="0.225" File="Models\Equinox\RailsGaugeStandard\Steel\Bendy_10m_Build2.mwm" /> <!-- sleepers 1 -->
-            <Model BuildPercentUpperBound="0.375" File="Models\Equinox\RailsGaugeStandard\Steel\Bendy_10m_Build3.mwm" /> <!-- sleepers 2 -->
-            <Model BuildPercentUpperBound="0.525" File="Models\Equinox\RailsGaugeStandard\Steel\Bendy_10m_Build4.mwm" /> <!-- sleepers 3 -->
-            <Model BuildPercentUpperBound="0.7" File="Models\Equinox\RailsGaugeStandard\Steel\Bendy_10m_Build5.mwm" /> <!-- sleepers 4 -->
-            <Model BuildPercentUpperBound="0.9" File="Models\Equinox\RailsGaugeStandard\Steel\Bendy_10m_Build6.mwm" /> <!-- rails -->
-            <Model BuildPercentUpperBound="1.1" File="Models\Equinox\RailsGaugeStandard\Steel\Bendy_10m.mwm" /> <!-- spikes -->
+            <Model UpperBound="0.075" File="Models\Equinox\RailsGaugeStandard\Steel\Bendy_10m_Build1.mwm" /> <!-- planning stakes -->
+            <Model UpperBound="0.225" File="Models\Equinox\RailsGaugeStandard\Steel\Bendy_10m_Build2.mwm" /> <!-- sleepers 1 -->
+            <Model UpperBound="0.375" File="Models\Equinox\RailsGaugeStandard\Steel\Bendy_10m_Build3.mwm" /> <!-- sleepers 2 -->
+            <Model UpperBound="0.525" File="Models\Equinox\RailsGaugeStandard\Steel\Bendy_10m_Build4.mwm" /> <!-- sleepers 3 -->
+            <Model UpperBound="0.7" File="Models\Equinox\RailsGaugeStandard\Steel\Bendy_10m_Build5.mwm" /> <!-- sleepers 4 -->
+            <Model UpperBound="0.9" File="Models\Equinox\RailsGaugeStandard\Steel\Bendy_10m_Build6.mwm" /> <!-- rails -->
+            <Model UpperBound="1.1" File="Models\Equinox\RailsGaugeStandard\Steel\Bendy_10m.mwm" /> <!-- spikes -->
         </BuildProgressModels>
 
         <BuildTime Seconds="20" />

@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
 using System.Xml.Serialization;
-using Equinox76561198048419394.RailSystem.Bendy;
-using VRage.Factory;
 using VRage.Game;
 using VRage.Game.Definitions;
+using VRage.Logging;
 using VRage.ObjectBuilders;
 
 namespace Equinox76561198048419394.RailSystem.Definition
@@ -48,7 +46,7 @@ namespace Equinox76561198048419394.RailSystem.Definition
             var ob = (MyObjectBuilder_RailSegmentDefinition) def;
             if (ob.Capabilities == null || ob.Capabilities.Length == 0)
             {
-                MyDefinitionErrors.Add(def.ModContext, $"Definition {def.Id} has no defined capabilities, using default", TErrorSeverity.Warning);
+                MyDefinitionErrors.Add(def.Package, $"Definition {def.Id} has no defined capabilities, using default", LogSeverity.Warning);
                 _caps = new[] {RailSegmentCaps.Default};
                 return;
             }

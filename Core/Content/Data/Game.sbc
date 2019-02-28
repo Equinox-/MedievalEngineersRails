@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+
+  <Definition xsi:type="VR.SessionDefinition" Merge="Append">
+    <Id Type="SessionDefinition" Subtype="MedievalBase" />
+    <SessionComponents>
+      <Component>ConstructableController</Component>
+      <Component>BendyController</Component>
+    </SessionComponents>
+  </Definition>
+</Definitions>

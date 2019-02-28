@@ -5,12 +5,9 @@ using Equinox76561198048419394.RailSystem.Util;
 using Equinox76561198048419394.RailSystem.Util.Curve;
 using VRage.Components.Entity.Camera;
 using VRage.Game;
-using VRage.Generics;
-using VRage.Library.Collections;
 using VRage.Library.Utils;
 using VRage.Utils;
 using VRageMath;
-using PoolManager = Equinox76561198048419394.RailSystem.Util.PoolManager;
 
 namespace Equinox76561198048419394.RailSystem.Voxel
 {

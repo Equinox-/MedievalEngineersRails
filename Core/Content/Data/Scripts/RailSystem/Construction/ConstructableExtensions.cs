@@ -1,6 +1,6 @@
-﻿using Sandbox.Game.Entities;
+﻿using Medieval.Entities.Components.Grid;
+using VRage.Components.Block;
 using VRage.Game.Entity;
-using VRage.Game.ModAPI;
 
 namespace Equinox76561198048419394.RailSystem.Construction
 {
@@ -11,9 +11,12 @@ namespace Equinox76561198048419394.RailSystem.Construction
             ConstructableComponent cc;
             if (e.Components.TryGet(out cc))
                 return cc.BuildPercent;
-            var block = e as MyCubeBlock;
+            var block = e.Components.Get<MyBlockComponent>();
             if (block != null)
-                return ((IMySlimBlock) block.SlimBlock).BuildLevelRatio;
+            {
+                return block.GridData.Container.Get<MyGridBuildingComponent>()?.GetBlockState(block.BlockId)?.BuildIntegrity ?? 1f;
+            }
+
             return 1f;
         }
     }

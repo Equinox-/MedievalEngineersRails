@@ -3,14 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Serialization;
 using Equinox76561198048419394.RailSystem.Util;
-using Sandbox.ModAPI;
 using VRage;
+using VRage.Components;
 using VRage.Components.Entity.Animations;
-using VRage.Factory;
 using VRage.Game;
 using VRage.Game.Components;
 using VRage.Game.ObjectBuilders.ComponentSystem;
-using VRage.Library.Logging;
 using VRage.ObjectBuilders;
 using VRage.Session;
 using VRageMath;
@@ -18,7 +16,7 @@ using VRageMath;
 namespace Equinox76561198048419394.RailSystem.Bendy
 {
     [MyComponent(typeof(MyObjectBuilder_BendyComponent))]
-    [MyDefinitionRequired]
+    [MyDefinitionRequired(typeof(BendyComponentDefinition))]
     [MyDependency(typeof(MySkeletonComponent), Critical = false)]
     public class BendyComponent : MyEntityComponent
     {
@@ -191,6 +189,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy
                 MarkBoneDirty(bone.Name);
         }
 
+        [Update(false)]
         private void ApplyPose(long dt)
         {
             if (_skeletonComponent == null)

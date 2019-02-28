@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Xml.Serialization;
 using Equinox76561198048419394.Core.Controller;
 using Equinox76561198048419394.Core.Util;
@@ -10,21 +9,18 @@ using Equinox76561198048419394.RailSystem.Definition;
 using Equinox76561198048419394.RailSystem.Util;
 using Equinox76561198048419394.RailSystem.Util.Curve;
 using Sandbox.Engine.Physics;
-using Sandbox.Game.Entities;
 using Sandbox.Game.Entities.Entity.Stats;
 using Sandbox.Game.EntityComponents.Character;
-using Sandbox.Game.GameSystems;
 using Sandbox.ModAPI;
 using VRage.Components;
 using VRage.Components.Entity;
+using VRage.Components.Physics;
 using VRage.Definitions.Components.Character;
-using VRage.Entity.EntityComponents;
-using VRage.Factory;
+using VRage.Entities.Gravity;
 using VRage.Game;
 using VRage.Game.Components;
 using VRage.Game.Entity;
 using VRage.Game.ObjectBuilders.ComponentSystem;
-using VRage.Library.Logging;
 using VRage.ObjectBuilders;
 using VRage.ObjectBuilders.Components.Entity.Stats;
 using VRage.Session;
@@ -35,7 +31,7 @@ namespace Equinox76561198048419394.RailSystem.Physics
 {
     [MyComponent(typeof(MyObjectBuilder_BogieComponent))]
     [MyDependency(typeof(MyModelAttachmentComponent), Critical = false, Recursive = false)]
-    [MyDefinitionRequired]
+    [MyDefinitionRequired(typeof(BogieComponentDefinition))]
     public class BogieComponent : MyEntityComponent
     {
         public BogieComponentDefinition Definition { get; private set; }
@@ -73,6 +69,7 @@ namespace Equinox76561198048419394.RailSystem.Physics
                 foreach (var e in _attacher.GetAttachedEntities(SkinHash))
                     FixupSkinEntity(_attacher, e);
             }
+
             base.OnAddedToScene();
             _powerObserver.RequiredPower = Definition.NeedsPower;
         }
@@ -142,6 +139,18 @@ namespace Equinox76561198048419394.RailSystem.Physics
         public const float AlignmentTangentBias = 0.0125f;
         public const float TotalBias = SwitchingDistanceBias + AlignmentTangentBias;
 
+        [Update(false)]
+        private void ControllerSync(long dt)
+        {
+            var attt = Entity.Components.Get<MyModelAttachmentComponent>();
+            if (attt != null)
+                foreach (var e in attt.GetAttachedEntities(SkinHash))
+                    e.Components.Get<MyAnimationControllerComponent>()?.TriggerAction(AnimRailSync);
+            Entity.Components.Get<MyAnimationControllerComponent>()?.TriggerAction(AnimRailSync);
+            foreach (var k in _activeControllers)
+                k.Get<MyAnimationControllerComponent>()?.TriggerAction(AnimRailSync);
+        }
+
         [FixedUpdate]
         private void Simulate()
         {
@@ -181,16 +190,7 @@ namespace Equinox76561198048419394.RailSystem.Physics
 
                 if (sync)
                 {
-                    AddScheduledCallback((dt) =>
-                    {
-                        var attt = Entity.Components.Get<MyModelAttachmentComponent>();
-                        if (attt != null)
-                            foreach (var e in attt.GetAttachedEntities(SkinHash))
-                                e.Components.Get<MyAnimationControllerComponent>()?.TriggerAction(AnimRailSync);
-                        Entity.Components.Get<MyAnimationControllerComponent>()?.TriggerAction(AnimRailSync);
-                        foreach (var k in _activeControllers)
-                            k.Get<MyAnimationControllerComponent>()?.TriggerAction(AnimRailSync);
-                    }, 30);
+                    AddScheduledCallback(ControllerSync, 30);
                 }
             }
 
@@ -242,7 +242,7 @@ namespace Equinox76561198048419394.RailSystem.Physics
                         dist -= AlignmentTangentBias * Math.Abs(Entity.PositionComp.WorldMatrix.Forward.Dot(tangent));
 
                     if (RailConstants.Debug.DrawBogieEdges)
-                        edge.DebugDraw(0, 1, switched ? new Vector4(0, 1, 0, 1) : new Vector4(1, 0, 1, 1), 2);
+                        edge.Draw(0, 1, switched ? new Vector4(0, 1, 0, 1) : new Vector4(1, 0, 1, 1), 2);
 
                     // ReSharper disable once InvertIf
                     if (dist < best)
@@ -284,9 +284,11 @@ namespace Equinox76561198048419394.RailSystem.Physics
 
             var up = (Vector3) Vector3D.Lerp(bestEdge.From.Up, bestEdge.To.Up, bestTime);
             // Not aligned vertically, abort
-            if (Entity.PositionComp.WorldMatrix.Up.Dot(up) < 0.5) {
+            if (Entity.PositionComp.WorldMatrix.Up.Dot(up) < 0.5)
+            {
                 return;
             }
+
             if (Entity.PositionComp.WorldMatrix.Forward.Dot(bestTangent) < 0)
                 bestTangent = -bestTangent;
             var curvePosition = bestEdge.Curve.Sample(bestTime) + up * Definition.VerticalOffset;
@@ -300,7 +302,7 @@ namespace Equinox76561198048419394.RailSystem.Physics
             var allowDeactivation = true;
             var effectiveMass = root.Physics.Mass;
             var inertiaTensor = CreateInertiaTensor(root);
-            
+
             var qCurrent = Quaternion.CreateFromRotationMatrix(Entity.PositionComp.WorldMatrix);
             var qDesired = Quaternion.CreateFromRotationMatrix(Matrix.CreateWorld(Vector3.Zero, bestTangent, up));
             var qConj = Quaternion.Multiply(Quaternion.Conjugate(qCurrent), qDesired);
@@ -309,10 +311,11 @@ namespace Equinox76561198048419394.RailSystem.Physics
                 allowDeactivation = false;
             var desiredAngular = Vector3.Transform(localAngularDesired, qCurrent) * 2;
             var rotApply = desiredAngular;
-            var angularImpulse = Vector3.TransformNormal(desiredAngular - 0.25f * physics.AngularVelocity, inertiaTensor) * Definition.OrientationConvergenceFactor /
+            var angularImpulse = Vector3.TransformNormal(desiredAngular - 0.25f * physics.AngularVelocity, inertiaTensor) *
+                                 Definition.OrientationConvergenceFactor /
                                  MyEngineConstants.UPDATE_STEP_SIZE_IN_SECONDS;
             var com = physics.GetCenterOfMassWorld();
-            
+
             // a) spring joint along normal to get dot(normal, (pivot*matrix - position)) == 0
             var err = (Vector3) (curvePosition - pivotWorld);
 

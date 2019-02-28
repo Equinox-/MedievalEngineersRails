@@ -1,17 +1,7 @@
-using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using Equinox76561198048419394.RailSystem.Bendy;
 using Equinox76561198048419394.RailSystem.Util;
-using Sandbox.ModAPI;
 using VRage.Components.Entity.Camera;
-using VRage.Game;
-using VRage.Game.Components;
-using VRage.Game.Entity;
-using VRage.Game.Entity.UseObject;
-using VRage.Game.ObjectBuilders.ComponentSystem;
-using VRage.Network;
-using VRage.Utils;
 using VRageMath;
 
 namespace Equinox76561198048419394.RailSystem.Definition
@@ -106,7 +96,7 @@ namespace Equinox76561198048419394.RailSystem.Definition
                     tEnd = 1f;
                 }
 
-                e.DebugDraw(tStart, tEnd, e == SwitchedEdge ? new Vector4(0, 1, 0, 1) : new Vector4(1, 0, 0, 0.5f), 1);
+                e.Draw(tStart, tEnd, e == SwitchedEdge ? new Vector4(0, 1, 0, 1) : new Vector4(1, 0, 0, 0.5f), 1);
             }
         }
 

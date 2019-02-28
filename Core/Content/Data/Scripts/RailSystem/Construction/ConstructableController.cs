@@ -1,25 +1,37 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using Sandbox.ModAPI;
+using VRage.Components;
 using VRage.Definitions.Inventory;
 using VRage.Game;
 using VRage.Game.Components;
-using VRage.Library.Logging;
 using VRage.Network;
 using VRage.ObjectBuilders;
 using VRage.Session;
 
 namespace Equinox76561198048419394.RailSystem.Construction
 {
-    [MySessionComponentDescriptor(MyUpdateOrder.NoUpdate, -10, typeof(MyObjectBuilder_ConstructableController))]
+    [MySessionComponent(typeof(MyObjectBuilder_ConstructableController), AllowAutomaticCreation = true, AlwaysOn = true)]
     [StaticEventOwner]
-    public class ConstructableController : MySessionComponentBase
+    public class ConstructableController : MySessionComponent
     {
         private readonly List<MyDefinitionId> _definitionPalette = new List<MyDefinitionId>();
         private readonly Dictionary<MyDefinitionId, int> _definitionPaletteMap = new Dictionary<MyDefinitionId, int>();
 
+        public int EncodeExisting(MyDefinitionId def)
+        {
+            lock (this)
+            {
+                int idx;
+                if (_definitionPaletteMap.TryGetValue(def, out idx)) return idx;
+            }
+            this.GetLogger().Warning($"Trying to encode invalid palette item {def}; palette is {string.Join(", ", _definitionPalette)}");
+            return 0;
+        }
+        
         public int Encode(MyDefinitionId def)
         {
+            lock (this)
             {
                 int idx;
                 if (_definitionPaletteMap.TryGetValue(def, out idx)) return idx;
@@ -35,14 +47,14 @@ namespace Equinox76561198048419394.RailSystem.Construction
                 result = idx;
             }
 
-            MyMultiplayerModApi.Static.RaiseStaticEvent(s => PaletteUpdateClient, result, (DefinitionIdBlit) def, HashPalette());
+            MyMultiplayerModApi.Static.RaiseStaticEvent(s => PaletteUpdateClient, result, def, HashPalette());
             return result;
         }
 
         public MyDefinitionId Decode(int idx)
         {
             if (idx < _definitionPalette.Count) return _definitionPalette[idx];
-            MyLog.Default.Warning($"Trying to decode invalid palette item {idx}; palette is {string.Join(", ", _definitionPalette)}");
+            this.GetLogger().Warning($"Trying to decode invalid palette item {idx}; palette is {string.Join(", ", _definitionPalette)}");
             return MyDefinitionManager.GetOfType<MyInventoryItemDefinition>().FirstOrDefault()?.Id ?? default(MyDefinitionId);
         }
 
@@ -65,11 +77,12 @@ namespace Equinox76561198048419394.RailSystem.Construction
 
         protected override MyObjectBuilder_SessionComponent Serialize()
         {
-            return new MyObjectBuilder_ConstructableController()
-            {
-                Palette = _definitionPalette.Select(x => (SerializableDefinitionId) x).ToArray()
-            };
+            var ob = (MyObjectBuilder_ConstructableController) base.Serialize();
+            ob.Palette = _definitionPalette.Select(x => (SerializableDefinitionId) x).ToArray();
+            return ob;
         }
+
+        protected override bool IsSerialized => true;
 
         private int HashPalette()
         {
@@ -82,12 +95,12 @@ namespace Equinox76561198048419394.RailSystem.Construction
         [Event]
         [Reliable]
         [Broadcast]
-        private static void PaletteUpdateClient(int index, DefinitionIdBlit id, int verifyHash)
+        private static void PaletteUpdateClient(int index, MyDefinitionId id, int verifyHash)
         {
             var mgr = MySession.Static.Components?.Get<ConstructableController>();
             if (mgr == null)
             {
-                MyLog.Default.Warning($"Requested partial palette update and we don't have a constructable controller");
+                MySession.Static.Log.Warning($"Requested partial palette update and we don't have a constructable controller");
                 return;
             }
 
@@ -102,19 +115,19 @@ namespace Equinox76561198048419394.RailSystem.Construction
             int hash = mgr.HashPalette();
             if (hash == verifyHash) return;
 
-            MyLog.Default.Warning($"Palette verification failed, reacquiring");
+            mgr.GetLogger().Warning($"Palette verification failed, reacquiring");
             MyMultiplayerModApi.Static.RaiseStaticEvent(s => PaletteRequestUpdateServer);
         }
 
         [Event]
         [Reliable]
         [Client]
-        private static void PaletteFullUpdateClient(DefinitionIdBlit[] ids)
+        private static void PaletteFullUpdateClient(MyDefinitionId[] ids)
         {
             var mgr = MySession.Static.Components?.Get<ConstructableController>();
             if (mgr == null)
             {
-                MyLog.Default.Warning($"Requested full palette update and we don't have a constructable controller");
+                MySession.Static.Log.Warning($"Requested full palette update and we don't have a constructable controller");
                 return;
             }
 
@@ -138,7 +151,7 @@ namespace Equinox76561198048419394.RailSystem.Construction
             var mgr = MySession.Static.Components?.Get<ConstructableController>();
             if (mgr == null)
                 return;
-            var blits = mgr._definitionPalette.Select(x => (DefinitionIdBlit) x).ToArray();
+            var blits = mgr._definitionPalette.ToArray();
             MyMultiplayerModApi.Static.RaiseStaticEvent(s => PaletteFullUpdateClient, blits, MyEventContext.Current.Sender);
         }
     }

@@ -1,6 +1,6 @@
 ﻿using System;
 using VRage.Game;
-using VRage.Library.Logging;
+using VRage.Session;
 
 namespace Equinox76561198048419394.RailSystem.Util
 {
@@ -14,9 +14,9 @@ namespace Equinox76561198048419394.RailSystem.Util
 
         public static void Warn(string msg)
         {
-            MyLog.Default.Warning(msg);
+            MySession.Static.Log.Warning(msg);
             if (RailConstants.Debug.AssertsWithStacks)
-                MyLog.Default.Warning(" @\n" + BreakOrStackTrace());
+                MySession.Static.Log.Warning(" @\n" + BreakOrStackTrace());
         }
 
         public static void True(bool val, string msg)

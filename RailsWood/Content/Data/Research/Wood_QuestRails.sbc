@@ -22,7 +22,7 @@
         <IsRepeatable>false</IsRepeatable>
 
         <!-- blocks -->
-        <FailAction xsi:type="Quest.Actions.LockResearch" Type="CubeBlock" Subtype="RailWoodStraight"/>
+        <FailAction xsi:type="Quest.Actions.LockResearch" Type="Block" Subtype="RailWoodStraight"/>
         <FailAction xsi:type="Quest.Actions.LockResearch" Type="HandItem" Subtype="RailWoodPlanner"/>
 
         <FailAction xsi:type="Quest.Actions.ShowNotification" Text="Description_ResearchQuest_Failed" SoundCueId="QuestCompleted"/>
@@ -38,14 +38,14 @@
                 <Condition xsi:type="Quest.Conditions.Gather" Tag="Timber" Amount="10" AreaInventory="Included"/>
                 <Condition xsi:type="Quest.Conditions.Gather" Tag="ScrapWood" Amount="5" AreaInventory="Included"/>
             </Condition>
-            <Action xsi:type="Quest.Actions.UnlockResearch" Type="CubeBlock" Subtype="RailWoodStraight"/>
+            <Action xsi:type="Quest.Actions.UnlockResearch" Type="Block" Subtype="RailWoodStraight"/>
             <Action xsi:type="Quest.Actions.ShowNotification" Text="Straight rail segments unlocked!" SoundCueId="QuestStepCompleted" SoundDelay="300"/>
         </Step>
         <Step>
             <FullDescription>Place and construct the first endpoint of your new rail network.</FullDescription>
             <Condition xsi:type="Quest.Conditions.Composite" Operator="AND">
-                <Condition xsi:type="Quest.Conditions.PlaceBlock" Type="CubeBlock" Subtype="RailWoodStraight" Amount="1" />
-                <Condition xsi:type="Quest.Conditions.BuildBlock" Type="CubeBlock" Subtype="RailWoodStraight" Amount="1" />
+                <Condition xsi:type="Quest.Conditions.PlaceBlock" Type="Block" Subtype="RailWoodStraight" Amount="1" />
+                <Condition xsi:type="Quest.Conditions.BuildBlock" Type="Block" Subtype="RailWoodStraight" Amount="1" />
             </Condition>
         </Step>
         <Step>

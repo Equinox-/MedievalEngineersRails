@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using System.Xml.Serialization;
 using Equinox76561198048419394.RailSystem.Util;
@@ -13,13 +12,13 @@ using Sandbox.Game.Entities.Inventory;
 using Sandbox.Game.EntityComponents.Character;
 using Sandbox.Game.Inventory;
 using Sandbox.ModAPI;
+using VRage.Components;
 using VRage.Definitions;
 using VRage.Definitions.Inventory;
-using VRage.Factory;
 using VRage.Game;
 using VRage.Game.Definitions;
 using VRage.Game.Entity;
-using VRage.Library.Logging;
+using VRage.Logging;
 using VRage.Network;
 using VRage.ObjectBuilders;
 using VRage.ObjectBuilders.Definitions.Equipment;
@@ -165,7 +164,8 @@ namespace Equinox76561198048419394.RailSystem.Voxel
                         if (outputInventory != null && outputInventory.AddItems(k.Key, amount)) continue;
                         ranOutOfInventorySpace = true;
                         var pos = MyAPIGateway.Entities.FindFreePlace(Target.Position, radius) ?? Target.Position;
-                        MyFloatingObjects.Spawn(MyInventoryItem.Create(k.Key, amount), MatrixD.CreateTranslation(pos), null);
+                        MySession.Static.Components.Get<MyFloatingObjects>()
+                            ?.Spawn(MyInventoryItem.Create(k.Key, amount), MatrixD.CreateTranslation(pos), null);
                     }
                 }
             }
@@ -245,22 +245,19 @@ namespace Equinox76561198048419394.RailSystem.Voxel
         {
             _gradeComponents.Clear();
             var sphere = new BoundingSphereD(pos, GRADE_SCAN_DISTANCE);
-            foreach (var e in MyEntities.GetEntitiesInSphere(ref sphere))
+            var tmp = MyEntities.GetEntitiesInSphere(ref sphere);
+            using (tmp.GetClearToken())
             {
-                FillGradeComponents(pos, e);
-                var compound = e as MyCompoundCubeBlock;
-                if (compound == null)
-                    continue;
-                using (var itr = compound.GetFatBlocks())
+                foreach (var e in tmp)
                 {
-                    while (itr.MoveNext())
-                        FillGradeComponents(pos, itr.Current);
+                    FillGradeComponents(pos, e);
                 }
             }
         }
 
         private static readonly MyStringId _fillColor = MyStringId.GetOrCompute("RailGradeFill");
         private static readonly MyStringId _excavateColor = MyStringId.GetOrCompute("RailGradeExcavate");
+
         private void DebugDraw()
         {
             if (Holder == null)
@@ -318,7 +315,7 @@ namespace Equinox76561198048419394.RailSystem.Voxel
                 var materialDefinition = MyDefinitionManager.Get<MyVoxelMaterialDefinition>(item.VoxelMaterial);
                 if (materialDefinition == null || materialDefinition.Index == byte.MaxValue)
                 {
-                    MyLog.Default.Error("Cannot find voxel material {0}", item.VoxelMaterial);
+                    MySession.Static.Log.Warning($"Cannot find voxel material {item.VoxelMaterial}");
                     Material = MyVoxelMaterialDefinition.Default;
                     Volume = 64;
                 }

@@ -1,49 +1,40 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-    <Definition xsi:type="MyObjectBuilder_CubeBlockDefinition">
-        <Id Type="CubeBlock" Subtype="RailSwitchExternal" />
+    <Definition xsi:type="MyObjectBuilder_BuildableBlockDefinition">
+        <Id Type="Block" Subtype="RailSwitchExternal" />
         <DisplayName>Switch Controller</DisplayName>
         <Description>Flag that can be used to control any railway junction by placing it nearby</Description>
         <Icon>Textures\GUI\Icons\Equinox\RailSwitchExternal.dds</Icon>
         <Public>true</Public>
         
         <Mass>50</Mass>
-        <CubeSize>Small</CubeSize>
-        <BlockTopology>TriangleMesh</BlockTopology>
-        <Size x="2" y="6" z="4" />
-        <ModelOffset x="0" y="0" z="0" />
+        <GridDataDefinitionId Type="GridDataComponent" Subtype="SmallGridDataBase" />
+        <BoundingBox>
+            <Min x="0" y="0" z="0" />
+            <Max x="2" y="6" z="4" />
+        </BoundingBox>
         <Model>Models/Equinox/RailsGaugeStandard/Steel/ExternalSwitchControl.mwm</Model>
 
-        <Direction>Both</Direction>
-        <Rotation>Both</Rotation>
-        <BuildType>Cube</BuildType>
-        <PhysicalMaterial>Iron</PhysicalMaterial>
-        <NavigationDefinition>Default</NavigationDefinition>
-        <CompoundEnabled>false</CompoundEnabled>
+        <Rotation>YAxis</Rotation>
+        <PhysicalMaterial>Metal</PhysicalMaterial>
         <MountPoints>
             <MountPoint Side="Bottom" StartX="0" StartY="0" EndX="2" EndY="4" />
         </MountPoints>
 
         <Components>
-            <Component Tag="Timber" Count="1" />
-            <Component Tag="Ingot" Count="2" />
-            <Component Type="InventoryItem" Subtype="PartsMetal" Count="5" />
+            <Component Count="1" Type="Block" Subtype="RailSwitchExternal" />
         </Components>
-
-        <CriticalComponent Type="InventoryItem" Subtype="PartsMetal" Index="0" />
         <BuildTimeSeconds>50</BuildTimeSeconds>
         <MaxIntegrity>5000</MaxIntegrity>
 
         <VoxelPlacement>
           <StaticMode>
-            <PlacementMode>Both</PlacementMode>
-            <MaxAllowed>1</MaxAllowed>
             <MinAllowed>0</MinAllowed>
+            <MaxAllowed>1</MaxAllowed>
           </StaticMode>
           <DynamicMode>
-            <PlacementMode>InVoxel</PlacementMode>
+            <MinAllowed>0.01</MinAllowed>
             <MaxAllowed>1</MaxAllowed>
-            <MinAllowed>0</MinAllowed>
           </DynamicMode>
         </VoxelPlacement>
     </Definition>
@@ -59,7 +50,7 @@
             <Item Type="InventoryItem" Subtype="PartsMetal" Amount="5" />
         </Prerequisites>
         <Results>
-            <Item Amount="1" Type="CubeBlock" Subtype="RailSwitchExternal" />
+            <Item Amount="1" Type="Block" Subtype="RailSwitchExternal" />
         </Results>
         <CraftingTime Seconds="2" />
     </Definition>
@@ -80,7 +71,7 @@
     </Definition>
 
     <Definition xsi:type="MyObjectBuilder_ContainerDefinition" Copy="Append">
-        <Id Type="CubeBlock" Subtype="RailSwitchExternal" />
+        <Id Type="Block" Subtype="RailSwitchExternal" />
 
         <Component Type="RailSwitchExternalComponent" Subtype="RailSwitchExternal" />
         <Component Type="ModelAttachmentComponent" Subtype="RailSwitchExternal" />

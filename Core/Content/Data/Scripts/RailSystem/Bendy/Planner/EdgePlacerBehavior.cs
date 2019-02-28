@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Text;
 using System.Xml.Serialization;
 using Equinox76561198048419394.RailSystem.Bendy.Shape;
@@ -12,16 +11,18 @@ using Sandbox.Definitions.Equipment;
 using Sandbox.Game.Entities;
 using Sandbox.Game.Entities.Character;
 using Sandbox.Game.EntityComponents.Character;
-using Sandbox.Game.GameSystems;
 using Sandbox.Game.Inventory;
 using Sandbox.ModAPI;
 using VRage.Components.Entity.Camera;
+using VRage.Components.Session;
+using VRage.Entities.Gravity;
 using VRage.Game;
 using VRage.Game.Definitions;
 using VRage.Game.Entity;
 using VRage.Game.ModAPI;
 using VRage.GUI.Crosshair;
 using VRage.Input.Devices.Keyboard;
+using VRage.Logging;
 using VRage.ObjectBuilders;
 using VRage.ObjectBuilders.Definitions.Equipment;
 using VRage.Session;
@@ -230,7 +231,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
         {
             CurveExtensions.AlignFwd(ref m1, ref m2);
             return new CubicSphericalCurve(
-                MyGamePruningStructure.GetClosestPlanet(m1.Translation)?.PositionComp.WorldVolume.Center ??
+                MyGamePruningStructureSandbox.GetClosestPlanet(m1.Translation)?.PositionComp.WorldVolume.Center ??
                 Vector3D.Zero, m1, m2);
         }
 
@@ -692,12 +693,12 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
             var ob = (MyObjectBuilder_EdgePlacerBehaviorDefinition) builder;
             Layer = ob.Layer;
             if (string.IsNullOrWhiteSpace(Layer))
-                MyDefinitionErrors.Add(builder.ModContext, $"{nameof(EdgePlacerBehaviorDefinition)} {builder.GetId()} has {nameof(Layer)} that is null",
-                    TErrorSeverity.Error);
+                MyDefinitionErrors.Add(builder.Package, $"{nameof(EdgePlacerBehaviorDefinition)} {builder.GetId()} has {nameof(Layer)} that is null",
+                    LogSeverity.Error);
             Placed = ob.Placed;
             if (Placed.TypeId.IsNull)
-                MyDefinitionErrors.Add(builder.ModContext, $"{nameof(EdgePlacerBehaviorDefinition)} {builder.GetId()} has {nameof(Placed)} that is null",
-                    TErrorSeverity.Error);
+                MyDefinitionErrors.Add(builder.Package, $"{nameof(EdgePlacerBehaviorDefinition)} {builder.GetId()} has {nameof(Placed)} that is null",
+                    LogSeverity.Error);
             CrosshairPrefix = ob.CrosshairPrefix;
 
             CrosshairPlace = Create("Place", MyCrosshairIconInfo.IconPosition.TopLeftCorner);

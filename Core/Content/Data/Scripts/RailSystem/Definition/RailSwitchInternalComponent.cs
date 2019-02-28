@@ -4,21 +4,22 @@ using System.Linq;
 using System.Xml.Serialization;
 using Equinox76561198048419394.RailSystem.Bendy;
 using Medieval.Entities.UseObject;
+using VRage.Components;
 using VRage.Components.Entity;
-using VRage.Factory;
 using VRage.Game;
 using VRage.Game.Components;
 using VRage.Game.Definitions;
 using VRage.Game.Entity;
 using VRage.Game.Entity.UseObject;
 using VRage.Game.ObjectBuilders.ComponentSystem;
+using VRage.Logging;
 using VRage.ObjectBuilders;
 using VRage.Utils;
 
 namespace Equinox76561198048419394.RailSystem.Definition
 {
     [MyComponent(typeof(MyObjectBuilder_RailSwitchInternalComponent))]
-    [MyDefinitionRequired]
+    [MyDefinitionRequired(typeof(RailSwitchInternalComponentDefinition))]
     [MyDependency(typeof(BendyComponent), Critical = true)]
     [MyDependency(typeof(RailSegmentComponent), Critical = true)]
     public class RailSwitchInternalComponent : MyEntityComponent, IMyGenericUseObjectInterface, IRailSwitch
@@ -221,13 +222,13 @@ namespace Equinox76561198048419394.RailSystem.Definition
                     var k = Switchables[index];
                     if (string.IsNullOrWhiteSpace(k.Dummy))
                     {
-                        MyDefinitionErrors.Add(ob.ModContext, $"Switchable has no dummy name, will not be interactable", TErrorSeverity.Warning);
+                        MyDefinitionErrors.Add(ob.Package, $"Switchable has no dummy name, will not be interactable", LogSeverity.Warning);
                         continue;
                     }
 
                     if (_switchablesByDummy.ContainsKey(k.Dummy))
                     {
-                        MyDefinitionErrors.Add(ob.ModContext, $"Switchable has duplicated dummy name, will not operate", TErrorSeverity.Error);
+                        MyDefinitionErrors.Add(ob.Package, $"Switchable has duplicated dummy name, will not operate", LogSeverity.Error);
                         continue;
                     }
 

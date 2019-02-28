@@ -1,5 +1,4 @@
 ﻿using Equinox76561198048419394.RailSystem.Bendy;
-using Equinox76561198048419394.RailSystem.Util;
 using Equinox76561198048419394.RailSystem.Util.Curve;
 using VRageMath;
 

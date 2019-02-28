@@ -1,7 +1,6 @@
 using System;
 using System.ComponentModel;
 using System.Xml.Serialization;
-using Equinox76561198048419394.RailSystem.Bendy;
 using VRage.Game;
 using VRage.Game.Definitions;
 using VRage.ObjectBuilders;

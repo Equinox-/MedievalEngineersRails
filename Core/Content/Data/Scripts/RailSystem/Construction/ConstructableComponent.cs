@@ -4,15 +4,14 @@ using System.Linq;
 using System.Xml.Serialization;
 using Equinox76561198048419394.RailSystem.Util;
 using Sandbox.Game.Entities;
-using Sandbox.Game.Replication;
 using Sandbox.ModAPI;
-using VRage.Collections;
+using VRage.Components;
+using VRage.Components.Physics;
 using VRage.Definitions.Inventory;
 using VRage.Game;
 using VRage.Game.Components;
 using VRage.Game.Entity;
 using VRage.Game.ObjectBuilders.ComponentSystem;
-using VRage.Library.Logging;
 using VRage.Network;
 using VRage.ObjectBuilders;
 using VRage.ObjectBuilders.Definitions.Inventory;
@@ -20,12 +19,12 @@ using VRage.Session;
 
 namespace Equinox76561198048419394.RailSystem.Construction
 {
-    public class ConstructableComponentReplicable : MyComponentReplicableBase<ConstructableComponent>
+    public class ConstructableComponentReplicable : MyComponentReplicable<ConstructableComponent>
     {
     }
 
     [MyComponent(typeof(MyObjectBuilder_ConstructableComponent))]
-    [MyDefinitionRequired]
+    [MyDefinitionRequired(typeof(ConstructableComponentDefinition))]
     [ReplicatedComponent(typeof(ConstructableComponentReplicable))]
     public class ConstructableComponent : MyEntityComponent, IMyEventProxy
     {
@@ -47,6 +46,8 @@ namespace Equinox76561198048419394.RailSystem.Construction
         public float MaxIntegrity => Definition.MaxIntegrity;
         public float BuildPercent => BuildIntegrity / MaxIntegrity;
 
+        private static ConstructableController Controller => MySession.Static.Components.Get<ConstructableController>();
+
         private ConstructionStockpile _stockpile;
 
         public override void Init(MyEntityComponentDefinition definition)
@@ -64,60 +65,37 @@ namespace Equinox76561198048419394.RailSystem.Construction
             };
             if (_stockpile == null || _stockpile.IsEmpty()) return ob;
 
-            var controller = MySession.Static.Components.Get<ConstructableController>();
-            if (controller != null)
+            var stream = new MemStream(_stockpile.Items.Count * 2 + 1);
+            stream.Write7BitEncoded((ulong) _stockpile.Items.Count);
+            foreach (var k in _stockpile.Items)
             {
-                var stream = new MemStream(_stockpile.Items.Count * 2 + 1);
-                stream.Write7BitEncoded((ulong) _stockpile.Items.Count);
-                foreach (var k in _stockpile.Items)
-                {
-                    stream.Write7BitEncoded((ulong) controller.Encode(k.Key));
-                    stream.Write7BitEncoded((ulong) k.Value);
-                }
-
-                ob.SPacked = stream.ToBase64();
-            }
-            else
-            {
-                ob.Stockpile = _stockpile.GetObjectBuilder();
+                stream.Write7BitEncoded((ulong) Controller.EncodeExisting(k.Key));
+                stream.Write7BitEncoded((ulong) k.Value);
             }
 
+            ob.SPacked = stream.ToBase64();
             return ob;
         }
 
         public override void Deserialize(MyObjectBuilder_EntityComponent bbase)
         {
             var ob = (MyObjectBuilder_ConstructableComponent) bbase;
-            if (ob.Stockpile?.Items != null && ob.Stockpile.Items.Count > 0)
+            if (!string.IsNullOrEmpty(ob.SPacked))
             {
-                if (_stockpile == null)
-                    _stockpile = new ConstructionStockpile();
-                _stockpile.Init(ob.Stockpile);
-            }
-            else if (!string.IsNullOrEmpty(ob.SPacked))
-            {
-                var controller = MySession.Static.Components.Get<ConstructableController>();
-                if (controller != null)
+                try
                 {
-                    try
-                    {
-                        var stream = new MemStream(Convert.FromBase64String(ob.SPacked));
-                        if (_stockpile == null)
-                            _stockpile = new ConstructionStockpile();
-                        _stockpile.Items.Clear();
-                        var count = (int) stream.Read7BitEncoded();
-                        for (var i = 0; i < count; i++)
-                            _stockpile.AddItem(controller.Decode((int) stream.Read7BitEncoded()),
-                                (int) stream.Read7BitEncoded());
-                    }
-                    catch (Exception e)
-                    {
-                        MyLog.Default.Warning($"Failed to deserialize packed stockpile data {e}");
-                    }
+                    var stream = new MemStream(Convert.FromBase64String(ob.SPacked));
+                    if (_stockpile == null)
+                        _stockpile = new ConstructionStockpile();
+                    _stockpile.Items.Clear();
+                    var count = (int) stream.Read7BitEncoded();
+                    for (var i = 0; i < count; i++)
+                        _stockpile.AddItem(Controller.Decode((int) stream.Read7BitEncoded()),
+                            (int) stream.Read7BitEncoded());
                 }
-                else
+                catch (Exception e)
                 {
-                    MyLog.Default.Warning($"Failed to deserialize packed stockpile data due to no controller");
+                    this.GetLogger().Warning($"Failed to deserialize packed stockpile data {e}");
                 }
             }
             else
@@ -203,7 +181,7 @@ namespace Equinox76561198048419394.RailSystem.Construction
 
         public void Install<TU>(SupplyForInstall<TU> supplier, TU userData)
         {
-            using (new StockpileSyncWatcher(this))
+            using (new StockpileChangeWatcher(this))
             {
                 _tmpStockpile.Items.Clear();
                 if (_stockpile != null)
@@ -304,7 +282,7 @@ namespace Equinox76561198048419394.RailSystem.Construction
         {
             if (_stockpile == null)
                 return;
-            using (new StockpileSyncWatcher(this))
+            using (new StockpileChangeWatcher(this))
             {
                 _tmpStockpile.Items.Clear();
                 foreach (var k in _stockpile.Items)
@@ -367,7 +345,7 @@ namespace Equinox76561198048419394.RailSystem.Construction
                     tmp = tmp.Parent;
                 }
             }
-            MyFloatingObjects.Spawn(item, Entity.WorldMatrix, phys);
+            MySession.Static.Components.Get<MyFloatingObjects>()?.Spawn(item, Entity.WorldMatrix, phys);
         }
 
         // ReSharper disable once MemberCanBeMadeStatic.Local
@@ -439,37 +417,39 @@ namespace Equinox76561198048419394.RailSystem.Construction
 
         #region Sync
 
-        private struct StockpileSyncWatcher : IDisposable
+        private struct StockpileChangeWatcher : IDisposable
         {
-            private static readonly MyConcurrentQueue<Dictionary<MyDefinitionId, int>> _snapshotCache =
-                new MyConcurrentQueue<Dictionary<MyDefinitionId, int>>();
-
             private ConstructableComponent _component;
             private Dictionary<MyDefinitionId, int> _snapshot;
 
-            public StockpileSyncWatcher(ConstructableComponent c)
+            public StockpileChangeWatcher(ConstructableComponent c)
             {
                 _component = c;
                 if (c._stockpile != null && !c._stockpile.IsEmpty())
                 {
-                    _snapshotCache.TryDequeue(out _snapshot);
-                    // ReSharper disable once ConditionIsAlwaysTrueOrFalse
-                    if (_snapshot == null)
-                        _snapshot = new Dictionary<MyDefinitionId, int>(c._stockpile.Items);
-                    else
-                        // ReSharper disable once HeuristicUnreachableCode
-                    {
-                        _snapshot.Clear();
-                        foreach (var kv in c._stockpile.Items)
-                            _snapshot[kv.Key] = kv.Value;
-                    }
+                    PoolManager.Get(out _snapshot);
+                    _snapshot.Clear();
+                    foreach (var kv in c._stockpile.Items)
+                        _snapshot[kv.Key] = kv.Value;
                 }
                 else
+                {
                     _snapshot = null;
+                }
             }
 
             public void Dispose()
             {
+                #region Update Palette
+
+                if (_component._stockpile != null)
+                    foreach (var id in _component._stockpile.Items.Keys)
+                        Controller.Encode(id);
+
+                #endregion
+
+                #region Network
+
                 var alwaysFullSync = false;
                 if (_snapshot != null && _snapshot.Count > 0 &&
                     (_component._stockpile == null || _component._stockpile.IsEmpty()))
@@ -504,10 +484,13 @@ namespace Equinox76561198048419394.RailSystem.Construction
                         _component.ComputeComponentHash());
                 }
 
+                #endregion
+
+
                 _component = null;
                 if (_snapshot == null) return;
                 _snapshot.Clear();
-                _snapshotCache.Enqueue(_snapshot);
+                PoolManager.Return(_snapshot);
                 _snapshot = null;
             }
         }
@@ -516,7 +499,7 @@ namespace Equinox76561198048419394.RailSystem.Construction
         {
             public static readonly SyncComponentBlit[] Empty = new SyncComponentBlit[0];
 
-            public DefinitionIdBlit Id;
+            public MyDefinitionId Id;
             public int Count;
 
             public static implicit operator SyncComponentBlit(KeyValuePair<MyDefinitionId, int> kv)
@@ -532,7 +515,7 @@ namespace Equinox76561198048419394.RailSystem.Construction
         {
             ParseState(false, changed);
             if (ComputeComponentHash() == hash) return;
-            MyLog.Default.Warning($"Constructable state verification failed, reacquiring");
+            this.GetLogger().Warning($"Constructable state verification failed, reacquiring");
             MyMultiplayerModApi.Static.RaiseEvent(this, cc => cc.SyncRequestFullState);
         }
 
@@ -614,17 +597,6 @@ namespace Equinox76561198048419394.RailSystem.Construction
     [XmlSerializerAssembly("MedievalEngineers.ObjectBuilders.XmlSerializers")]
     public class MyObjectBuilder_ConstructableComponent : MyObjectBuilder_EntityComponent
     {
-        // Obselete, for backwards compat
-        // [Serialize(MyObjectFlags.Nullable)]
-        // TODO marked internal so the serializer doesn't pick it up
-        internal MyObjectBuilder_ConstructionStockpile Stockpile;
-
-        // Obselete, for backwards compat
-        public bool ShouldSerializeStockpile()
-        {
-            return false;
-        }
-
         /// <summary>
         /// Base64 packed stockpile data
         /// </summary>

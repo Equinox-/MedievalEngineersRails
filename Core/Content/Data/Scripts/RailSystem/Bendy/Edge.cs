@@ -1,9 +1,7 @@
 ﻿using System;
-using Equinox76561198048419394.RailSystem.Util;
 using Equinox76561198048419394.RailSystem.Util.Curve;
-using VRage.Components.Entity.Camera;
-using VRage.Game;
-using VRage.Library.Logging;
+using VRage.Components;
+using VRage.Logging;
 using VRage.Utils;
 using VRageMath;
 
@@ -42,7 +40,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy
         public void MarkDirty()
         {
             if (!InScene)
-                MyLog.Default.Warning($"Edge not in scene marked dirty");
+                GetLogger().Warning($"Edge not in scene marked dirty");
             lock (this)
             {
                 if (_dirty)
@@ -53,13 +51,18 @@ namespace Equinox76561198048419394.RailSystem.Bendy
             }
         }
 
+        private NamedLogger GetLogger()
+        {
+            return Graph.Owner.GetLogger().WithContext(this);
+        }
+
         private void MoveProxy()
         {
-            var bb = BoundingBoxD.CreatePoint(From.Position).Include(To.Position).Inflate(0.1f);
+            var bb = new BoundingBoxD(Vector3D.Min(From.Position, To.Position) - .1f, Vector3D.Max(From.Position, To.Position) + .1f);
             if (_proxyId >= 0)
-                Graph.Edges.MoveProxy(_proxyId, ref bb, Vector3D.Zero);
+                Graph.Edges.MoveProxy(_proxyId, in bb, Vector3D.Zero);
             else
-                _proxyId = Graph.Edges.AddProxy(ref bb, this, 0);
+                _proxyId = Graph.Edges.AddProxy(in bb, this, 0);
         }
 
         public MatrixD FromMatrix { get; private set; }
@@ -175,7 +178,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy
         private static readonly MyStringId SquareMaterial = MyStringId.GetOrCompute("Square");
         private const float EdgeMarkerVertOffset = 0.325f;
 
-        public void DebugDraw(float tStart, float tEnd, Vector4 color, int verticalGroup = 0)
+        public void Draw(float tStart, float tEnd, Vector4 color, int verticalGroup = 0)
         {
             if (Curve == null)
                 return;

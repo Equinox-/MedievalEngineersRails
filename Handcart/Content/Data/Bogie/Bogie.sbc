@@ -1,34 +1,23 @@
 <?xml version="1.0"?>
 <Definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-    <Definition xsi:type="MyObjectBuilder_CubeBlockDefinition">
-        <Id Type="MyObjectBuilder_CubeBlock" Subtype="Bogie" />
+    <Definition xsi:type="MyObjectBuilder_BuildableBlockDefinition">
+        <Id Type="Block" Subtype="Bogie" />
         <DisplayName>Bogie</DisplayName>
         <Icon>Textures\GUI\Icons\Cubes\RailStdGaugeBogieBasic.dds</Icon>
-        <Public>true</Public>
         <Model>Models\Equinox\Bogie\Bogie.mwm</Model>
-        <PhysicalMaterial>Wood</PhysicalMaterial>
-        <Mass>500</Mass>
 
-        <CubeSize>Small</CubeSize>
-        <BlockTopology>TriangleMesh</BlockTopology>
-        <Size x="5" y="3" z="8" />
-        <ModelOffset x="0" y="0" z="0" />
-        <Components>
-            <Component Tag="Timber" Count="6" />
-            <Component Tag="Ingot" Count="5" />
-            <Component Type="InventoryItem" Subtype="PartsMetal" Count="24" />
-        </Components>
-        <CriticalComponent Type="InventoryItem" Subtype="PartsMetal" Index="0" />
-        <BuildTimeSeconds>6</BuildTimeSeconds>
+        <GridDataDefinitionId Type="GridDataComponent" Subtype="SmallGridDataBase" />
+        <PhysicalMaterial>WoodLight</PhysicalMaterial>
+        <Mass>500</Mass>
+        <BoundingBox>
+          <Min x="0" y="0" z="0" />
+          <Max x="5" y="3" z="8" />
+        </BoundingBox>
         <MaxIntegrity>27500</MaxIntegrity>
-        <VoxelPlacement>
-            <StaticMode>
-                <PlacementMode>OutsideVoxel</PlacementMode>
-            </StaticMode>
-            <DynamicMode>
-                <PlacementMode>OutsideVoxel</PlacementMode>
-            </DynamicMode>
-        </VoxelPlacement>
+
+        <Components>
+            <Component Type="Block" Subtype="Bogie" Count="1" />
+        </Components>
     </Definition>
 
     <Definition xsi:type="MyObjectBuilder_CraftingRecipeDefinition">
@@ -42,7 +31,7 @@
             <Item Type="InventoryItem" Subtype="PartsMetal" Amount="24"/>
         </Prerequisites>
         <Results>
-            <Item Type="CubeBlock" Subtype="Bogie" Amount="1" />
+            <Item Type="Block" Subtype="Bogie" Amount="1" />
         </Results>
         <CraftingTime Seconds="5" />
     </Definition>
@@ -67,7 +56,8 @@
     </Definition>
 
     <Definition xsi:type="MyObjectBuilder_ContainerDefinition" Copy="Append">
-        <Id Type="MyObjectBuilder_CubeBlock" Subtype="Bogie" />
+        <Id Type="Block" Subtype="Bogie" />
+        <CopyFrom Type="EntityBase" Subtype="BaseFatBlock" />
 
         <Component Type="BogieComponent" Subtype="Bogie" />
         <Component Type="ModelAttachmentComponent" Subtype="Bogie" />

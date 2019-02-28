@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-    <Definition xsi:type="MyObjectBuilder_CubeBlockDefinition">
-        <Id Type="CubeBlock" Subtype="RailSwitchRhsParallel" />
+    <Definition xsi:type="MyObjectBuilder_BuildableBlockDefinition">
+        <Id Type="Block" Subtype="RailSwitchRhsParallel" />
         <DisplayName>Right Hand Switch (Standard Gauge, Steel)</DisplayName>
         <Icon>Textures\GUI\Icons\Equinox\RailSwitchRhsParallel.dds</Icon>
         <Public>true</Public>
@@ -9,18 +9,15 @@
         <Model>Models\Equinox\RailsGaugeStandard\Steel\Switch_RightHand_Parallel.mwm</Model>
         <Mass>500</Mass>
         
-        <CubeSize>Large</CubeSize>
-        <BlockTopology>TriangleMesh</BlockTopology>
-        <Size x="8" y="1" z="2" />
+        <GridDataDefinitionId Type="GridDataComponent" Subtype="LargeGridDataBase" />
         <ModelOffset x="0" y="0" z="1.25" />
-        <Center x="0" y="0" z="0" />
+        <BoundingBox>
+            <Min x="0" y="0" z="0" />
+            <Max x="8" y="1" z="2" />
+        </BoundingBox>
 
-        <Direction>Horizontal</Direction>
-        <Rotation>Vertical</Rotation>
-        <BuildType>Cube</BuildType>
-        <PhysicalMaterial>Wood</PhysicalMaterial>
-        <NavigationDefinition>Default</NavigationDefinition>
-        <CompoundEnabled>false</CompoundEnabled>
+        <Rotation>YAxis</Rotation>
+        <PhysicalMaterial>WoodHeavy</PhysicalMaterial>
         <MountPoints>
             <MountPoint Side="Bottom" StartX="0" StartY="0" EndX="1" EndY="1" />
         </MountPoints>
@@ -31,17 +28,27 @@
             <Component Type="InventoryItem" Subtype="PartsMetal" Count="18" />
         </Components>
 
-        <CriticalComponent Type="InventoryItem" Subtype="PartsMetal" Index="0" />
-
 
         <BuildProgressModels>
-            <Model BuildPercentUpperBound="0.434" File="Models\Equinox\RailsGaugeStandard\Steel\Switch_RightHand_Parallel_Build1.mwm" /> <!-- planning stakes -->
-            <Model BuildPercentUpperBound="0.9" File="Models\Equinox\RailsGaugeStandard\Steel\Switch_RightHand_Parallel_Build2.mwm" /> <!-- sleepers -->
-            <Model BuildPercentUpperBound="1.1" File="Models\Equinox\RailsGaugeStandard\Steel\Switch_RightHand_Parallel.mwm" /> <!-- rails + spikes + hardware -->
+            <Model UpperBound="0.434" File="Models\Equinox\RailsGaugeStandard\Steel\Switch_RightHand_Parallel_Build1.mwm" /> <!-- planning stakes -->
+            <Model UpperBound="0.9" File="Models\Equinox\RailsGaugeStandard\Steel\Switch_RightHand_Parallel_Build2.mwm" /> <!-- sleepers -->
+            <Model UpperBound="1.1" File="Models\Equinox\RailsGaugeStandard\Steel\Switch_RightHand_Parallel.mwm" /> <!-- rails + spikes + hardware -->
         </BuildProgressModels>
 
         <BuildTimeSeconds>20</BuildTimeSeconds>
         <MaxIntegrity>5000</MaxIntegrity>
+        
+        <VoxelPlacement>
+          <StaticMode>
+            <MinAllowed>0</MinAllowed>
+            <MaxAllowed>1</MaxAllowed>
+          </StaticMode>
+          <DynamicMode>
+            <MinAllowed>0.01</MinAllowed>
+            <MaxAllowed>0.1</MaxAllowed>
+            <SnapMax>true</SnapMax>
+          </DynamicMode>
+        </VoxelPlacement>
     </Definition>
 
     <Definition xsi:type="MyObjectBuilder_BendyComponentDefinition">
@@ -49,17 +56,17 @@
         <Layer>TrainRailGaugeStandard</Layer>
         <Nodes>
             <Node>
-                <Position x="10" y="-1.25" z="0" />
+                <Position x="10" y="-1.25" z="1.25" />
                 <Forward x="1" y="0" z="0" />
                 <Up x="0" y="1" z="0" />
             </Node>
             <Node>
-                <Position x="-10" y="-1.25" z="0" />
+                <Position x="-10" y="-1.25" z="1.25" />
                 <Forward x="1" y="0" z="0" />
                 <Up x="0" y="1" z="0" />
             </Node>
             <Node>
-                <Position x="-10" y="-1.25" z="-2.5" />
+                <Position x="-10" y="-1.25" z="-1.25" />
                 <Forward x="1" y="0" z="0" />
                 <Up x="0" y="1" z="0" />
             </Node>
@@ -77,10 +84,22 @@
         <MaxAngleDegrees>15</MaxAngleDegrees>
     </Definition>
 
-    <Definition xsi:type="MyObjectBuilder_ContainerDefinition" Copy="Append">
-        <Id Type="CubeBlock" Subtype="RailSwitchRhsParallel" />
-        <CopyFrom Type="CubeBlock" Subtype="RailSwitchBase" />
+    <Definition xsi:type="MyObjectBuilder_ModelComponentDefinition">
+        <Id Type="ModelComponent" Subtype="RailSwitchRhsParallel" />
+        <Model>Models\Equinox\RailsGaugeStandard\Steel\Switch_RightHand_Parallel.mwm</Model>
+        <PhysicalMaterial>WoodHeavy</PhysicalMaterial>
+    </Definition>
 
+    <Definition xsi:type="MyObjectBuilder_ContainerDefinition" Copy="Append">
+        <Id Type="Block" Subtype="RailSwitchRhsParallel" />
+        <CopyFrom Type="EntityBase" Subtype="RailSwitchBase" />
+
+        <Component Type="MultiplayerComponent" />
+        <Component Type="BlockRenderComponent" />
+        <Component Type="BlockModelComponent" />
+        <Component Type="BuildableBlockComponent" Subtype="Default" />
+
+        <Component Type="ModelComponent" Subtype="RailSwitchRhsParallel" /> <!-- this is "wrong" but a necessary evil to have a skeleton component on a block -->
         <Component Type="BendyComponent" Subtype="RailSwitchRhsParallel" />
         <Component Type="ModelAttachmentComponent" Subtype="RailSwitchRhsParallel" />
         <Component Type="MyObjectBuilder_AnimationControllerComponent" Subtype="RailSwitchRhsParallelSkin" />
@@ -111,6 +130,6 @@
     <Definition xsi:type="MyObjectBuilder_ModelComponentDefinition">
         <Id Type="ModelComponent" Subtype="RailSwitchRhsParallelSkin" />
         <Model>Models\Equinox\RailsGaugeStandard\Steel\Switch_RightHand_Parallel_Skin.mwm</Model>
-        <PhysicalMaterial>Wood</PhysicalMaterial>
+        <PhysicalMaterial>WoodHeavy</PhysicalMaterial>
     </Definition>
 </Definitions>

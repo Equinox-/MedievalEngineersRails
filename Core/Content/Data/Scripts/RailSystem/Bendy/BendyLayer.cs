@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using Equinox76561198048419394.RailSystem.Util;
-using Equinox76561198048419394.RailSystem.Util.Curve;
-using Sandbox.Game.GameSystems;
 using Sandbox.ModAPI;
 using VRage.Components.Entity.Camera;
+using VRage.Entities.Gravity;
 using VRage.Game;
 using VRage.Game.ModAPI;
 using VRage.Utils;
@@ -15,9 +14,11 @@ namespace Equinox76561198048419394.RailSystem.Bendy
     public class BendyLayer
     {
         public readonly string Layer;
+        public readonly BendyController Owner;
 
-        public BendyLayer(string id)
+        public BendyLayer(BendyController owner, string id)
         {
+            Owner = owner;
             Layer = id;
         }
 
@@ -138,7 +139,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy
                 });
 
             if (RailConstants.Debug.DrawGraphEdges)
-                Edges.OverlapAllFrustum(ref frust, (Edge edge, bool intersects) => { edge.DebugDraw(0, 1, _edgeColor); });
+                Edges.OverlapAllFrustum(ref frust, (Edge edge, bool intersects) => { edge.Draw(0, 1, _edgeColor); });
         }
     }
 }

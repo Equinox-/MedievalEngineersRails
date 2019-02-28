@@ -5,27 +5,38 @@ using Equinox76561198048419394.RailSystem.Util;
 using Sandbox.Engine.Physics;
 using Sandbox.ModAPI;
 using VRage;
-using VRage.Factory;
+using VRage.Components;
+using VRage.Components.Physics;
+using VRage.Engine;
 using VRage.Game;
 using VRage.Game.Components;
 using VRage.Game.Entity;
 using VRage.Game.ObjectBuilders.ComponentSystem;
 using VRage.ObjectBuilders;
+using VRage.Utils;
 using VRageMath;
+// ReSharper disable ConditionIsAlwaysTrueOrFalse
 
 namespace Equinox76561198048419394.RailSystem.Bendy.Shape
 {
     [MyComponent(typeof(MyObjectBuilder_BendyPhysicsComponent))]
     [MyDependency(typeof(BendyComponent), Critical = true, Recursive = true)]
     [MyDependency(typeof(ConstructableComponent), Critical = false, Recursive = false)]
-    [MyDefinitionRequired]
+    [MyDefinitionRequired(typeof(BendyPhysicsComponentDefinition))]
     public class BendyPhysicsComponent : BendyShapeComponent
     {
-        private static bool DebugAsChildren = false;
+        private const bool DebugAsChildren = false;
+
+        private readonly MyTimedUpdate _calcDel;
 
         public new BendyPhysicsComponentDefinition Definition { get; private set; }
         private readonly List<MyEntity> _physicsProxies = new List<MyEntity>();
 
+        public BendyPhysicsComponent()
+        {
+            _calcDel = ProxyCalculate;
+        }
+        
         public override void Init(MyEntityComponentDefinition definition)
         {
             base.Init(definition);
@@ -34,11 +45,14 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Shape
 
         public override void OnAddedToScene()
         {
-            base.OnAddedToScene();
+            CloseProxies();
+        }
+
+        private void CloseProxies()
+        {
             foreach (var k in _physicsProxies)
                 k.Close();
             _physicsProxies.Clear();
-//            AddFixedUpdate(DebugDraw);
         }
 
         public override void OnRemovedFromScene()
@@ -72,58 +86,61 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Shape
                 FarmingExtensions.DisableItemsIn(new OrientedBoundingBoxD(tmp, Entity.PositionComp.WorldMatrix));
             }
         }
-        
+
         protected override void BoxesUpdated(List<OrientedBoundingBox> boxes)
         {
-            while (_physicsProxies.Count > boxes.Count)
-            {
-                _physicsProxies[_physicsProxies.Count - 1]?.Close();
-                _physicsProxies.RemoveAt(_physicsProxies.Count - 1);
-            }
-
-            while (_physicsProxies.Count < boxes.Count)
+            CloseProxies();
+            foreach (var box in boxes)
             {
                 var ent = MyAPIGateway.Entities.CreateFromObjectBuilder(new MyObjectBuilder_EntityBase()
                 {
                     SubtypeName = "BendyPhysicsProxy",
+                    EntityDefinitionId = new SerializableDefinitionId(typeof(MyObjectBuilder_EntityBase), "BendyPhysicsProxy"),
                     PositionAndOrientation = new MyPositionAndOrientation(Entity.PositionComp.WorldMatrix),
                     PersistentFlags = MyPersistentEntityFlags2.InScene
                 });
                 ent.Save = false;
-                ent.IsPreview = true;
                 ent.Components.Add(new BendyShapeProxy(Entity));
                 if (DebugAsChildren)
                     Entity.Hierarchy.AddChild(ent);
                 else
                     MyAPIGateway.Entities.AddEntity(ent);
+
+                var localMatrix = Matrix.CreateFromQuaternion(box.Orientation);
+                localMatrix.Translation = box.Center;
+                var worldMatrix = localMatrix * Entity.PositionComp.WorldMatrix;
+                if (DebugAsChildren)
+                {
+                    ent.PositionComp.LocalMatrix = localMatrix;
+                    ent.PositionComp.WorldMatrix = worldMatrix;
+                }
+                else
+                {
+                    ent.PositionComp.WorldMatrix = worldMatrix;
+                }
+
+                var aabb = new BoundingBox(-box.HalfExtent, box.HalfExtent);
+                ent.PositionComp.LocalAABB = aabb;
+                const int defaultCollisionLayer = 15;
+                ent.InitBoxPhysics(Definition.Material, Vector3.Zero, box.HalfExtent * 2, 0f,
+                    0f, 0f, defaultCollisionLayer, RigidBodyFlag.RBF_STATIC);
+                ent.Physics.Activate();
                 _physicsProxies.Add(ent);
             }
 
-            for (var i = 0; i < _physicsProxies.Count; i++)
-            {
-                var box = boxes[i];
-                var ent = _physicsProxies[i];
-                if (ent.Physics != null)
-                {
-                    ent.Physics.Close();
-                    ent.Components.Remove(ent.Physics);
-                }
-
-                var m = Matrix.CreateFromQuaternion(box.Orientation);
-                if (DebugAsChildren)
-                    ent.PositionComp.LocalMatrix = m;
-                else
-                    ent.PositionComp.WorldMatrix = m * Entity.PositionComp.WorldMatrix;
-                var aabb = new BoundingBox(box.Center - box.HalfExtent, box.Center + box.HalfExtent);
-                ent.PositionComp.LocalAABB = aabb;
-                const int defaultCollisionLayer = 15;
-                ent.InitBoxPhysics(Definition.Material, box.Center, box.HalfExtent * 2, 0f, 0f, 0f, defaultCollisionLayer, RigidBodyFlag.RBF_STATIC);
-                ent.Physics.Enabled = true;
-                ent.RaisePhysicsChanged();
-            }
-            
             if (_destroyEnvItems)
                 DestroyEnvItemsInternal();
+        }
+
+        protected override void ScheduleCalc()
+        {
+            AddScheduledCallback(_calcDel);
+        }
+
+        [Update(false)]
+        private void ProxyCalculate(long dt)
+        {
+            base.CalcShape();
         }
     }
 

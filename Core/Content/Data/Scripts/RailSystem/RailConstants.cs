@@ -1,4 +1,9 @@
-﻿namespace Equinox76561198048419394.RailSystem
+﻿using Equinox76561198048419394.RailSystem.Bendy.Shape;
+using Equinox76561198048419394.RailSystem.Definition;
+using Equinox76561198048419394.RailSystem.Physics;
+using VRage.Components;
+
+namespace Equinox76561198048419394.RailSystem
 {
     public static class RailConstants
     {
@@ -14,12 +19,36 @@
             public bool DrawGradingShapes;
         }
 
-//        public static DebugOptions Debug = new DebugOptions
-//        {
-//            AssertsWithStacks = false, DrawGraphEdges = false, DrawGraphNodes = false, DrawBogiePhysics = false,
-//            DrawBendyPhysics = false, DrawSwitchControllers = true, DrawBogieEdges = true, DrawGradingShapes = true
-//        };
-        public static DebugOptions Debug = default(DebugOptions);
+        public static DebugOptions Debug;
+
+        static RailConstants()
+        {
+            DebugOff();
+            // DebugOn();
+        }
+
+        public static void DebugOn()
+        {
+            Debug = new DebugOptions
+            {
+                AssertsWithStacks = false, DrawGraphEdges = true, DrawGraphNodes = true, DrawBogiePhysics = false,
+                DrawBendyPhysics = false, DrawSwitchControllers = true, DrawBogieEdges = true, DrawGradingShapes = true
+            };
+            DebugCommit();
+        }
+
+        public static void DebugOff()
+        {
+            Debug = default;
+            DebugCommit();
+        }
+
+        private static void DebugCommit()
+        {
+            DebugDraw.SetEnabled(typeof(RailSwitchExternalComponent), Debug.DrawSwitchControllers);
+            DebugDraw.SetEnabled(typeof(RailSegmentComponent), Debug.DrawSwitchControllers);
+            DebugDraw.SetEnabled(typeof(BendyPhysicsComponent), Debug.DrawBendyPhysics);
+        }
 
         // Maximum nodes in a single call
         public const int MaxNodesPlaced = 128;

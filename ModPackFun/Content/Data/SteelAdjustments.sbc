@@ -1,25 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-    <Definition xsi:type="MyObjectBuilder_CubeBlockDefinition">
-        <Id Type="CubeBlock" Subtype="RailSteelStraight" />
+    <Definition xsi:type="MyObjectBuilder_BuildableBlockDefinition" Merge="Overwrite">
+        <Id Type="Block" Subtype="RailSteelStraight" />
         <DisplayName>Straight Rail Segment (Standard Gauge, Steel)</DisplayName>
         <Icon>Textures\GUI\Icons\Equinox\RailSteelStraight.dds</Icon>
-        <Public>true</Public>
-
+        
         <Model>Models\Equinox\RailsGaugeStandard\Steel\Bendy_10m.mwm</Model>
         <Mass>500</Mass>
+        
+        <GridDataDefinitionId Type="GridDataComponent" Subtype="LargeGridDataBase" />
+        <BoundingBox>
+            <Min x="0" y="0" z="0" />
+            <Max x="4" y="1" z="1" />
+        </BoundingBox>
 
-        <CubeSize>Large</CubeSize>
-        <BlockTopology>TriangleMesh</BlockTopology>
-        <Size x="4" y="1" z="1" />
-        <Center x="0" y="0" z="0" />
-
-        <Direction>Horizontal</Direction>
-        <Rotation>Vertical</Rotation>
-        <BuildType>Cube</BuildType>
-        <PhysicalMaterial>Wood</PhysicalMaterial>
-        <NavigationDefinition>Default</NavigationDefinition>
-        <CompoundEnabled>false</CompoundEnabled>
+        <Rotation>YAxis</Rotation>
+        <PhysicalMaterial>WoodHeavy</PhysicalMaterial>
         <MountPoints>
             <MountPoint Side="Bottom" StartX="0" StartY="0" EndX="1" EndY="1" />
         </MountPoints>
@@ -31,18 +27,29 @@
         </Components>
 
         <BuildProgressModels>
-            <Model BuildPercentUpperBound="0.075" File="Models\Equinox\RailsGaugeStandard\Steel\Bendy_10m_Build1.mwm" /> <!-- planning stakes -->
-            <Model BuildPercentUpperBound="0.225" File="Models\Equinox\RailsGaugeStandard\Steel\Bendy_10m_Build2.mwm" /> <!-- sleepers 1 -->
-            <Model BuildPercentUpperBound="0.375" File="Models\Equinox\RailsGaugeStandard\Steel\Bendy_10m_Build3.mwm" /> <!-- sleepers 2 -->
-            <Model BuildPercentUpperBound="0.525" File="Models\Equinox\RailsGaugeStandard\Steel\Bendy_10m_Build4.mwm" /> <!-- sleepers 3 -->
-            <Model BuildPercentUpperBound="0.7" File="Models\Equinox\RailsGaugeStandard\Steel\Bendy_10m_Build5.mwm" /> <!-- sleepers 4 -->
-            <Model BuildPercentUpperBound="0.9" File="Models\Equinox\RailsGaugeStandard\Steel\Bendy_10m_Build6.mwm" /> <!-- rails -->
-            <Model BuildPercentUpperBound="1.1" File="Models\Equinox\RailsGaugeStandard\Steel\Bendy_10m.mwm" /> <!-- spikes -->
+            <Model UpperBound="0.075" File="Models\Equinox\RailsGaugeStandard\Steel\Bendy_10m_Build1.mwm" /> <!-- planning stakes -->
+            <Model UpperBound="0.225" File="Models\Equinox\RailsGaugeStandard\Steel\Bendy_10m_Build2.mwm" /> <!-- sleepers 1 -->
+            <Model UpperBound="0.375" File="Models\Equinox\RailsGaugeStandard\Steel\Bendy_10m_Build3.mwm" /> <!-- sleepers 2 -->
+            <Model UpperBound="0.525" File="Models\Equinox\RailsGaugeStandard\Steel\Bendy_10m_Build4.mwm" /> <!-- sleepers 3 -->
+            <Model UpperBound="0.7" File="Models\Equinox\RailsGaugeStandard\Steel\Bendy_10m_Build5.mwm" /> <!-- sleepers 4 -->
+            <Model UpperBound="0.9" File="Models\Equinox\RailsGaugeStandard\Steel\Bendy_10m_Build6.mwm" /> <!-- rails -->
+            <Model UpperBound="1.1" File="Models\Equinox\RailsGaugeStandard\Steel\Bendy_10m.mwm" /> <!-- spikes -->
         </BuildProgressModels>
-        <CriticalComponent Type="InventoryItem" Subtype="PartsMetal" Index="0" />
 
         <BuildTimeSeconds>20</BuildTimeSeconds>
         <MaxIntegrity>5000</MaxIntegrity>
+
+        <VoxelPlacement>
+          <StaticMode>
+            <MinAllowed>0</MinAllowed>
+            <MaxAllowed>1</MaxAllowed>
+          </StaticMode>
+          <DynamicMode>
+            <MinAllowed>0.01</MinAllowed>
+            <MaxAllowed>0.1</MaxAllowed>
+            <SnapMax>true</SnapMax>
+          </DynamicMode>
+        </VoxelPlacement>
     </Definition>
     
     <Definition xsi:type="MyObjectBuilder_ConstructableComponentDefinition">
@@ -55,13 +62,13 @@
         </Components>
 
         <BuildProgressModels>
-            <Model BuildPercentUpperBound="0.075" File="Models\Equinox\RailsGaugeStandard\Steel\Bendy_10m_Build1.mwm" /> <!-- planning stakes -->
-            <Model BuildPercentUpperBound="0.225" File="Models\Equinox\RailsGaugeStandard\Steel\Bendy_10m_Build2.mwm" /> <!-- sleepers 1 -->
-            <Model BuildPercentUpperBound="0.375" File="Models\Equinox\RailsGaugeStandard\Steel\Bendy_10m_Build3.mwm" /> <!-- sleepers 2 -->
-            <Model BuildPercentUpperBound="0.525" File="Models\Equinox\RailsGaugeStandard\Steel\Bendy_10m_Build4.mwm" /> <!-- sleepers 3 -->
-            <Model BuildPercentUpperBound="0.7" File="Models\Equinox\RailsGaugeStandard\Steel\Bendy_10m_Build5.mwm" /> <!-- sleepers 4 -->
-            <Model BuildPercentUpperBound="0.9" File="Models\Equinox\RailsGaugeStandard\Steel\Bendy_10m_Build6.mwm" /> <!-- rails -->
-            <Model BuildPercentUpperBound="1.1" File="Models\Equinox\RailsGaugeStandard\Steel\Bendy_10m.mwm" /> <!-- spikes -->
+            <Model UpperBound="0.075" File="Models\Equinox\RailsGaugeStandard\Steel\Bendy_10m_Build1.mwm" /> <!-- planning stakes -->
+            <Model UpperBound="0.225" File="Models\Equinox\RailsGaugeStandard\Steel\Bendy_10m_Build2.mwm" /> <!-- sleepers 1 -->
+            <Model UpperBound="0.375" File="Models\Equinox\RailsGaugeStandard\Steel\Bendy_10m_Build3.mwm" /> <!-- sleepers 2 -->
+            <Model UpperBound="0.525" File="Models\Equinox\RailsGaugeStandard\Steel\Bendy_10m_Build4.mwm" /> <!-- sleepers 3 -->
+            <Model UpperBound="0.7" File="Models\Equinox\RailsGaugeStandard\Steel\Bendy_10m_Build5.mwm" /> <!-- sleepers 4 -->
+            <Model UpperBound="0.9" File="Models\Equinox\RailsGaugeStandard\Steel\Bendy_10m_Build6.mwm" /> <!-- rails -->
+            <Model UpperBound="1.1" File="Models\Equinox\RailsGaugeStandard\Steel\Bendy_10m.mwm" /> <!-- spikes -->
         </BuildProgressModels>
 
         <BuildTime Seconds="20" />

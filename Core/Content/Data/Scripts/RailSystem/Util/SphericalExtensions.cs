@@ -8,7 +8,7 @@ namespace Equinox76561198048419394.RailSystem.Util
     {
         public static double GetElevation(this Vector3D v)
         {
-            var planet = MyGamePruningStructure.GetClosestPlanet(v);
+            var planet = MyGamePruningStructureSandbox.GetClosestPlanet(v);
             return planet != null ? Vector3D.Distance(v, planet.PositionComp.WorldVolume.Center) : v.Length();
         }
 

@@ -5,14 +5,12 @@ using Equinox76561198048419394.Core.Controller;
 using Equinox76561198048419394.RailSystem.Bendy;
 using Equinox76561198048419394.RailSystem.Util;
 using Medieval.Entities.UseObject;
-using Sandbox.Game.Replication;
-using Sandbox.Game.World;
 using Sandbox.ModAPI;
 using VRage;
 using VRage.Collections;
+using VRage.Components;
 using VRage.Components.Entity;
 using VRage.Components.Entity.Camera;
-using VRage.Factory;
 using VRage.Game;
 using VRage.Game.Components;
 using VRage.Game.Definitions;
@@ -20,21 +18,21 @@ using VRage.Game.Entity;
 using VRage.Game.Entity.UseObject;
 using VRage.Game.ModAPI;
 using VRage.Game.ObjectBuilders.ComponentSystem;
-using VRage.Input.Devices.Keyboard;
 using VRage.Network;
 using VRage.ObjectBuilders;
+using VRage.Session;
 using VRage.Utils;
 using VRageMath;
-using MySession = VRage.Session.MySession;
 
 namespace Equinox76561198048419394.RailSystem.Definition
 {
     [MyComponent(typeof(MyObjectBuilder_RailSwitchExternalComponent))]
-    [MyDefinitionRequired]
+    [MyDefinitionRequired(typeof(RailSwitchInternalComponentDefinition))]
     [MyDependency(typeof(MyComponentEventBus), Critical = false)]
     [MyDependency(typeof(MyModelAttachmentComponent), Critical = false)]
     [ReplicatedComponent]
-    public class RailSwitchExternalComponent : MyEntityComponent, IMyGenericUseObjectInterface, IMyComponentEventProvider, IMyEventProxy, IRailSwitch
+    public class RailSwitchExternalComponent : MyEntityComponent, IMyGenericUseObjectInterface, IMyComponentEventProvider, IMyEventProxy, IRailSwitch,
+        IComponentDebugDraw
     {
         private const string EventName = "Switched";
 
@@ -82,11 +80,6 @@ namespace Equinox76561198048419394.RailSystem.Definition
             foreach (var kv in _bendyController.Layers)
                 OnLayerAdded(kv.Key, kv.Value);
             _bendyController.LayerAdded += OnLayerAdded;
-
-
-            if (RailConstants.Debug.DrawSwitchControllers && !((IMyUtilities) MyAPIUtilities.Static).IsDedicated)
-                AddFixedUpdate(DebugDraw);
-
             if (Definition.AllowDynamic)
                 Entity.PositionComp.OnPositionChanged += OnPositionChanged;
             FlagAnimationWarp();
@@ -108,12 +101,15 @@ namespace Equinox76561198048419394.RailSystem.Definition
             if (Entity == null || !Entity.InScene)
                 return;
             if (!_dirty)
-                AddScheduledCallback((dt) =>
-                {
-                    _dirty = false;
-                    CheckNode();
-                });
+                AddScheduledCallback(RunDirty);
             _dirty = true;
+        }
+
+        [Update(false)]
+        private void RunDirty(long dt)
+        {
+            _dirty = false;
+            CheckNode();
         }
 
         private void OnPositionChanged(MyPositionComponentBase obj)
@@ -137,16 +133,18 @@ namespace Equinox76561198048419394.RailSystem.Definition
             _bendyController = null;
 
             BindController(null);
-            RemoveFixedUpdate(DebugDraw);
             base.OnRemovedFromScene();
         }
 
         private static readonly MyStringId SquareMaterial = MyStringId.GetOrCompute("Square");
 
-        private void DebugDraw()
+        public void DebugDraw()
         {
+            if (!RailConstants.Debug.DrawSwitchControllers)
+                return;
             if (((IMyUtilities) MyAPIUtilities.Static).IsDedicated)
                 return;
+
             const float vertOffset = 1f;
             if (Entity == null || !Entity.InScene)
                 return;
@@ -390,6 +388,7 @@ namespace Equinox76561198048419394.RailSystem.Definition
             _eventBus?.Invoke(EventName);
         }
 
+        [FixedUpdate(false)]
         private void Animate()
         {
             const float eps = 1e-3f;

@@ -1,26 +1,30 @@
 ﻿using System;
-using Sandbox.Game.Entities;
+using VRage.Components.Entity.CubeGrid;
+using VRage.Definitions.Grid;
+using VRage.Game;
 using VRageMath;
 
 namespace Equinox76561198048419394.RailSystem.Util
 {
     public static class MiscExtensions
     {
-        public static bool AnyBlocksInAABB(this MyCubeGrid g, BoundingBoxD box)
+        public static bool AnyBlocksInAABB(this MyGridDataComponent g, BoundingBoxD box)
         {
-            if (g.PositionComp == null)
+            var e = g.Entity;
+            if (e.PositionComp == null)
                 return false;
-            if (box.Contains(g.PositionComp.WorldAABB) == ContainmentType.Contains)
-                return g.GetBlocks().Count > 0;
+            if (box.Contains(e.PositionComp.WorldAABB) == ContainmentType.Contains)
+                return g.BlockCount > 0;
 
-            var orientedBoundingBoxD = OrientedBoundingBoxD.Create(box, g.PositionComp.WorldMatrixNormalizedInv);
-            orientedBoundingBoxD.Center *= g.GridSizeR;
-            orientedBoundingBoxD.HalfExtent *= g.GridSizeR;
-            box = box.TransformFast(g.PositionComp.WorldMatrixNormalizedInv);
+            var orientedBoundingBoxD = OrientedBoundingBoxD.Create(box, e.PositionComp.WorldMatrixNormalizedInv);
+            var sizeR = 1f / g.Size;
+            orientedBoundingBoxD.Center *= sizeR;
+            orientedBoundingBoxD.HalfExtent *= sizeR;
+            box = box.TransformFast(e.PositionComp.WorldMatrixNormalizedInv);
             var min = box.Min;
             var max = box.Max;
-            var obbPt1 = new Vector3I((int) Math.Round(min.X * g.GridSizeR), (int) Math.Round(min.Y * g.GridSizeR), (int) Math.Round(min.Z * g.GridSizeR));
-            var obbPt2 = new Vector3I((int) Math.Round(max.X * g.GridSizeR), (int) Math.Round(max.Y * g.GridSizeR), (int) Math.Round(max.Z * g.GridSizeR));
+            var obbPt1 = new Vector3I((int) Math.Round(min.X * sizeR), (int) Math.Round(min.Y * sizeR), (int) Math.Round(min.Z * sizeR));
+            var obbPt2 = new Vector3I((int) Math.Round(max.X * sizeR), (int) Math.Round(max.Y * sizeR), (int) Math.Round(max.Z * sizeR));
             var obbMin = Vector3I.Min(obbPt1, obbPt2);
             var obbMax = Vector3I.Max(obbPt1, obbPt2);
             var start = Vector3I.Max(obbMin, g.Min);
@@ -32,7 +36,7 @@ namespace Equinox76561198048419394.RailSystem.Util
 
             while (vector3IRangeIterator.IsValid())
             {
-                if (g.GetCubeBlock(next) != null)
+                if (g.GetAnyBlock(next) != null)
                     return true;
                 vector3IRangeIterator.GetNext(out next);
             }

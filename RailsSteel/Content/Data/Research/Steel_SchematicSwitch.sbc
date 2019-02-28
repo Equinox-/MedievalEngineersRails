@@ -4,8 +4,8 @@
         <Id Type="ResearchDefinition" Subtype="RailSwitch"/>
         <DisplayName>Railroad Switches</DisplayName>
                 
-        <Entry Type="CubeBlock" Subtype="RailSwitchRhsParallel" />
-        <Entry Type="CubeBlock" Subtype="RailSwitchExternal"/>
+        <Entry Type="Block" Subtype="RailSwitchRhsParallel" />
+        <Entry Type="Block" Subtype="RailSwitchExternal"/>
         <Entry Type="CraftingRecipeDefinition" Subtype="RailSwitchExternal"/>
         <Entry Type="CraftingRecipeDefinition" Subtype="SchematicRailSwitch"/>
     </Definition>

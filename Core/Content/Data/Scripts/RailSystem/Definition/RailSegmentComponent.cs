@@ -1,33 +1,23 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using System.Xml.Serialization;
 using Equinox76561198048419394.RailSystem.Bendy;
 using Equinox76561198048419394.RailSystem.Util;
-using Medieval.Entities.UseObject;
-using Sandbox.Game.Replication;
 using Sandbox.ModAPI;
-using VRage.Components.Entity;
-using VRage.Factory;
+using VRage.Components;
 using VRage.Game;
 using VRage.Game.Components;
-using VRage.Game.Entity;
-using VRage.Game.Entity.UseObject;
 using VRage.Game.ModAPI;
 using VRage.Game.ObjectBuilders.ComponentSystem;
-using VRage.Library.Logging;
 using VRage.Network;
 using VRage.ObjectBuilders;
-using VRage.Utils;
-using VRageMath;
 
 namespace Equinox76561198048419394.RailSystem.Definition
 {
     [MyComponent(typeof(MyObjectBuilder_RailSegmentComponent))]
-    [MyDefinitionRequired]
+    [MyDefinitionRequired(typeof(RailSegmentDefinition))]
     [MyDependency(typeof(BendyComponent))]
     [ReplicatedComponent]
-    public class RailSegmentComponent : MyEntityComponent, IMyEventProxy
+    public class RailSegmentComponent : MyEntityComponent, IMyEventProxy, IComponentDebugDraw
     {
         public RailSegmentDefinition Definition { get; private set; }
 
@@ -44,24 +34,23 @@ namespace Equinox76561198048419394.RailSystem.Definition
             base.OnAddedToScene();
             _bendy = Container.Get<BendyComponent>();
             
-            // Wait for first update
-            AddScheduledCallback((dt) =>
-            {
-                // Apply switch table a bit in the future (once the nodes have settled)
-                AddScheduledCallback((dt2) => ApplySwitchTable(), MyEngineConstants.UPDATE_STEP_SIZE_IN_MILLISECONDS * 4);
-            });
-            
-            if (RailConstants.Debug.DrawSwitchControllers && !((IMyUtilities)MyAPIUtilities.Static).IsDedicated)
-                AddFixedUpdate(DebugDraw);
+            AddScheduledCallback(FirstUpdate);
         }
 
-        public override void OnRemovedFromScene()
+        [Update(false)]
+        private void FirstUpdate(long dt)
         {
-            RemoveFixedUpdate(DebugDraw);
-            base.OnRemovedFromScene();
+            // Apply switch table a bit in the future (once the nodes have settled)
+            AddScheduledCallback(ApplySwitchTableFuture, MyEngineConstants.UPDATE_STEP_SIZE_IN_MILLISECONDS * 4);
         }
 
-        private void DebugDraw()
+        [Update(false)]
+        private void ApplySwitchTableFuture(long dt)
+        {
+            ApplySwitchTable();
+        }
+
+        public void DebugDraw()
         {
             if (((IMyUtilities) MyAPIUtilities.Static).IsDedicated)
                 return;

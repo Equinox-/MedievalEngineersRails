@@ -4,7 +4,7 @@
         <Id Type="ResearchDefinition" Subtype="RailSteel"/>
         <DisplayName>Steel Rails</DisplayName>
         
-        <Entry Type="CubeBlock" Subtype="RailSteelStraight"/>
+        <Entry Type="Block" Subtype="RailSteelStraight"/>
         <Entry Type="HandItem" Subtype="RailSteelPlanner"/>
         <Entry Type="CraftingRecipeDefinition" Subtype="RailSteelPlanner"/>
         <Entry Type="CraftingRecipeDefinition" Subtype="SchematicRailSteel"/>

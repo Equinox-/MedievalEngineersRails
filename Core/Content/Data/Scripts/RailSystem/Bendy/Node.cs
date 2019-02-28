@@ -1,10 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using Equinox76561198048419394.RailSystem.Util;
 using VRage.Collections;
-using VRage.Game.Entity;
-using VRage.Library.Logging;
+using VRage.Components;
+using VRage.Logging;
 using VRageMath;
 
 namespace Equinox76561198048419394.RailSystem.Bendy
@@ -21,7 +20,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy
         public Node(BendyLayer s, Vector3D pos, Vector3D up)
         {
             Position = pos;
-            Up = UpBias = (Vector3) up;
+            Up = UpBias = Vector3.Normalize((Vector3) up);
             Tangent = Vector3.Normalize(Vector3.CalculatePerpendicularVector(Up));
             Graph = s;
             TangentPins = 0;
@@ -47,7 +46,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy
             if (TangentPins == 0 && InScene)
                 MarkDirty();
             else if (TangentPins < 0)
-                MyLog.Default.Warning($"Unpinned node more than we pinned");
+                GetLogger().Warning($"Unpinned node more than we pinned");
         }
 
         public Vector3 Tangent { get; private set; }
@@ -71,8 +70,8 @@ namespace Equinox76561198048419394.RailSystem.Bendy
 
         private void RemoveNeighbor(Node n, Edge via)
         {
-            var tmp = _neighbors[n];
-            Assert.True(via == tmp, "Remove neighbor via improper edge");
+            if (via != _neighbors.GetValueOrDefault(n))
+                GetLogger().Warning("Remove neighbor via improper edge");
             _neighbors.Remove(n);
             NeighborRemoved?.Invoke(this, n, via);
         }
@@ -117,7 +116,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy
         public void MarkDirty()
         {
             if (!InScene)
-                MyLog.Default.Warning($"Node not in scene marked dirty");
+                GetLogger().Warning($"Node not in scene marked dirty");
             lock (this)
             {
                 if (_dirty)
@@ -128,13 +127,18 @@ namespace Equinox76561198048419394.RailSystem.Bendy
             }
         }
 
+        private NamedLogger GetLogger()
+        {
+            return Graph.Owner.GetLogger().WithContext(this);
+        }
+
         private void MoveProxy()
         {
             var bb = BoundingBoxD.CreatePoint(Position).Inflate(0.005f);
             if (_proxyId >= 0)
-                Graph.Nodes.MoveProxy(_proxyId, ref bb, Vector3D.Zero);
+                Graph.Nodes.MoveProxy(_proxyId, in bb, Vector3D.Zero);
             else
-                _proxyId = Graph.Nodes.AddProxy(ref bb, this, 0);
+                _proxyId = Graph.Nodes.AddProxy(in bb, this, 0);
         }
 
         public void DeferredUpdate()
@@ -199,7 +203,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy
         public void Close()
         {
             if (_neighbors.Count > 0)
-                MyLog.Default.Warning($"Closed a node when there were still neighbors");
+                GetLogger().Warning($"Closed a node when there were still neighbors");
             foreach (var k in _neighbors.Values.ToArray())
                 k.Close();
             if (_proxyId >= 0)

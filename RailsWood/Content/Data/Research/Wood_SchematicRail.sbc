@@ -4,7 +4,7 @@
         <Id Type="ResearchDefinition" Subtype="RailWood"/>
         <DisplayName>Wooden Rails</DisplayName>
         
-        <Entry Type="CubeBlock" Subtype="RailWoodStraight"/>
+        <Entry Type="Block" Subtype="RailWoodStraight"/>
 
         <Entry Type="HandItem" Subtype="RailWoodPlanner"/>
         <Entry Type="CraftingRecipeDefinition" Subtype="RailWoodPlanner"/>

@@ -1,20 +1,20 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Serialization;
 using Equinox76561198048419394.RailSystem.Bendy;
 using Equinox76561198048419394.RailSystem.Construction;
 using Equinox76561198048419394.RailSystem.Util;
+using Sandbox.Engine.Voxels;
 using Sandbox.Game.Entities;
-using Sandbox.Game.GameSystems;
-using Sandbox.ModAPI;
 using VRage.Components;
-using VRage.Factory;
+using VRage.Components.Entity.CubeGrid;
+using VRage.Components.Session;
+using VRage.Entities.Gravity;
 using VRage.Game;
 using VRage.Game.Components;
+using VRage.Game.Entity;
 using VRage.Game.ObjectBuilders.ComponentSystem;
 using VRage.ObjectBuilders;
-using VRage.Utils;
 using VRage.Voxels;
 using VRageMath;
 
@@ -22,7 +22,7 @@ namespace Equinox76561198048419394.RailSystem.Voxel
 {
     [MyComponent(typeof(MyObjectBuilder_RailGradeComponent))]
     [MyDependency(typeof(BendyComponent), Critical = true)]
-    [MyDefinitionRequired]
+    [MyDefinitionRequired(typeof(RailGradeComponentDefinition))]
     public class RailGradeComponent : MyEntityComponent, IConstructionPrereq, IRailGradeComponent
     {
         public RailGradeComponentDefinition Definition { get; private set; }
@@ -78,7 +78,8 @@ namespace Equinox76561198048419394.RailSystem.Voxel
             {
                 if (_supportCache != null) return _supportCache;
                 if (_bendy == null || _bendy.Edges.Length == 0 || !Definition.Support.HasValue) return _supportCache;
-                return _supportCache = CompositeGradeShape.Composite(_bendy.Edges.Select(e => Definition.Support.Value.CreateShape(new EdgeBlit(e), false)).ToArray());
+                return _supportCache =
+                    CompositeGradeShape.Composite(_bendy.Edges.Select(e => Definition.Support.Value.CreateShape(new EdgeBlit(e), false)).ToArray());
             }
         }
 
@@ -157,43 +158,46 @@ namespace Equinox76561198048419394.RailSystem.Voxel
 
             var shape = Definition.RequiredSupport.Value;
             var sphere = new BoundingSphereD(Vector3D.Transform(_localBox.Center, Entity.PositionComp.WorldMatrix), _localBox.HalfExtents.Length());
-            var entities = MyEntities.GetTopMostEntitiesInSphere(ref sphere);
-            var gravity = MyGravityProviderSystem.CalculateTotalGravityInPoint(Entity.GetPosition());
-            gravity.Normalize();
-
             var supported = 0;
             var total = 0;
-            for (var i = 0; i < shape.Segments; i++)
+            var entities = MyEntities.GetTopMostEntitiesInSphere(ref sphere);
+            using (entities.GetClearToken())
             {
-                var t = (i + 0.5f) / shape.Segments;
-                var pos = curve.Sample(t);
-                pos += gravity;
+                var gravity = MyGravityProviderSystem.CalculateTotalGravityInPoint(Entity.GetPosition());
+                gravity.Normalize();
 
-                var aabb = new BoundingBoxD(pos - 0.5f, pos + 0.5f);
-
-                var found = false;
-                foreach (var e in entities)
+                for (var i = 0; i < shape.Segments; i++)
                 {
-                    var vox = e as MyVoxelBase;
-                    var grid = e as MyCubeGrid;
-                    if (vox != null)
+                    var t = (i + 0.5f) / shape.Segments;
+                    var pos = curve.Sample(t);
+                    pos += gravity;
+
+                    var aabb = new BoundingBoxD(pos - 0.5f, pos + 0.5f);
+
+                    var found = false;
+                    foreach (var e in entities)
                     {
-                        Vector3I vc;
-                        var test = pos;
-                        MyVoxelCoordSystems.WorldPositionToVoxelCoord(vox.PositionLeftBottomCorner, ref test, out vc);
-                        _voxelStorage.Resize(Vector3I.One);
-                        vox.Storage.ReadRange(_voxelStorage, MyStorageDataTypeFlags.Content, 0, vc, vc);
-                        found |= _voxelStorage.Get(MyStorageDataTypeEnum.Content, ref Vector3I.Zero) > 0;
+                        var vox = e as MyVoxelBase;
+                        var grid = e.Components.Get<MyGridDataComponent>();
+                        if (vox != null)
+                        {
+                            Vector3I vc;
+                            var test = pos;
+                            MyVoxelCoordSystems.WorldPositionToVoxelCoord(vox.PositionLeftBottomCorner, ref test, out vc);
+                            _voxelStorage.Resize(Vector3I.One);
+                            vox.Storage.ReadRange(_voxelStorage, MyStorageDataTypeFlags.Content, 0, in vc, in vc);
+                            found |= _voxelStorage.Get(MyStorageDataTypeEnum.Content, ref Vector3I.Zero) > 0;
+                        }
+                        else if (grid != null)
+                            found |= grid.AnyBlocksInAABB(aabb);
+
+                        if (found) break;
                     }
-                    else if (grid != null)
-                        found |= grid.AnyBlocksInAABB(aabb);
 
-                    if (found) break;
+                    if (found)
+                        supported++;
+                    total++;
                 }
-
-                if (found)
-                    supported++;
-                total++;
             }
 
             return supported >= 0.8 * total;
@@ -232,7 +236,7 @@ namespace Equinox76561198048419394.RailSystem.Voxel
     public struct RailGradeComponentBlit : IRailGradeComponent
     {
         public EdgeBlit[] Edges;
-        public DefinitionIdBlit Definition;
+        public MyDefinitionId Definition;
 
         public void Unblit(out IGradeShape fillShape, out IGradeShape excavateShape)
         {

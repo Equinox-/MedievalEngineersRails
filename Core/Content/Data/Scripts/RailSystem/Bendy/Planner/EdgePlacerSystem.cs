@@ -4,20 +4,23 @@ using Equinox76561198048419394.RailSystem.Bendy.Shape;
 using Equinox76561198048419394.RailSystem.Construction;
 using Equinox76561198048419394.RailSystem.Util;
 using Medieval.Constants;
+using Medieval.Entities.Components.Grid;
 using Medieval.GameSystems;
 using Sandbox.Definitions.Inventory;
 using Sandbox.Game.Entities;
 using Sandbox.Game.Entities.Inventory;
 using Sandbox.ModAPI;
 using VRage;
+using VRage.Components.Block;
 using VRage.Definitions.Inventory;
 using VRage.Game;
 using VRage.Game.Entity;
 using VRage.Game.ModAPI;
 using VRage.Game.ObjectBuilders.ComponentSystem;
-using VRage.Library.Logging;
+using VRage.Logging;
 using VRage.Network;
 using VRage.ObjectBuilders;
+using VRage.ObjectBuilders.Components;
 using VRage.Session;
 using VRageMath;
 
@@ -36,7 +39,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
         public struct EdgePlacerConfig
         {
             public long EntityPlacing;
-            public DefinitionIdBlit Placed;
+            public MyDefinitionId Placed;
         }
 
         /// <summary>
@@ -76,10 +79,10 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
 
             var dotFrom = Math.Abs(Vector3.Normalize(from.Tangent).Dot((Vector3) dirNext));
             var dotTo = Math.Abs(Vector3.Normalize(to.Tangent).Dot((Vector3) dirNext));
-            
+
             result.BendRadians = Math.Acos(Math.Min(dotFrom, dotTo));
 
-            var planet = MyGamePruningStructure.GetClosestPlanet(@from.Position);
+            var planet = MyGamePruningStructureSandbox.GetClosestPlanet(@from.Position);
             // ReSharper disable once InvertIf
             if (planet?.PositionComp != null)
             {
@@ -171,7 +174,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
 
             for (var i = 1; i < nodes.Count; i++)
             {
-                if (!VerifyEdge(def, nodes[i-1], nodes[i], errors) && errors == null)
+                if (!VerifyEdge(def, nodes[i - 1], nodes[i], errors) && errors == null)
                     return false;
             }
 
@@ -213,7 +216,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
                 var tanHere = Vector3.Zero;
                 if (a.Existing != null)
                     tanHere = a.Existing.Tangent * a.Existing.Neighbors.Count();
-                
+
                 if (i > 0 && (nodes[i - 1].Existing == null || a.Existing?.ConnectionTo(nodes[i - 1].Existing) == null))
                 {
                     var tP = Vector3.Normalize(nodes[i - 1].Position - a.Position);
@@ -221,7 +224,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
                         tP = -tP;
                     tanHere += tP;
                 }
-                
+
                 // ReSharper disable once InvertIf
                 if (i + 1 < nodes.Count && (nodes[i + 1].Existing == null || a.Existing?.ConnectionTo(nodes[i + 1].Existing) == null))
                 {
@@ -234,7 +237,6 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
                 a.Tangent = Vector3.Normalize(tanHere.LengthSquared() > 0 ? tanHere : Vector3.CalculatePerpendicularVector(nodes[i].Up));
                 nodes[i] = a;
             }
-            
         }
 
         public static void RaisePlaceEdge(EdgePlacerConfig cfg, Vector3D[] segments)
@@ -302,7 +304,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
                 if (!validPlacedType)
                 {
                     MyEventContext.ValidationFailed();
-                    MyLog.Default.Warning(
+                    MySession.Static.Log.Warning(
                         $"{holderPlayer} tried to place {cfg.Placed}, but has no item that can place it");
                     return;
                 }
@@ -434,23 +436,10 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
 
             #endregion
 
-            var block = removeEntity as MyCubeBlock;
+            var block = removeEntity?.Get<MyBlockComponent>();
             if (block != null)
             {
-                var compound =
-                    ((IMySlimBlock) block.CubeGrid.GetCubeBlock(block.Position))?.FatBlock as MyCompoundCubeBlock;
-                if (compound != null && compound != block)
-                {
-                    var id = compound.GetBlockId(block.SlimBlock);
-                    if (id.HasValue)
-                        block.CubeGrid.RazeBlockInCompoundBlock(
-                            new List<MyTuple<Vector3I, ushort>>
-                            {
-                                new MyTuple<Vector3I, ushort>(compound.Position, id.Value)
-                            });
-                }
-                else
-                    block.CubeGrid.RazeBlock(block.Position);
+                block.GridData.RemoveBlock(block.Block);
             }
             else
             {
@@ -479,11 +468,22 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
                     return false;
                 }
 
-                var block = (IMySlimBlock) (removeEntity as MyCubeBlock)?.SlimBlock;
-                if (block != null && (!block.StockpileEmpty || block.BuildIntegrity > 0))
+                var block = removeEntity?.Get<MyBlockComponent>();
+                if (block != null)
                 {
-                    errMessage = "You cannot quick deconstruct built segments";
-                    return false;
+                    var gbc = block.GridData.Container.Get<MyGridBuildingComponent>();
+                    if (gbc == null)
+                    {
+                        errMessage = "You cannot quick deconstruct built segments";
+                        return false;
+                    }
+
+                    var state = gbc.GetBlockState(block.BlockId);
+                    if (state == null || state.BuildIntegrity > 0)
+                    {
+                        errMessage = "You cannot quick deconstruct built segments";
+                        return false;
+                    }
                 }
             }
 

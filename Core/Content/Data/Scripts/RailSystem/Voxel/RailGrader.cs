@@ -1,17 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Equinox76561198048419394.RailSystem.Bendy;
 using Equinox76561198048419394.RailSystem.Util;
 using Sandbox.Game.Entities;
-using Sandbox.Game.GameSystems;
 using Sandbox.ModAPI;
-using VRage.Definitions;
-using VRage.Game;
+using VRage.Entities.Gravity;
 using VRage.Game.Entity;
-using VRage.Library.Logging;
-using VRage.ModAPI;
+using VRage.Logging;
 using VRage.Network;
+using VRage.Session;
 using VRage.Voxels;
 using VRageMath;
 
@@ -20,6 +17,15 @@ namespace Equinox76561198048419394.RailSystem.Voxel
     [StaticEventOwner]
     public static class RailGraderSystem
     {
+        private static NamedLogger Log
+        {
+            get
+            {
+                var namedLogger = MySession.Static.Log;
+                return new NamedLogger(in namedLogger, nameof(RailGraderSystem));
+            }
+        }
+
         private static readonly MyStorageData _storage = new MyStorageData();
         private static readonly List<MyVoxelBase> _workingVoxels = new List<MyVoxelBase>();
         private static readonly List<MyEntity> _dynamicEntities = new List<MyEntity>();
@@ -37,14 +43,15 @@ namespace Equinox76561198048419394.RailSystem.Voxel
                     _dynamicEntities.Clear();
                     _workingVoxels.Clear();
                     var sphere = new BoundingSphereD(target, voxelRadius + 2);
-                    foreach (var e in MyEntities.GetEntitiesInSphere(ref sphere))
-                    {
-                        var vox = e as MyVoxelBase;
-                        if (vox != null)
-                            _workingVoxels.Add(vox);
-                        if (e.Physics != null && !e.Physics.IsStatic)
-                            _dynamicEntities.Add(e);
-                    }
+                    var tmp = MyEntities.GetEntitiesInSphere(ref sphere);
+                    using (tmp.GetClearToken())
+                        foreach (var e in tmp)
+                        {
+                            if (e is MyVoxelBase vox)
+                                _workingVoxels.Add(vox);
+                            if (e.Physics != null && !e.Physics.IsStatic)
+                                _dynamicEntities.Add(e);
+                        }
                 }
 
 
@@ -58,7 +65,7 @@ namespace Equinox76561198048419394.RailSystem.Voxel
                 for (var i = 0; i < components.Count; i++)
                     components[i].Unblit(out fill[i], out excavate[i]);
 
-                var voxel = MyGamePruningStructure.GetClosestPlanet(target)?.RootVoxel;
+                var voxel = MyGamePruningStructureSandbox.GetClosestPlanet(target)?.RootVoxel;
                 if (voxel == null)
                     return false;
                 Vector3I center;
@@ -254,8 +261,8 @@ namespace Equinox76561198048419394.RailSystem.Voxel
                 out excavated, true, out triedToChange, out intersectedDynamic);
 
             if (Math.Abs(config.DepositExpected - deposited) <= GradingDesyncTol && Math.Abs(config.ExcavateExpected - excavated) <= GradingDesyncTol) return;
-            
-            MyLog.Default.Warning($"Grading desync occured!  {config.DepositExpected} != {deposited}, {config.ExcavateExpected} != {excavated}");
+
+            Log.Warning($"Grading desync occured!  {config.DepositExpected} != {deposited}, {config.ExcavateExpected} != {excavated}");
             var time = DateTime.Now;
             if ((time - _lastGradingDesync) <= TimeSpan.FromSeconds(30)) return;
             var red = new Vector4(1, 0, 0, 1);

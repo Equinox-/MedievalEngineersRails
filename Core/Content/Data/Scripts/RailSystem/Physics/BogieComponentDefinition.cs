@@ -1,7 +1,9 @@
-﻿using System.Xml.Serialization;
+﻿using System.Runtime.Remoting.Contexts;
+using System.Xml.Serialization;
 using Equinox76561198048419394.Core.Util;
 using VRage.Game;
 using VRage.Game.Definitions;
+using VRage.Logging;
 using VRage.ObjectBuilders;
 
 namespace Equinox76561198048419394.RailSystem.Physics
@@ -40,11 +42,11 @@ namespace Equinox76561198048419394.RailSystem.Physics
             var ob = (MyObjectBuilder_BogieComponentDefinition) def;
             
             if (!ob.VerticalOffset.HasValue)
-                MyDefinitionErrors.Add(Context, $"Bogie {Id} has no {nameof(VerticalOffset)}", TErrorSeverity.Critical);
+                MyDefinitionErrors.Add(Package, $"Bogie {Id} has no {nameof(VerticalOffset)}", LogSeverity.Critical);
             if (!ob.CoefficientOfFriction.HasValue)
-                MyDefinitionErrors.Add(Context, $"Bogie {Id} has no {nameof(CoefficientOfFriction)}", TErrorSeverity.Critical);
+                MyDefinitionErrors.Add(Package, $"Bogie {Id} has no {nameof(CoefficientOfFriction)}", LogSeverity.Critical);
             if (!ob.DetachDistance.HasValue)
-                MyDefinitionErrors.Add(Context, $"Bogie {Id} has no {nameof(DetachDistance)}", TErrorSeverity.Critical);
+                MyDefinitionErrors.Add(Package, $"Bogie {Id} has no {nameof(DetachDistance)}", LogSeverity.Critical);
             
             VerticalOffset = ob.VerticalOffset ?? 0;
             Layer = ob.Layer;

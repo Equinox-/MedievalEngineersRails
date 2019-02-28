@@ -16,8 +16,8 @@
         </Switchable>
     </Definition>
 
-    <Definition xsi:type="MyObjectBuilder_ContainerDefinition">
-        <Id Type="CubeBlock" Subtype="RailSwitchBase" />
+    <Definition xsi:type="MyObjectBuilder_ContainerDefinition" Abstract="true">
+        <Id Type="EntityBase" Subtype="RailSwitchBase" />
 
         <Component Type="RailSegmentComponent" Subtype="RailSwitch" />
         <Component Type="UseObjectsComponent" Subtype="RailSwitch" />

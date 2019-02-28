@@ -1,35 +1,23 @@
 <?xml version="1.0"?>
 <Definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-    <Definition xsi:type="MyObjectBuilder_CubeBlockDefinition">
-        <Id Type="MyObjectBuilder_CubeBlock" Subtype="HandcartRail"/>
+    <Definition xsi:type="MyObjectBuilder_BuildableBlockDefinition">
+        <Id Type="Block" Subtype="HandcartRail"/>
         <DisplayName>Handcart</DisplayName>
         <Icon>Textures\GUI\Icons\Cubes\RailStdGaugeHandcart.dds</Icon>
-        <PhysicalMaterial>Wood</PhysicalMaterial>
-        <Mass>500</Mass>
-        <Public>true</Public>
-        <CubeSize>Small</CubeSize>
-        <BlockTopology>TriangleMesh</BlockTopology>
-        <Size x="5" y="3" z="8"/>
-        <ModelOffset x="0" y="0" z="0"/>
         <Model>Models\Equinox\Handcart\Handcart.mwm</Model>
-        <CriticalComponent Type="InventoryItem" Subtype="PartsMetal" Index="0"/>
-        <Components>
-            <Component Tag="Timber" Count="10"/>
-            <Component Tag="Plank" Count="8"/>
-            <Component Tag="Ingot" Count="10"/>
-            <Component Type="InventoryItem" Subtype="PartsMetal" Count="48"/>
-        </Components>
-        <BuildTimeSeconds>6</BuildTimeSeconds>
+
+        <GridDataDefinitionId Type="GridDataComponent" Subtype="SmallGridDataBase" />
+        <PhysicalMaterial>WoodLight</PhysicalMaterial>
+        <Mass>500</Mass>
+        <BoundingBox>
+          <Min x="0" y="0" z="0" />
+          <Max x="5" y="3" z="8" />
+        </BoundingBox>
         <MaxIntegrity>27500</MaxIntegrity>
-        <AvailableInSurvival>true</AvailableInSurvival>
-        <VoxelPlacement>
-            <StaticMode>
-                <PlacementMode>OutsideVoxel</PlacementMode>
-            </StaticMode>
-            <DynamicMode>
-                <PlacementMode>OutsideVoxel</PlacementMode>
-            </DynamicMode>
-        </VoxelPlacement>
+
+        <Components>
+            <Component Type="Block" Subtype="HandcartRail" Count="1" />
+        </Components>
     </Definition>
 
     <Definition xsi:type="MyObjectBuilder_CraftingRecipeDefinition">
@@ -44,7 +32,7 @@
             <Item Type="InventoryItem" Subtype="PartsMetal" Amount="48"/>
         </Prerequisites>
         <Results>
-            <Item Type="CubeBlock" Subtype="HandcartRail" Amount="1" />
+            <Item Type="Block" Subtype="HandcartRail" Amount="1" />
         </Results>
         <CraftingTime Seconds="10" />
     </Definition>
@@ -110,7 +98,8 @@
     </Definition>
 
     <Definition xsi:type="MyObjectBuilder_ContainerDefinition" Copy="Append">
-        <Id Type="MyObjectBuilder_CubeBlock" Subtype="HandcartRail"/>
+        <Id Type="Block" Subtype="HandcartRail"/>
+        <CopyFrom Type="EntityBase" Subtype="BaseFatBlock" />
 
         <Component Type="BogieComponent" Subtype="HandcartRail"/>
         <Component Type="ModelAttachmentComponent" Subtype="HandcartRail"/>
