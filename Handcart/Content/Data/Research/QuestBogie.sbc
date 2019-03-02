@@ -22,7 +22,7 @@
         <IsAbandonable>true</IsAbandonable>
         <IsRepeatable>false</IsRepeatable>
 
-        <FailAction xsi:type="Quest.Actions.LockResearch" Type="CubeBlock" Subtype="Bogie"/>
+        <FailAction xsi:type="Quest.Actions.LockResearch" Type="Block" Subtype="Bogie"/>
 
         <FailAction xsi:type="Quest.Actions.ShowNotification" Text="Description_ResearchQuest_Failed" SoundCueId="QuestCompleted"/>
 
@@ -38,17 +38,17 @@
                 <Condition xsi:type="Quest.Conditions.Gather" Tag="Ingot" Amount="5" AreaInventory="Included"/>
                 <Condition xsi:type="Quest.Conditions.Gather" Type="InventoryItem" Subtype="PartsMetal" Amount="24" AreaInventory="Included"/>
             </Condition>
-            <Action xsi:type="Quest.Actions.UnlockResearch" Type="CubeBlock" Subtype="Bogie"/>
+            <Action xsi:type="Quest.Actions.UnlockResearch" Type="Block" Subtype="Bogie"/>
             <Action xsi:type="Quest.Actions.UnlockResearch" Type="CraftingRecipeDefinition" Subtype="Bogie"/>
             <Action xsi:type="Quest.Actions.ShowNotification" Text="Basic bogie unlocked!" SoundCueId="QuestStepCompleted" SoundDelay="300"/>
         </Step>
         <Step>
             <FullDescription>Craft your new bogie.</FullDescription>
-            <Condition xsi:type="Quest.Conditions.Craft" Type="CubeBlock" Subtype="Bogie" Amount="1"/>
+            <Condition xsi:type="Quest.Conditions.Craft" Type="Block" Subtype="Bogie" Amount="1"/>
         </Step>
         <Step>
             <FullDescription>Place your bogie above a standard gauge railway</FullDescription>
-            <Condition xsi:type="Quest.Conditions.PlaceBlock" Type="CubeBlock" Subtype="Bogie" Amount="1"/>
+            <Condition xsi:type="Quest.Conditions.PlaceBlock" Type="Block" Subtype="Bogie" Amount="1"/>
         </Step>
     </Definition>
 </Definitions>

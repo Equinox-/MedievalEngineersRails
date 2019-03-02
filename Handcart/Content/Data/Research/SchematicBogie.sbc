@@ -4,7 +4,7 @@
         <Id Type="ResearchDefinition" Subtype="Bogie"/>
         <DisplayName>Basic Bogie</DisplayName>
         
-        <Entry Type="CubeBlock" Subtype="Bogie"/>
+        <Entry Type="Block" Subtype="Bogie"/>
         <Entry Type="CraftingRecipeDefinition" Subtype="Bogie"/>
 
         <Entry Type="CraftingRecipeDefinition" Subtype="SchematicBogie"/>

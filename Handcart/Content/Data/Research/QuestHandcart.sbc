@@ -22,7 +22,7 @@
         <IsAbandonable>true</IsAbandonable>
         <IsRepeatable>false</IsRepeatable>
 
-        <FailAction xsi:type="Quest.Actions.LockResearch" Type="CubeBlock" Subtype="HandcartRail"/>
+        <FailAction xsi:type="Quest.Actions.LockResearch" Type="Block" Subtype="HandcartRail"/>
 
         <FailAction xsi:type="Quest.Actions.ShowNotification" Text="Description_ResearchQuest_Failed" SoundCueId="QuestCompleted"/>
 
@@ -39,17 +39,17 @@
                 <Condition xsi:type="Quest.Conditions.Gather" Tag="Ingot" Amount="10" AreaInventory="Included"/>
                 <Condition xsi:type="Quest.Conditions.Gather" Type="InventoryItem" Subtype="PartsMetal" Amount="48" AreaInventory="Included"/>
             </Condition>
-            <Action xsi:type="Quest.Actions.UnlockResearch" Type="CubeBlock" Subtype="HandcartRail"/>
+            <Action xsi:type="Quest.Actions.UnlockResearch" Type="Block" Subtype="HandcartRail"/>
             <Action xsi:type="Quest.Actions.UnlockResearch" Type="CraftingRecipeDefinition" Subtype="HandcartRail"/>
             <Action xsi:type="Quest.Actions.ShowNotification" Text="Basic handcart unlocked!" SoundCueId="QuestStepCompleted" SoundDelay="300"/>
         </Step>
         <Step>
             <FullDescription>Craft your new handcart.</FullDescription>
-            <Condition xsi:type="Quest.Conditions.Craft" Type="CubeBlock" Subtype="HandcartRail" Amount="1"/>
+            <Condition xsi:type="Quest.Conditions.Craft" Type="Block" Subtype="HandcartRail" Amount="1"/>
         </Step>
         <Step>
             <FullDescription>Place your handcart above a standard gauge railway</FullDescription>
-            <Condition xsi:type="Quest.Conditions.PlaceBlock" Type="CubeBlock" Subtype="HandcartRail" Amount="1"/>
+            <Condition xsi:type="Quest.Conditions.PlaceBlock" Type="Block" Subtype="HandcartRail" Amount="1"/>
         </Step>
     </Definition>
 </Definitions>

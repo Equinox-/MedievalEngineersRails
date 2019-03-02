@@ -4,7 +4,7 @@
         <Id Type="ResearchDefinition" Subtype="HandcartRail"/>
         <DisplayName>Handcart</DisplayName>
         
-        <Entry Type="CubeBlock" Subtype="HandcartRail"/>
+        <Entry Type="Block" Subtype="HandcartRail"/>
         <Entry Type="CraftingRecipeDefinition" Subtype="HandcartRail"/>
 
         <Entry Type="CraftingRecipeDefinition" Subtype="SchematicHandcartRail"/>
