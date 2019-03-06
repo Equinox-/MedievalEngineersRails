@@ -19,13 +19,9 @@ using VRage.Session;
 
 namespace Equinox76561198048419394.RailSystem.Construction
 {
-    public class ConstructableComponentReplicable : MyComponentReplicable<ConstructableComponent>
-    {
-    }
-
     [MyComponent(typeof(MyObjectBuilder_ConstructableComponent))]
     [MyDefinitionRequired(typeof(ConstructableComponentDefinition))]
-    [ReplicatedComponent(typeof(ConstructableComponentReplicable))]
+    [ReplicatedComponent]
     public class ConstructableComponent : MyEntityComponent, IMyEventProxy
     {
         public ConstructableComponentDefinition Definition { get; private set; }

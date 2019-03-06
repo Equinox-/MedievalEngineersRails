@@ -125,7 +125,7 @@ namespace Equinox76561198048419394.RailSystem.Construction
         public class CcObBuildModel
         {
             [XmlAttribute]
-            [Obsolete("Use UpperBound")]
+//            [Obsolete("Use UpperBound")]
             public float BuildPercentUpperBound
             {
                 get => UpperBound;

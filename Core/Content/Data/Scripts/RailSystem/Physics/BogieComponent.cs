@@ -301,7 +301,7 @@ namespace Equinox76561198048419394.RailSystem.Physics
             var impulse = Vector3.Zero;
             var allowDeactivation = true;
             var effectiveMass = root.Physics.Mass;
-            var inertiaTensor = CreateInertiaTensor(root);
+            var inertiaTensor = root.Physics.InertiaTensor;
 
             var qCurrent = Quaternion.CreateFromRotationMatrix(Entity.PositionComp.WorldMatrix);
             var qDesired = Quaternion.CreateFromRotationMatrix(Matrix.CreateWorld(Vector3.Zero, bestTangent, up));
@@ -441,12 +441,12 @@ namespace Equinox76561198048419394.RailSystem.Physics
             if (allowDeactivation)
             {
 //                physics.Sleep();
-//                if (physics.AngularAcceleration == Vector3.Zero && physics.LinearAcceleration == Vector3.Zero && physics.LinearVelocity.Equals(Vector3.Zero) &&
-//                    physics.AngularVelocity.Equals(Vector3.Zero))
+//                if (!physics.IsActive)
 //                    return;
             }
 
-            physics.AddForce(MyPhysicsForceType.APPLY_WORLD_IMPULSE_AND_WORLD_ANGULAR_IMPULSE, impulse, com, angularImpulse);
+            physics.AddForce(MyPhysicsForceType.APPLY_WORLD_IMPULSE_AND_WORLD_ANGULAR_IMPULSE, impulse, com, Vector3.Zero);
+            physics.AddForce(MyPhysicsForceType.APPLY_WORLD_IMPULSE_AND_WORLD_ANGULAR_IMPULSE, Vector3.Zero, pivotWorld, angularImpulse);
         }
 
         private const float _edgeWidth = 0.05f;
