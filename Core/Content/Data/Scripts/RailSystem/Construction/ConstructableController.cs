@@ -25,10 +25,11 @@ namespace Equinox76561198048419394.RailSystem.Construction
                 int idx;
                 if (_definitionPaletteMap.TryGetValue(def, out idx)) return idx;
             }
+
             this.GetLogger().Warning($"Trying to encode invalid palette item {def}; palette is {string.Join(", ", _definitionPalette)}");
             return 0;
         }
-        
+
         public int Encode(MyDefinitionId def)
         {
             lock (this)
@@ -47,7 +48,7 @@ namespace Equinox76561198048419394.RailSystem.Construction
                 result = idx;
             }
 
-            MyMultiplayerModApi.Static.RaiseStaticEvent(s => PaletteUpdateClient, result, def, HashPalette());
+            MyMultiplayerModApi.Static.RaiseStaticEvent(s => PaletteUpdateClient, result, (SerializableDefinitionId) def, HashPalette());
             return result;
         }
 
@@ -95,7 +96,7 @@ namespace Equinox76561198048419394.RailSystem.Construction
         [Event]
         [Reliable]
         [Broadcast]
-        private static void PaletteUpdateClient(int index, MyDefinitionId id, int verifyHash)
+        private static void PaletteUpdateClient(int index, SerializableDefinitionId id, int verifyHash)
         {
             var mgr = MySession.Static.Components?.Get<ConstructableController>();
             if (mgr == null)
@@ -122,7 +123,7 @@ namespace Equinox76561198048419394.RailSystem.Construction
         [Event]
         [Reliable]
         [Client]
-        private static void PaletteFullUpdateClient(MyDefinitionId[] ids)
+        private static void PaletteFullUpdateClient(SerializableDefinitionId[] ids)
         {
             var mgr = MySession.Static.Components?.Get<ConstructableController>();
             if (mgr == null)
@@ -151,7 +152,7 @@ namespace Equinox76561198048419394.RailSystem.Construction
             var mgr = MySession.Static.Components?.Get<ConstructableController>();
             if (mgr == null)
                 return;
-            var blits = mgr._definitionPalette.ToArray();
+            var blits = mgr._definitionPalette.Select(x => (SerializableDefinitionId) x).ToArray();
             MyMultiplayerModApi.Static.RaiseStaticEvent(s => PaletteFullUpdateClient, blits, MyEventContext.Current.Sender);
         }
     }

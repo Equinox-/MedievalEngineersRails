@@ -495,7 +495,7 @@ namespace Equinox76561198048419394.RailSystem.Construction
         {
             public static readonly SyncComponentBlit[] Empty = new SyncComponentBlit[0];
 
-            public MyDefinitionId Id;
+            public SerializableDefinitionId Id;
             public int Count;
 
             public static implicit operator SyncComponentBlit(KeyValuePair<MyDefinitionId, int> kv)

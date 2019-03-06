@@ -236,7 +236,7 @@ namespace Equinox76561198048419394.RailSystem.Voxel
     public struct RailGradeComponentBlit : IRailGradeComponent
     {
         public EdgeBlit[] Edges;
-        public MyDefinitionId Definition;
+        public SerializableDefinitionId Definition;
 
         public void Unblit(out IGradeShape fillShape, out IGradeShape excavateShape)
         {

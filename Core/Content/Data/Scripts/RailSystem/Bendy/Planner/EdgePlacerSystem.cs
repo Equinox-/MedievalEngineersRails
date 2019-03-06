@@ -39,7 +39,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
         public struct EdgePlacerConfig
         {
             public long EntityPlacing;
-            public MyDefinitionId Placed;
+            public SerializableDefinitionId Placed;
         }
 
         /// <summary>
@@ -362,7 +362,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
                     EntityDefinitionId = (MyDefinitionId) cfg.Placed,
                     PersistentFlags = MyPersistentEntityFlags2.InScene,
                     PositionAndOrientation = new MyPositionAndOrientation(worldMatrix),
-                    SubtypeName = cfg.Placed.SubtypeId.String,
+                    SubtypeName = cfg.Placed.SubtypeId,
                     ComponentContainer = obContainer
                 };
                 var entity = MyAPIGateway.Entities.CreateFromObjectBuilderAndAdd(entOb);
