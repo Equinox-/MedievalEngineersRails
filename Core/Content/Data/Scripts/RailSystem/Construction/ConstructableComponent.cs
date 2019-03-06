@@ -108,7 +108,13 @@ namespace Equinox76561198048419394.RailSystem.Construction
             base.OnAddedToContainer();
             ModelChanged = null;
             IntegrityChanged = null;
-            IntegrityChanged += () => MyMultiplayerModApi.Static.RaiseEvent(this, cc => cc.SyncIntegrity, BuildIntegrity);
+            IntegrityChanged += () =>
+            {
+                if (Entity != null && Entity.InScene && MyMultiplayerModApi.Static.IsServer)
+                {
+                    MyMultiplayerModApi.Static.RaiseEvent(this, cc => cc.SyncIntegrity, BuildIntegrity);
+                }
+            };
             IntegrityChanged += CheckModel;
         }
 
