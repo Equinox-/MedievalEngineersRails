@@ -10,8 +10,8 @@
         <PhysicalMaterial>WoodLight</PhysicalMaterial>
         <Mass>500</Mass>
         <BoundingBox>
-          <Min x="0" y="0" z="0" />
-          <Max x="5" y="3" z="8" />
+          <Min x="-2" y="0" z="-4" />
+          <Max x="3" y="3" z="4" />
         </BoundingBox>
         <MaxIntegrity>27500</MaxIntegrity>
 

@@ -13,10 +13,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Shape
         public float HalfWidth => Width / 2;
         public float Height { get; private set; }
         public int Segments { get; private set; }
-
-        public float VerticalSizeTol { get; private set; }
-        public float VerticalAlignTol { get; private set; }
-        public float HorizontalAlignTol { get; private set; }
+        public float VolumeErrorTolerance { get; private set; }
 
         protected override void Init(MyObjectBuilder_DefinitionBase def)
         {
@@ -32,9 +29,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Shape
             if (Segments <= 0)
                 MyDefinitionErrors.Add(def.Package, $"{GetType().Name} {def.GetId()} has {nameof(Segments)}={Segments} <= 0", LogSeverity.Warning);
 
-            VerticalSizeTol = ob.VerticalSizeTolerance ?? 0.05f;
-            VerticalAlignTol = ob.VerticalAlignmentTolerance ?? 0.01f;
-            HorizontalAlignTol = ob.HorizontalAlignmentTolerance ?? 0.25f;
+            VolumeErrorTolerance = ob.VolumeErrorTolerance ?? 0.1f;
         }
     }
 
@@ -59,5 +54,8 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Shape
 
         [XmlElement]
         public float? HorizontalAlignmentTolerance;
+
+        [XmlElement]
+        public float? VolumeErrorTolerance;
     }
 }

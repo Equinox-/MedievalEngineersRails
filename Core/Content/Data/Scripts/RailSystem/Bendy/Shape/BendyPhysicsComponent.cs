@@ -25,8 +25,6 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Shape
     [MyDefinitionRequired(typeof(BendyPhysicsComponentDefinition))]
     public class BendyPhysicsComponent : BendyShapeComponent
     {
-        private const bool DebugAsChildren = false;
-
         private readonly MyTimedUpdate _calcDel;
 
         public new BendyPhysicsComponentDefinition Definition { get; private set; }
@@ -101,29 +99,18 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Shape
                 });
                 ent.Save = false;
                 ent.Components.Add(new BendyShapeProxy(Entity));
-                if (DebugAsChildren)
-                    Entity.Hierarchy.AddChild(ent);
-                else
-                    MyAPIGateway.Entities.AddEntity(ent);
 
                 var localMatrix = Matrix.CreateFromQuaternion(box.Orientation);
                 localMatrix.Translation = box.Center;
                 var worldMatrix = localMatrix * Entity.PositionComp.WorldMatrix;
-                if (DebugAsChildren)
-                {
-                    ent.PositionComp.LocalMatrix = localMatrix;
-                    ent.PositionComp.WorldMatrix = worldMatrix;
-                }
-                else
-                {
-                    ent.PositionComp.WorldMatrix = worldMatrix;
-                }
+                ent.PositionComp.WorldMatrix = worldMatrix;
 
                 var aabb = new BoundingBox(-box.HalfExtent, box.HalfExtent);
                 ent.PositionComp.LocalAABB = aabb;
                 const int defaultCollisionLayer = 15;
                 ent.InitBoxPhysics(Definition.Material, Vector3.Zero, box.HalfExtent * 2, 0f,
                     0f, 0f, defaultCollisionLayer, RigidBodyFlag.RBF_STATIC);
+                MyAPIGateway.Entities.AddEntity(ent);
                 ent.Physics.Activate();
                 _physicsProxies.Add(ent);
             }
