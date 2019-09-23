@@ -35,6 +35,7 @@ namespace Equinox76561198048419394.RailSystem.Physics
         public float DetachDistanceSq { get; private set; }
         
         public float OrientationConvergenceFactor { get; private set; }
+        public float OrientationConvergenceFactorHorizontal { get; private set; }
 
         protected override void Init(MyObjectBuilder_DefinitionBase def)
         {
@@ -56,6 +57,7 @@ namespace Equinox76561198048419394.RailSystem.Physics
             DetachDistance = ob.DetachDistance ?? 1.5f;
             CoefficientOfFriction = ob.CoefficientOfFriction ?? 0.01f;
             OrientationConvergenceFactor = ob.OrientationConvergenceFactor ?? 1f;
+            OrientationConvergenceFactorHorizontal = ob.OrientationConvergenceFactorHorizontal ?? OrientationConvergenceFactor;
             NeedsPower = ob.NeedsPower ?? PowerObserver.RequiredPowerEnum.None;
         }
     }
@@ -75,6 +77,7 @@ namespace Equinox76561198048419394.RailSystem.Physics
         public float? DetachDistance;
 
         public float? OrientationConvergenceFactor;
+        public float? OrientationConvergenceFactorHorizontal;
 
         public PowerObserver.RequiredPowerEnum? NeedsPower;
     }
