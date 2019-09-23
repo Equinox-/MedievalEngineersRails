@@ -311,9 +311,13 @@ namespace Equinox76561198048419394.RailSystem.Physics
                 allowDeactivation = false;
             var desiredAngular = Vector3.Transform(localAngularDesired, qCurrent) * 2;
             var rotApply = desiredAngular;
-            var angularImpulse = Vector3.TransformNormal(desiredAngular - 0.25f * physics.AngularVelocity, inertiaTensor) *
-                                 Definition.OrientationConvergenceFactor /
-                                 MyEngineConstants.UPDATE_STEP_SIZE_IN_SECONDS;
+            var dAngAccel = desiredAngular - 0.25f * physics.AngularVelocity;
+            
+            var dAngAccelUp = Vector3.Dot(dAngAccel , up) * up;
+            var dAngAccelOther = dAngAccel - dAngAccelUp;
+            var dAngAccelCorrected = (dAngAccelUp * Definition.OrientationConvergenceFactorHorizontal) +
+                                     (dAngAccelOther * Definition.OrientationConvergenceFactor);
+            var angularImpulse = Vector3.TransformNormal(dAngAccelCorrected, inertiaTensor) / MyEngineConstants.UPDATE_STEP_SIZE_IN_SECONDS;
             var com = physics.GetCenterOfMassWorld();
 
             // a) spring joint along normal to get dot(normal, (pivot*matrix - position)) == 0
