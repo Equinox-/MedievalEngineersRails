@@ -89,6 +89,8 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Shape
         {
             if (_calcScheduled)
                 return;
+            if (Entity == null || !Entity.InScene)
+                return;
             ScheduleCalc();
             _calcScheduled = true;
         }
@@ -97,12 +99,16 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Shape
 
         protected void CalcShape()
         {
-            if (!_calcScheduled || _bendyDynamicComponent?.Edges == null || Definition.Segments == 0)
+            if (!_calcScheduled)
                 return;
             _calcScheduled = false;
+            if (_bendyDynamicComponent?.Edges == null || Definition.Segments == 0 || Entity?.PositionComp == null)
+                return;
             _boxes.Clear();
             foreach (var edge in _bendyDynamicComponent.Edges)
             {
+                if (edge?.Curve == null)
+                    continue;
                 var originalHead = _boxes.Count;
                 for (var i = 0; i < Definition.Segments; i++)
                 {
@@ -216,11 +222,11 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Shape
             var curve = edge.Curve;
 
             var pos0 = curve.Sample(t0);
-            var up0 = Vector3D.Lerp(edge.From.Up, edge.To.Up, t0);
+            var up0 = Vector3D.Lerp(edge.FromMatrix.Up, edge.ToMatrix.Up, t0);
             var tan0 = curve.SampleDerivative(t0);
 
             var pos1 = curve.Sample(t1);
-            var up1 = Vector3D.Lerp(edge.From.Up, edge.To.Up, t1);
+            var up1 = Vector3D.Lerp(edge.FromMatrix.Up, edge.ToMatrix.Up, t1);
             var tan1 = curve.SampleDerivative(t1);
 
             var centerTransform = MatrixD.CreateWorld((pos0 + pos1) / 2, tan0 + tan1, up0 + up1);
