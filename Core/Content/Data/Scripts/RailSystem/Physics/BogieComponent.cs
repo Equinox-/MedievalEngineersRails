@@ -323,8 +323,8 @@ namespace Equinox76561198048419394.RailSystem.Physics
             // a) spring joint along normal to get dot(normal, (pivot*matrix - position)) == 0
             var err = (Vector3) (curvePosition - pivotWorld);
 
-            // preemptive up force to counteract gravity.
-            var gravityHere = MyGravityProviderSystem.CalculateTotalGravityInPoint(pivotWorld);
+            // preemptive up force to counteract gravity.  Use root entity's position not its COM because that's what MyGridRigidBodyComponent does
+            var gravityHere = MyGravityProviderSystem.CalculateTotalGravityInPoint(root.GetPosition());
             impulse += Vector3.Dot(gravityHere, up) * up * physics.Mass * MyEngineConstants.UPDATE_STEP_SIZE_IN_SECONDS;
 
             impulse += SolveImpulse(err, normal, physics.LinearVelocity, effectiveMass);
@@ -444,9 +444,12 @@ namespace Equinox76561198048419394.RailSystem.Physics
 
             if (allowDeactivation)
             {
-//                physics.Sleep();
-//                if (!physics.IsActive)
-//                    return;
+                // Immediately update gravity so that the delayed gravity updates don't
+                // wake the body up.
+                physics.Gravity = gravityHere;
+                physics.Sleep();
+                if (!physics.IsActive)
+                    return;
             }
 
             physics.AddForce(MyPhysicsForceType.APPLY_WORLD_IMPULSE_AND_WORLD_ANGULAR_IMPULSE, impulse, com, Vector3.Zero);

@@ -112,7 +112,7 @@ namespace Equinox76561198048419394.RailSystem.Construction
             if (constructable == null)
                 return;
 
-            int messageTime = 0;
+            int messageTime;
             switch (ActiveAction)
             {
                 case MyHandItemActionEnum.Primary:
@@ -179,6 +179,7 @@ namespace Equinox76561198048419394.RailSystem.Construction
                 case MyHandItemActionEnum.None:
                 case MyHandItemActionEnum.Tertiary:
                 default:
+                    messageTime = 2000;
                     break;
             }
 
