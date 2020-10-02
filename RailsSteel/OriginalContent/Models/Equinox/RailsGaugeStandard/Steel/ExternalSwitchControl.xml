@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Model Name="BendableRailSegment_10m">
+	<Parameter Name="RescaleFactor">1.0</Parameter>
+  <Parameter Name="RotationY">0.0</Parameter>
+
+  <MaterialRef Name="BlockSheet" />
+  <MaterialRef Name="Steel_Rolled" />
+  <MaterialRef Name="Steel_Rusty_50" />
+  <MaterialRef Name="Steel_Rusty_100" />
+  <MaterialRef Name="RoughWood_Tarred" />
+  <MaterialRef Name="RoughWood01_Tarred" />
+  <MaterialRef Name="RoughWood01_Edges_Tarred" />
+</Model>

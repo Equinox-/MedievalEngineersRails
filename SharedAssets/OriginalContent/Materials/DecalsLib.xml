@@ -1,0 +1,67 @@
+<MaterialsLib Name="Decal Materials">
+  <Material Name="DECAL_Atlas_Dirt_1">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">DECAL_NOPREMULT</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Decals\Environment\DECAL_Atlas_Dirt_1_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Decals\Environment\DECAL_Atlas_Dirt_1_ng.dds</Parameter>
+	<Parameter Name="AddMapsTexture">Textures\Decals\Environment\DECAL_Atlas_Dirt_1_add.dds</Parameter>
+    <Parameter Name="AlphamaskTexture">Textures\Decals\Environment\DECAL_Atlas_Dirt_1_alphamask.dds</Parameter>
+  </Material>
+  
+  <Material Name="DECAL_Atlas_Various_1">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">FOLIAGE</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Decals\Environment\DECAL_Atlas_Various_1_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Decals\Environment\DECAL_Atlas_Various_1_ng.dds</Parameter>
+	<Parameter Name="AddMapsTexture">Textures\Decals\Environment\DECAL_Atlas_Various_1_add.dds</Parameter>
+    <Parameter Name="AlphamaskTexture">Textures\Decals\Environment\DECAL_Atlas_Various_1_alphamask.dds</Parameter>
+  </Material>
+
+  <Material Name="A_D_DamagedStoneEdges_V1">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">DECAL_CUTOUT</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Decals\Blocks\Stone\A_D_DamagedStoneEdges_V1_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Decals\Blocks\Stone\A_D_DamagedStoneEdges_V1_ng.dds</Parameter>
+	<Parameter Name="AddMapsTexture">Textures\Decals\Blocks\Stone\A_D_DamagedStoneEdges_V1_add.dds</Parameter>
+    <Parameter Name="AlphamaskTexture">Textures\Decals\Blocks\Stone\A_D_DamagedStoneEdges_V1_alphamask.dds</Parameter>
+  </Material>
+  
+  <Material Name="D_AdditionalStoneEdges_V1">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">DECAL_CUTOUT</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Decals\Blocks\Stone\D_AdditionalStoneEdges_V1_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Decals\Blocks\Stone\D_AdditionalStoneEdges_V1_ng.dds</Parameter>
+	<Parameter Name="AddMapsTexture">Textures\Decals\Blocks\Stone\D_AdditionalStoneEdges_V1_add.dds</Parameter>
+    <Parameter Name="AlphamaskTexture">Textures\Decals\Blocks\Stone\D_AdditionalStoneEdges_V1_alphamask.dds</Parameter>
+  </Material>
+  
+  
+  <Material Name="DECAL_RenderTarget">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">DECAL_NOPREMULT</Parameter>
+	 <Parameter Name="ColorMetalTexture">Textures\Models\signpost\WoodSignpost_cm.dds</Parameter>
+    <Parameter Name="AlphamaskTexture">Textures\Models\signpost\WoodSignpost_alphamask.dds</Parameter>
+  </Material>
+  
+  
+</MaterialsLib>

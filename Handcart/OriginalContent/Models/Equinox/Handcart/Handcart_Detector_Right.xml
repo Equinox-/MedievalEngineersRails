@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Model Name="Scene">
+	<Parameter Name="RescaleFactor">1.00</Parameter>
+	<Material Name="BlockSheet">
+		<Parameter Name="Technique">ALPHA_MASKED</Parameter>
+		<Parameter Name="ColorMetalTexture">Textures\Models\Cubes\block_sheet_cm.dds</Parameter>
+		<Parameter Name="NormalGlossTexture">Textures\Models\Cubes\block_sheet_ng.dds</Parameter>
+		<Parameter Name="AddMapsTexture">Textures\Models\Cubes\block_sheet_add.dds</Parameter>
+		<Parameter Name="AlphamaskTexture">Textures\Models\Cubes\block_sheet_alphamask.dds</Parameter>
+	</Material>
+	<Material Name="Handcart">
+		<Parameter Name="Technique">MESH</Parameter>
+		<Parameter Name="ColorMetalTexture">Textures\Models\Equinox\Handcart\Handcart_cm.dds</Parameter>
+		<Parameter Name="NormalGlossTexture">Textures\Models\Equinox\Handcart\Handcart_ng.dds</Parameter>
+	</Material>
+</Model>

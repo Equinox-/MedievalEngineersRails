@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Model Name="Scene">
+	<Parameter Name="RescaleFactor">1.00</Parameter>
+	<Material Name="StephensonsRocket_Engine">
+		<Parameter Name="Technique">MESH</Parameter>
+		<Parameter Name="ColorMetalTexture">Textures\Models\Equinox\Engines\Rocket\StephensonsRocket_Engine_cm.dds</Parameter>
+		<Parameter Name="NormalGlossTexture">Textures\Models\Equinox\Engines\Rocket\StephensonsRocket_Engine_ng.dds</Parameter>
+		<Parameter Name="AddMapsTexture">Textures\Models\Equinox\Engines\Rocket\StephensonsRocket_Engine_add.dds</Parameter>
+	</Material>
+	<Material Name="Copper_Smooth">
+		<Parameter Name="Technique">MESH</Parameter>
+		<Parameter Name="ColorMetalTexture">Textures\Models\Equinox\Engines\Rocket\Copper_Smooth_cm.dds</Parameter>
+		<Parameter Name="NormalGlossTexture">Textures\Models\Equinox\Engines\Rocket\Copper_Smooth_ng.dds</Parameter>
+		<Parameter Name="AddMapsTexture">Textures\Models\Equinox\Engines\Rocket\Copper_Smooth_add.dds</Parameter>
+	</Material>
+	<Material Name="Brass_Smooth">
+		<Parameter Name="Technique">MESH</Parameter>
+		<Parameter Name="ColorMetalTexture">Textures\Models\Equinox\Engines\Rocket\Brass_Smooth_cm.dds</Parameter>
+		<Parameter Name="NormalGlossTexture">Textures\Models\Equinox\Engines\Rocket\Brass_Smooth_ng.dds</Parameter>
+		<Parameter Name="AddMapsTexture">Textures\Models\Equinox\Engines\Rocket\Brass_Smooth_add.dds</Parameter>
+	</Material>
+	<Material Name="PaintedWood">
+		<Parameter Name="Technique">MESH</Parameter>
+		<Parameter Name="ColorMetalTexture">Textures\Models\Equinox\Engines\Rocket\PaintedWood_cm.dds</Parameter>
+		<Parameter Name="NormalGlossTexture">Textures\Models\Equinox\Engines\Rocket\PaintedWood_ng.dds</Parameter>
+		<Parameter Name="AddMapsTexture">Textures\Models\Equinox\Engines\Rocket\PaintedWood_add.dds</Parameter>
+	</Material>
+	<Material Name="CastIron">
+		<Parameter Name="Technique">MESH</Parameter>
+		<Parameter Name="ColorMetalTexture">Textures\Models\Equinox\Engines\Rocket\CastIron_cm.dds</Parameter>
+		<Parameter Name="NormalGlossTexture">Textures\Models\Equinox\Engines\Rocket\CastIron_ng.dds</Parameter>
+		<Parameter Name="AddMapsTexture">Textures\Models\Equinox\Engines\Rocket\CastIron_add.dds</Parameter>
+	</Material>
+	<Material Name="Worked_Iron">
+		<Parameter Name="Technique">MESH</Parameter>
+		<Parameter Name="ColorMetalTexture">Textures\Models\Equinox\Engines\Rocket\Worked_Iron_cm.dds</Parameter>
+		<Parameter Name="NormalGlossTexture">Textures\Models\Equinox\Engines\Rocket\Worked_Iron_ng.dds</Parameter>
+		<Parameter Name="AddMapsTexture">Textures\Models\Equinox\Engines\Rocket\Worked_Iron_add.dds</Parameter>
+	</Material>
+	<Material Name="Fastener">
+		<Parameter Name="Technique">MESH</Parameter>
+		<Parameter Name="ColorMetalTexture">Textures\Models\Equinox\Engines\Rocket\Fastener_cm.dds</Parameter>
+		<Parameter Name="NormalGlossTexture">Textures\Models\Equinox\Engines\Rocket\Fastener_ng.dds</Parameter>
+		<Parameter Name="AddMapsTexture">Textures\Models\Equinox\Engines\Rocket\Fastener_add.dds</Parameter>
+	</Material>
+</Model>

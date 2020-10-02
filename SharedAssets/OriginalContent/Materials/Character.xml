@@ -1,0 +1,120 @@
+<MaterialsLib Name="Character Materials">
+  <Material Name="Lower_body_mat">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">MESH</Parameter>
+    <Parameter Name="DiffuseTexture">Textures\Models\Characters\ME_geo_lower_me.dds</Parameter>
+    <Parameter Name="NormalTexture" />
+    <Parameter Name="ColorMetalTexture">Textures\Models\Characters\ME_geo_lower_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Characters\ME_geo_lower_ng.dds</Parameter>
+    <Parameter Name="AddMapsTexture">Textures\Models\Characters\ME_geo_lower_add.dds</Parameter>
+  </Material>
+  <Material Name="Upper_body_face_mat">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">MESH</Parameter>
+    <Parameter Name="DiffuseTexture">Textures\Models\Characters\ME_geo_upper_me.dds</Parameter>
+    <Parameter Name="NormalTexture" />
+    <Parameter Name="ColorMetalTexture">Textures\Models\Characters\ME_geo_upper_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Characters\ME_geo_upper_ng.dds</Parameter>
+    <Parameter Name="AddMapsTexture">Textures\Models\Characters\ME_geo_upper_add.dds</Parameter>
+  </Material>
+  <Material Name="Upper_body_shirt_mat">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">MESH</Parameter>
+    <Parameter Name="DiffuseTexture">Textures\Models\Characters\ME_geo_upper_me.dds</Parameter>
+    <Parameter Name="NormalTexture" />
+    <Parameter Name="ColorMetalTexture">Textures\Models\Characters\ME_geo_upper_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Characters\ME_geo_upper_ng.dds</Parameter>
+    <Parameter Name="AddMapsTexture">Textures\Models\Characters\ME_geo_upper_add.dds</Parameter>
+  </Material>
+  <Material Name="Upper_body_leather_mat">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">1024</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">MESH</Parameter>
+    <Parameter Name="DiffuseTexture">Textures\Models\Characters\ME_geo_upper_me.dds</Parameter>
+    <Parameter Name="NormalTexture" />
+    <Parameter Name="ColorMetalTexture">Textures\Models\Characters\ME_geo_upper_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Characters\ME_geo_upper_ng.dds</Parameter>
+    <Parameter Name="AddMapsTexture">Textures\Models\Characters\ME_geo_upper_add.dds</Parameter>
+  </Material>
+  <Material Name="Upper_body_beard">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">ALPHA_MASKED</Parameter>
+    <Parameter Name="DiffuseTexture">Textures\Models\Characters\ME_geo_upper_beard_me.dds</Parameter>
+    <Parameter Name="NormalTexture" />
+    <Parameter Name="ColorMetalTexture">Textures\Models\Characters\ME_geo_upper_beard_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Characters\ME_geo_upper_beard_ng.dds</Parameter>
+    <Parameter Name="AlphamaskTexture">Textures\Models\Characters\ME_geo_upper_beard_alphamask.dds</Parameter>
+  </Material>
+  <Material Name="SledgeHammer">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">MESH</Parameter>
+    <Parameter Name="DiffuseTexture">Textures\Models\Weapons\SledgeHammer_de.dds</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Models\Weapons\SledgeHammer_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Weapons\SledgeHammer_ng.dds</Parameter>
+    <Parameter Name="AddTexture">Textures\Models\Weapons\SledgeHammer_add.dds</Parameter>
+  </Material>
+  
+ <!--Barbar Materials-->
+ 
+    <Material Name="Barbar_mat">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">1.071773</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">MESH</Parameter>
+    <Parameter Name="DiffuseTexture">Textures\Models\Characters\Barbar\Barbar_de.dds</Parameter>
+	<Parameter Name="ColorMetalTexture">Textures\Models\Characters\Barbar\Barbar_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Characters\Barbar\Barbar_ng.dds</Parameter>
+    <Parameter Name="AddTexture">Textures\Models\Characters\Barbar\Barbar_add.dds</Parameter>
+  </Material>
+  <Material Name="Barbar_pants">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">1.071773</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">MESH</Parameter>
+    <Parameter Name="DiffuseTexture">Textures\Models\Characters\Barbar\Barbar_de.dds</Parameter>
+	<Parameter Name="ColorMetalTexture">Textures\Models\Characters\Barbar\Barbar_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Characters\Barbar\Barbar_ng.dds</Parameter>
+    <Parameter Name="AddTexture">Textures\Models\Characters\Barbar\Barbar_add.dds</Parameter>	
+  </Material>
+  <Material Name="ArmorsWeapons">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">MESH</Parameter>
+    <Parameter Name="DiffuseTexture">Textures\Models\Characters\Barbar\ArmorsWeapons_de.dds</Parameter>
+	<Parameter Name="ColorMetalTexture">Textures\Models\Characters\Barbar\ArmorsWeapons_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Characters\Barbar\ArmorsWeapons_ng.dds</Parameter>
+    <Parameter Name="AddTexture">Textures\Models\Characters\Barbar\ArmorsWeapons_add.dds</Parameter>
+  </Material>
+
+  
+</MaterialsLib>

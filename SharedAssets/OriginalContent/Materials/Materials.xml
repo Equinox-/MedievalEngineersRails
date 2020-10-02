@@ -1,0 +1,1501 @@
+<MaterialsLib Name="Default Materials">
+  <!-- Block Sheet -->
+  <Material Name="BlockSheet">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="DiffuseTexture">Textures\Models\Cubes\block_sheet_de.dds</Parameter>
+	<Parameter Name="NormalTexture">Textures\Models\Cubes\block_sheet_ns.dds</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Models\Cubes\block_sheet_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Cubes\block_sheet_ng.dds</Parameter>
+    <Parameter Name="AddMapsTexture">Textures\Models\Cubes\block_sheet_add.dds</Parameter>
+    <Parameter Name="Technique">MESH</Parameter>
+  </Material>
+  
+  <!-- BlockSheet_02 -->
+  
+  <Material Name="BlockSheet_02">
+    <Parameter Name="SpecularIntensity">0.072</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">MESH</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Models\Cubes\block_sheet_02_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Cubes\block_sheet_02_ng.dds</Parameter>
+    <Parameter Name="AddMapsTexture">Textures\Models\Cubes\block_sheet_02_add.dds</Parameter>
+  </Material>
+  
+  <Material Name="Scroll">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Models\Cubes\Scroll_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Cubes\Scroll_ng.dds</Parameter>
+    <Parameter Name="AddMapsTexture">Textures\Models\Cubes\Scroll_add.dds</Parameter>
+	<Parameter Name="AlphamaskTexture">Textures\Models\Cubes\Scroll_alphamask.dds</Parameter>
+    <Parameter Name="Technique">ALPHA_MASKED</Parameter>
+  </Material>
+  
+
+  
+  <!-- StoneBlocks -->
+  
+<!--   <Material Name="Cobblestone_V1">
+    <Parameter Name="SpecularIntensity">0.072</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">MESH</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Models\Cubes\Stones\Cobblestone_V1_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Cubes\Stones\Cobblestone_V1_ng.DDS</Parameter>
+    <Parameter Name="AddMapsTexture">Textures\Models\Cubes\Stones\Cobblestone_V1_add.DDS</Parameter>
+  </Material> -->
+ 
+ 
+  <Material Name="FloorCobblestone_V1">
+    <Parameter Name="SpecularIntensity">0.072</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+	<Parameter Name="ParallaxHeight">0.035</Parameter>
+	<Parameter Name="ParallaxBackOffset">0.8</Parameter>
+    <Parameter Name="Technique">MESH</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Models\Stones\FloorCobblestone\FloorCobblestone_V1_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Stones\FloorCobblestone\FloorCobblestone_V1_ng.DDS</Parameter>
+    <Parameter Name="AddMapsTexture">Textures\Models\Stones\FloorCobblestone\FloorCobblestone_V1_add.DDS</Parameter>
+  </Material>
+  
+  
+  <Material Name="FloorCobblestone_V1_LOD">
+    <Parameter Name="SpecularIntensity">0.072</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">MESH</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Models\Stones\FloorCobblestone\FloorCobblestone_V1_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Stones\FloorCobblestone\FloorCobblestone_V1_ng.DDS</Parameter>
+    <Parameter Name="AddMapsTexture">Textures\Models\Stones\FloorCobblestone\FloorCobblestone_V1_add.DDS</Parameter>
+  </Material>
+  
+  <!-- Flags -->
+  
+  <Material Name="FlagBlue">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="DiffuseTexture">Textures\Models\Cubes\FlagBlue_de.dds</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Models\Cubes\FlagBlue_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Cubes\FlagBlue_ng.dds</Parameter>
+    <Parameter Name="AddMapsTexture">Textures\Models\Cubes\FlagBlue_add.dds</Parameter>
+    <Parameter Name="Technique">MESH</Parameter>
+  </Material>
+  
+  <Material Name="FlagRed">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="DiffuseTexture">Textures\Models\Cubes\FlagRed_de.dds</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Models\Cubes\FlagRed_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Cubes\FlagBlue_ng.dds</Parameter>
+    <Parameter Name="AddMapsTexture">Textures\Models\Cubes\FlagBlue_add.dds</Parameter>
+    <Parameter Name="Technique">MESH</Parameter>
+  </Material>
+  
+  
+  <Material Name="BannerFlag">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Models\Cubes\ClothFlag_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Cubes\ClothFlag_ng.dds</Parameter>
+<!--     <Parameter Name="AddMapsTexture">Textures\Models\Cubes\ClothFlag_add.dds</Parameter> -->
+    <Parameter Name="Technique">MESH</Parameter>
+  </Material>
+  
+  <Material Name="BotFlag">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="DiffuseTexture">Textures\Models\BotFlags\BotFlag_Mining_de.dds</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Models\BotFlags\BotFlag_Mining_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\BotFlags\BotFlag_ng.dds</Parameter>
+    <Parameter Name="AddMapsTexture">Textures\Models\BotFlags\BotFlag_Mining_add.dds</Parameter>
+    <Parameter Name="Technique">MESH</Parameter>
+  </Material>
+  
+  <!-- ConstructionTexture -->
+  
+    <Material Name="ConstructionTexture">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Models\Cubes\ConstructionTexture_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Cubes\ConstructionTexture_ng.dds</Parameter>
+    <Parameter Name="AlphamaskTexture">Textures\Models\Cubes\ConstructionTexture_alphamask.dds</Parameter>
+    <Parameter Name="Technique">ALPHA_MASKED</Parameter>
+  </Material>
+  
+  <Material Name="Gear">
+    <Parameter Name="SpecularIntensity">2</Parameter>
+    <Parameter Name="SpecularPower">20</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">MESH</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Models\Cubes\Astronaut_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Cubes\Astronaut_ng.dds</Parameter>
+    <Parameter Name="AddMapsTexture">Textures\Models\Cubes\Astronaut_add.dds</Parameter>
+  </Material>
+  
+  
+  <Material Name="Astronaut_Body">
+    <Parameter Name="SpecularIntensity">2</Parameter>
+    <Parameter Name="SpecularPower">20</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">MESH</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Models\Cubes\Astronaut_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Cubes\Astronaut_ng.dds</Parameter>
+    <Parameter Name="AddMapsTexture">Textures\Models\Cubes\Astronaut_add.dds</Parameter>
+  </Material>
+  
+  
+  <Material Name="Cloth">
+    <Parameter Name="SpecularIntensity">0.75</Parameter>
+    <Parameter Name="SpecularPower">5</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">MESH</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Models\Cubes\Astronaut_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Cubes\Astronaut_ng.dds</Parameter>
+    <Parameter Name="AddMapsTexture">Textures\Models\Cubes\Astronaut_add.dds</Parameter>
+  </Material>
+  <Material Name="Head">
+    <Parameter Name="SpecularIntensity">5</Parameter>
+    <Parameter Name="SpecularPower">20</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">MESH</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Models\Cubes\Astronaut_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Cubes\Astronaut_ng.dds</Parameter>
+    <Parameter Name="AddMapsTexture">Textures\Models\Cubes\Astronaut_add.dds</Parameter>
+  </Material>
+  <Material Name="Arms">
+    <Parameter Name="Technique">MESH</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Models\Cubes\Hand_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Cubes\Hand_ng.dds</Parameter>
+    <!-- <Parameter Name="AddMapsTexture">Textures\Models\Cubes\Hand_add.dds</Parameter> -->
+  </Material>
+  <Material Name="Spacesuit_hood">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">MESH</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Models\Cubes\Astronaut_hood_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Cubes\Astronaut_hood_ng.dds</Parameter>
+    <Parameter Name="AddMapsTexture">Textures\Models\Cubes\Astronaut_hood_add.dds</Parameter>
+  </Material>
+  <Material Name="Astronaut_head">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">MESH</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Models\Cubes\skull_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Cubes\skull_ng.dds</Parameter>
+    <Parameter Name="AddMapsTexture">Textures\Models\Cubes\skull_add.dds</Parameter>
+  </Material>
+  
+  
+  <!-- Trees -->
+  
+  <Material Name="PineTreesLeafs">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">ALPHA_MASKED</Parameter>
+    <Parameter Name="DiffuseTexture">Textures\Models\Environment\Trees\PineTreesLeafs_de.dds</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Models\Environment\Trees\PineTreesLeafs_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Environment\Trees\PineTreesLeafs_ng.dds</Parameter>
+	<Parameter Name="AddMapsTexture">Textures\Models\Environment\Trees\PineTreesLeafs_add.dds</Parameter>
+    <Parameter Name="AlphamaskTexture">Textures\Models\Environment\Trees\PineTreesLeafs_alphamask.dds</Parameter>
+	
+  </Material>
+  <Material Name="PineTreesTrunks">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">MESH</Parameter>
+    <Parameter Name="DiffuseTexture">Textures\Models\Environment\Trees\PineTreesTrunk_de.dds</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Models\Environment\Trees\PineTreesTrunk_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Environment\Trees\PineTreesTrunk_ng.dds</Parameter>
+  </Material>
+  
+    <Material Name="PineTreesLOD3">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">ALPHA_MASKED</Parameter>
+    <Parameter Name="DiffuseTexture">Textures\Models\Environment\Trees\PineTreesLOD3_de.dds</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Models\Environment\Trees\PineTreesLOD3_cm.dds</Parameter>
+	<Parameter Name="NormalGlossTexture">Textures\Models\Environment\Trees\PineTreesLOD3_ng.dds</Parameter>
+    <Parameter Name="AlphamaskTexture">Textures\Models\Environment\Trees\PineTreesLOD3_alphamask.dds</Parameter>
+    <Parameter Name="AddMapsTexture">Textures\Models\Environment\Trees\PineTreesLOD3_add.dds</Parameter>
+  </Material>
+  
+  <Material Name="PalmTree">
+    <Parameter Name="SpecularIntensity">0.117</Parameter>
+    <Parameter Name="SpecularPower">9.189586</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">FOLIAGE</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Models\Environment\Trees\PalmTree_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Environment\Trees\PalmTree_ng.dds</Parameter>
+    <Parameter Name="AddMapsTexture">Textures\Models\Environment\Trees\PalmTree_add.dds</Parameter>
+    <Parameter Name="AlphamaskTexture">Textures\Models\Environment\Trees\PalmTree_alphamask.dds</Parameter>
+  </Material>
+  
+  <Material Name="PalmTreeLeaves">
+    <Parameter Name="SpecularIntensity">0.117</Parameter>
+    <Parameter Name="SpecularPower">9.189586</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">FOLIAGE</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Models\Environment\Trees\PalmTree_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Environment\Trees\PalmTree_ng.dds</Parameter>
+    <Parameter Name="AddMapsTexture">Textures\Models\Environment\Trees\PalmTree_add.dds</Parameter>
+    <Parameter Name="AlphamaskTexture">Textures\Models\Environment\Trees\PalmTree_alphamask.dds</Parameter>
+<!-- 	<Parameter Name="WindScale">0.008</Parameter>
+	<Parameter Name="WindFrequency">4</Parameter> -->
+  </Material>
+  
+  <Material Name="PalmTreeLOD3">
+    <Parameter Name="SpecularIntensity">0.117</Parameter>
+    <Parameter Name="SpecularPower">9.189586</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">FOLIAGE</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Models\Environment\Trees\PalmTreesLOD3_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Environment\Trees\PalmTreesLOD3_ng.dds</Parameter>
+    <Parameter Name="AddMapsTexture">Textures\Models\Environment\Trees\PalmTreesLOD3_add.dds</Parameter>
+    <Parameter Name="AlphamaskTexture">Textures\Models\Environment\Trees\PalmTreesLOD3_alphamask.dds</Parameter>
+  </Material>
+  
+  
+   <Material Name="Bushes">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">ALPHA_MASKED</Parameter>
+    <Parameter Name="DiffuseTexture">Textures\Models\Environment\Bushes\Bushes_01_me.dds</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Models\Environment\Bushes\Bushes_01_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Environment\Bushes\Bushes_01_ng.dds</Parameter>
+    <Parameter Name="AlphamaskTexture">Textures\Models\Environment\Bushes\Bushes_01_alphamask.dds</Parameter>
+	<Parameter Name="AddMapsTexture">Textures\Models\Environment\Bushes\Bushes_01_add.dds</Parameter>
+  </Material>
+  
+  <!-- Skull -->
+  
+  <Material Name="Skull">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">MESH</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Models\Cubes\skull_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Cubes\skull_ng.dds</Parameter>
+    <Parameter Name="AddMapsTexture">Textures\Models\Cubes\skull_add.dds</Parameter>
+  </Material>
+  
+  
+  
+  
+  
+  <Material Name="ChristmasTreeChain">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">FOLIAGE</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Models\Miscellaneous\ChristmasTreeChain_cm.DDS</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Miscellaneous\ChristmasTreeChain_ng.DDS</Parameter>
+    <Parameter Name="AddMapsTexture">Textures\Models\Miscellaneous\ChristmasTreeChain_add.DDS</Parameter>
+    <Parameter Name="AlphamaskTexture">Textures\Models\Miscellaneous\ChristmasTreeChain_alphamask.DDS</Parameter>
+  </Material>
+  
+  
+  <Material Name="Torch">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">MESH</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Models\Cubes\Torch_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Cubes\Torch_ng.dds</Parameter>
+    <Parameter Name="AddMapsTexture">Textures\Models\Cubes\Torch_add.dds</Parameter>
+  </Material>
+  
+  
+  
+  
+  <Material Name="Deer_doe">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">MESH</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Models\Characters\Wildlife\DeerDoe\DeerDoe_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Characters\Wildlife\DeerDoe\DeerDoe_ng.dds</Parameter>
+    <Parameter Name="AddMapsTexture">Textures\Models\Characters\Wildlife\DeerDoe\DeerDoe_add.dds</Parameter>
+  </Material>
+  
+  
+  <Material Name="TannedLeather">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">MESH</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Models\Items\TannedLeather_cm.DDS</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Items\TannedLeather_ng.DDS</Parameter>
+    <Parameter Name="AddMapsTexture">Textures\Models\Items\TannedLeather_add.DDS</Parameter>
+  </Material>
+  
+  <Material Name="Antlers">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">MESH</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Models\Characters\Wildlife\DeerDoe\Antlers_cm.DDS</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Characters\Wildlife\DeerDoe\Antlers_ng.DDS</Parameter>
+  </Material>
+  
+  
+  
+  <Material Name="Pumpkin">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">MESH</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Models\Environment\Bushes\pumpkin_cm.DDS</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Environment\Bushes\pumpkin_cm.DDS</Parameter>
+    <Parameter Name="AddMapsTexture">Textures\Models\Environment\Bushes\pumpkin_cm.DDS</Parameter>
+  </Material>
+  
+  
+  <Material Name="FlaxAtlas">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">FOLIAGE</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Models\Environment\Farming\Flax_cm.DDS</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Environment\Farming\Flax_ng.DDS</Parameter>
+  </Material>
+  
+ <Material Name="KingStatue">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">MESH</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Models\Cubes\KingStatue_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Cubes\KingStatue_ng.dds</Parameter>
+    <Parameter Name="AddMapsTexture">Textures\Models\Cubes\KingStatue_add.dds</Parameter>
+  </Material>
+
+  
+  
+  <Material Name="Catapult_projectile">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">MESH</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Models\Cubes\Catapult_projectile_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Cubes\Catapult_projectile_ng.dds</Parameter>
+    <Parameter Name="AddMapsTexture">Textures\Models\Cubes\Catapult_projectile_add.dds</Parameter>
+  </Material>
+  
+  <Material Name="LeafyBranches_1">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">FOLIAGE</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Models\Environment\Bushes\LeafyBranches_1_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Environment\Bushes\LeafyBranches_1_ng.dds</Parameter>
+    <Parameter Name="AlphamaskTexture">Textures\Models\Environment\Bushes\LeafyBranches_1_alphamask.dds</Parameter>
+	<Parameter Name="AddMapsTexture">Textures\Models\Environment\Bushes\LeafyBranches_1_add.dds</Parameter>
+<!-- 	<Parameter Name="WindScale">0.008</Parameter>
+	<Parameter Name="WindFrequency">4</Parameter> -->
+  </Material>
+  
+  <Material Name="Trunks">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">MESH</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Models\Environment\Trees\Trunks_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Environment\Trees\Trunks_ng.dds</Parameter>
+	<Parameter Name="AddMapsTexture">Textures\Models\Environment\Trees\Trunks_add.dds</Parameter>
+  </Material>
+  
+  
+  <Material Name="Bushes_02">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">FOLIAGE</Parameter>
+    <Parameter Name="DiffuseTexture">Textures\Models\Environment\Bushes\Bushes_02_de.dds</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Models\Environment\Bushes\Bushes_02_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Environment\Bushes\Bushes_02_ng.dds</Parameter>
+    <Parameter Name="AlphamaskTexture">Textures\Models\Environment\Bushes\Bushes_02_alphamask.dds</Parameter>
+	<Parameter Name="AddTexture">Textures\Models\Environment\Bushes\Bushes_02_add.dds</Parameter>
+  </Material>
+  
+  
+  <Material Name="pumpkin_spoiled">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">FOLIAGE</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Models\Environment\Farming\pumpkin_spoiled_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Environment\Farming\pumpkin_spoiled_ng.dds</Parameter>
+	<Parameter Name="AlphamaskTexture">Textures\Models\Environment\Farming\pumpkin_grown_alphamask.dds</Parameter>
+  </Material>
+  
+  
+  <Material Name="pumpkin_grown">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">FOLIAGE</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Models\Environment\Farming\pumpkin_grown_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Environment\Farming\pumpkin_grown_ng.dds</Parameter>
+	<Parameter Name="AlphamaskTexture">Textures\Models\Environment\Farming\pumpkin_grown_alphamask.dds</Parameter>
+  </Material>
+  
+  <Material Name="Oak_Branches">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">FOLIAGE</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Models\Environment\Trees\Oak_Branches_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Environment\Trees\Oak_Branches_ng.dds</Parameter>
+	<Parameter Name="AddMapsTexture">Textures\Models\Environment\Trees\Oak_Branches_add.dds</Parameter>
+    <Parameter Name="AlphamaskTexture">Textures\Models\Environment\Trees\Oak_Branches_alphamask.dds</Parameter>
+  </Material>
+  
+  
+  <Material Name="Oak_Bark">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">MESH</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Models\Environment\Trees\Oak_Bark_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Environment\Trees\Oak_Bark_ng.dds</Parameter>
+	<Parameter Name="AddMapsTexture">Textures\Models\Environment\Trees\Oak_Bark_add.dds</Parameter>
+  </Material>
+  
+  <Material Name="TreeEnd">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">MESH</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Models\Environment\Trees\TreeEnd_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Environment\Trees\TreeEnd_ng.dds</Parameter>
+	<Parameter Name="AddMapsTexture">Textures\Models\Environment\Trees\TreeEnd_add.dds</Parameter>
+  </Material>
+  
+  <Material Name="Tree_Cutout">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">MESH</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Models\Environment\Trees\TreeCutout_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Environment\Trees\TreeCutout_ng.dds</Parameter>
+	<Parameter Name="AddMapsTexture">Textures\Models\Environment\Trees\TreeCutout_add.dds</Parameter>
+  </Material>
+  
+  <!-- Ores -->
+  
+    <Material Name="StoneMat_Rocks">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">MESH</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Voxels\Rocks_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Voxels\Rocks_ng.dds</Parameter>
+    <Parameter Name="AddMapsTexture">Textures\Voxels\Rocks_add.dds</Parameter>
+  </Material>
+  
+  <Material Name="StoneMat_Sandstone">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">MESH</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Voxels\Sandstone_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Voxels\Sandstone_ng.dds</Parameter>
+    <Parameter Name="AddMapsTexture">Textures\Voxels\Sandstone_add.dds</Parameter>
+  </Material>
+  
+ <!-- Material DECALS -->
+ 
+ <Material Name="BannerDecal">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">DECAL_NOPREMULT</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Decals\DECAL_Fabric_cm.dds</Parameter>
+    <Parameter Name="AlphamaskTexture">Textures\Decals\DECAL_Fabric_alphamask.dds</Parameter>
+  </Material>
+  
+
+    <Material Name="ShieldMaterial">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">DECAL_NOPREMULT</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Decals\DECAL_Metal_cm.dds</Parameter>
+    <Parameter Name="AlphamaskTexture">Textures\Decals\DECAL_Metal_alphamask.dds</Parameter>
+  </Material>
+  
+  <Material Name="DECAL_Wood">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">DECAL_NOPREMULT</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Decals\DECAL_Wood_cm.dds</Parameter>
+    <Parameter Name="AlphamaskTexture">Textures\Decals\DECAL_Wood_alphamask.dds</Parameter>
+  </Material>
+  
+  <!-- Paper -->
+  
+  <Material Name="Paper">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">ALPHA_MASKED</Parameter>
+    <Parameter Name="NormalTexture">Textures\Models\Cubes\Papers_ng.dds</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Models\Cubes\Papers_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Cubes\Papers_ng.dds</Parameter>
+    <Parameter Name="AlphamaskTexture">Textures\Models\Cubes\Papers_alphamask.dds</Parameter>
+  </Material>
+  
+  
+  <Material Name="WheatComponent">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">ALPHA_MASKED</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Models\Environment\Farming\WheatComponent_cm.DDS</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Environment\Farming\WheatComponent_ng.DDS</Parameter>
+    <Parameter Name="AlphamaskTexture">Textures\Models\Environment\Farming\WheatComponent_alphamask.DDS</Parameter>
+  </Material>
+  
+  
+  
+  <!-- CharacterTools -->
+  
+    <Material Name="CharacterTools">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">MESH</Parameter>
+    <Parameter Name="DiffuseTexture">Textures\Models\Weapons\CharacterTools_de.dds</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Models\Weapons\CharacterTools_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Weapons\CharacterTools_ng.dds</Parameter>
+    <Parameter Name="AddTexture">Textures\Models\Weapons\CharacterTools_add.dds</Parameter>
+  </Material>
+  
+
+ 
+  
+  <!-- Light Wood -->
+  
+  <Material Name="LightWood_01">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">MESH</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Models\Cubes\RoughWood01_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Cubes\RoughWood01_ng.dds</Parameter>
+    <Parameter Name="AddMapsTexture">Textures\Models\Cubes\RoughWood01_add.dds</Parameter>
+  </Material>
+  
+  
+  <Material Name="LightWood">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">MESH</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Models\Cubes\RoughWood01_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Cubes\RoughWood01_ng.dds</Parameter>
+    <Parameter Name="AddMapsTexture">Textures\Models\Cubes\RoughWood01_add.dds</Parameter>
+  </Material>
+
+  
+  <Material Name="LightWood_01_Edges">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">MESH</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Models\Cubes\RoughWood01_Edges_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Cubes\RoughWood01_Edges_ng.dds</Parameter>
+    <Parameter Name="AddMapsTexture">Textures\Models\Cubes\RoughWood01_Edges_add.dds</Parameter>
+  </Material>
+  
+  <!-- Dark Wood -->
+  
+  <Material Name="DarkWood_01">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">MESH</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Models\Woods\RoughWood01_Dark_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Woods\RoughWood01_Dark_ng.dds</Parameter>
+    <Parameter Name="AddMapsTexture">Textures\Models\Woods\RoughWood01_Dark_add.dds</Parameter>
+  </Material>
+  
+  <Material Name="DarkWood_01_Edges">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">MESH</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Models\Woods\RoughWood01_Edges_Dark_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Woods\RoughWood01_Edges_Dark_ng.dds</Parameter>
+    <Parameter Name="AddMapsTexture">Textures\Models\Woods\RoughWood01_Edges_Dark_add.dds</Parameter>
+  </Material>
+  
+  
+  <!-- Liquids -->
+  
+  <Material Name="Dark_Liquid">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">MESH</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Models\Cubes\Dark_Liquid_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Cubes\Dark_Liquid_ng.dds</Parameter>
+    <Parameter Name="AddMapsTexture">Textures\Models\Cubes\Dark_Liquid_add.dds</Parameter>
+  </Material>
+  
+  <!-- Wood Endings -->
+  
+  <Material Name="WoodEnding">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">MESH</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Models\Woods\TimberEnd_1_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Woods\TimberEnd_1_ng.dds</Parameter>
+    <Parameter Name="AddMapsTexture">Textures\Models\Woods\TimberEnd_1_add.dds</Parameter>
+  </Material>
+  
+  <Material Name="WoodEnding3">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">MESH</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Models\Woods\TimberEnd_3_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Woods\TimberEnd_3_ng.dds</Parameter>
+    <Parameter Name="AddMapsTexture">Textures\Models\Woods\TimberEnd_3_add.dds</Parameter>
+  </Material>
+  
+  <Material Name="WoodEnding4">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">MESH</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Models\Woods\TimberEnd_4_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Woods\TimberEnd_4_ng.dds</Parameter>
+    <Parameter Name="AddMapsTexture">Textures\Models\Woods\TimberEnd_4_add.dds</Parameter>
+  </Material>
+  
+  <!-- Rope -->
+  
+  
+  <Material Name="Rope">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">MESH</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Models\Cubes\Rope_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Cubes\Rope_ng.dds</Parameter>
+    <Parameter Name="AddMapsTexture">Textures\Models\Cubes\Rope_add.dds</Parameter>
+  </Material>
+
+    <!-- Rope2 -->
+
+  <Material Name="Rope2">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">MESH</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Models\Cubes\Rope2_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Cubes\Rope2_ng.dds</Parameter>
+    <Parameter Name="AddMapsTexture">Textures\Models\Cubes\Rope2_add.dds</Parameter>
+  </Material>
+  
+<!-- LightWood_Small_01 -->
+  
+  <Material Name="LightWood_Small_01">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">MESH</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Models\Cubes\WoodenPlate_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Cubes\WoodenPlate_ng.dds</Parameter>
+    <Parameter Name="AddMapsTexture">Textures\Models\Cubes\WoodenPlate_add.dds</Parameter>
+  </Material>
+  
+  <!-- SemiRoughWoods -->
+  
+  <Material Name="SemiRoughWood_Dark">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">MESH</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Models\Woods\SemiRoughWood01_Dark_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Woods\SemiRoughWood01_Dark_ng.dds</Parameter>
+    <Parameter Name="AddMapsTexture">Textures\Models\Woods\SemiRoughWood01_Dark_add.dds</Parameter>
+  </Material>
+  
+  <Material Name="SemiRoughWood_Dark_Edges">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">MESH</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Models\Woods\SemiRoughWoodEdges01_Dark_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Woods\SemiRoughWoodEdges01_Dark_ng.dds</Parameter>
+    <Parameter Name="AddMapsTexture">Textures\Models\Woods\SemiRoughWoodEdges01_Dark_add.dds</Parameter>
+  </Material>
+  
+  <Material Name="SemiRoughWood">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">MESH</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Models\Woods\SemiRoughWood01_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Woods\SemiRoughWood01_ng.dds</Parameter>
+    <Parameter Name="AddMapsTexture">Textures\Models\Woods\SemiRoughWood01_add.dds</Parameter>
+  </Material>
+  
+  <Material Name="SemiRoughPlanks_Dark">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">MESH</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Models\Woods\SemiRoughPlanks01_Dark_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Woods\SemiRoughPlanks01_Dark_ng.dds</Parameter>
+    <Parameter Name="AddMapsTexture">Textures\Models\Woods\SemiRoughPlanks01_Dark_add.dds</Parameter>
+  </Material>
+  
+  <Material Name="SemiRoughPlanks">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">MESH</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Models\Woods\SemiRoughPlanks01_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Woods\SemiRoughPlanks01_ng.dds</Parameter>
+    <Parameter Name="AddMapsTexture">Textures\Models\Woods\SemiRoughPlanks01_add.dds</Parameter>
+  </Material>
+  
+  <Material Name="SemiRoughPlanksFloor">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">MESH</Parameter>
+	<Parameter Name="ParallaxHeight">0.023</Parameter>
+	<Parameter Name="ParallaxBackOffset">0.8</Parameter>
+	<!-- <Parameter Name="ParallaxCutout">true</Parameter> -->
+    <Parameter Name="ColorMetalTexture">Textures\Models\Woods\SemiRoughPlanksFloor_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Woods\SemiRoughPlanksFloor_ng.dds</Parameter>
+    <Parameter Name="AddMapsTexture">Textures\Models\Woods\SemiRoughPlanksFloor_add.dds</Parameter>
+  </Material>
+  
+  <Material Name="ChiseledWood">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">MESH</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Models\Woods\ChiseledWood_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Woods\ChiseledWood_ng.dds</Parameter>
+    <Parameter Name="AddMapsTexture">Textures\Models\Woods\ChiseledWood_add.dds</Parameter>
+  </Material>
+  
+  <!-- Transmissions -->
+  
+  <Material Name="DarkWood">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">MESH</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Models\Woods\RoughWood01_Dark_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Woods\RoughWood01_Dark_ng.dds</Parameter>
+    <Parameter Name="AddMapsTexture">Textures\Models\Woods\RoughWood01_Dark_add.dds</Parameter>
+  </Material>
+  
+  <Material Name="DarkWood_Edges">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">MESH</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Models\Woods\RoughWood01_Edges_Dark_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Woods\RoughWood01_Edges_Dark_ng.dds</Parameter>
+    <Parameter Name="AddMapsTexture">Textures\Models\Woods\RoughWood01_Edges_Dark_add.dds</Parameter>
+  </Material>
+  
+  <!-- Thatch -->
+  
+  <Material Name="Thatch">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">FOLIAGE</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Models\Cubes\Thatch_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Cubes\Thatch_ng.dds</Parameter>
+    <Parameter Name="AddMapsTexture">Textures\Models\Cubes\Thatch_add.dds</Parameter>
+  </Material>
+
+  
+  <!-- RoofTile_V1 -->
+  
+  <Material Name="RoofTile_V1">
+    <Parameter Name="SpecularIntensity">0.072</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+	 <Parameter Name="ParallaxHeight">0.038</Parameter>
+	 <Parameter Name="ParallaxBackOffset">1.0</Parameter>
+    <Parameter Name="Technique">MESH</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Models\Tiles\RoofTile_V1_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Tiles\RoofTile_V1_ng.DDS</Parameter>
+    <Parameter Name="AddMapsTexture">Textures\Models\Tiles\RoofTile_V1_add.DDS</Parameter>
+  </Material>
+  
+  
+  
+  <!-- RoofTileSingle_V1 -->
+  
+  <Material Name="RoofTileSingle_V1">
+    <Parameter Name="SpecularIntensity">0.072</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+<!-- 	 <Parameter Name="ParallaxHeight">0.025</Parameter>
+	 <Parameter Name="ParallaxBackOffset">1.0</Parameter> -->
+    <Parameter Name="Technique">MESH</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Models\Tiles\RoofTileSingle_V1_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Tiles\RoofTileSingle_V1_ng.DDS</Parameter>
+    <Parameter Name="AddMapsTexture">Textures\Models\Tiles\RoofTileSingle_V1_add.DDS</Parameter>
+  </Material>
+  
+  <!-- Thatch_1_alpha -->
+  
+  <!-- Thatch_1 -->
+
+  <Material Name="Thatch_1">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">MESH</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Models\Cubes\Thatch_1_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Cubes\Thatch_1_ng.dds</Parameter>
+    <Parameter Name="AddMapsTexture">Textures\Models\Cubes\Thatch_1_add.dds</Parameter>
+  </Material>
+  
+ 
+
+  <!-- Thatch_1_alpha -->
+
+  <Material Name="Thatch_1_alpha">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">FOLIAGE</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Models\Cubes\Thatch_1_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Cubes\Thatch_1_ng.dds</Parameter>
+    <Parameter Name="AddMapsTexture">Textures\Models\Cubes\Thatch_1_add.dds</Parameter>
+    <Parameter Name="AlphamaskTexture">Textures\Models\Cubes\Thatch_1_alphamask.dds</Parameter>
+  </Material>
+<!-- Thatch_End -->
+
+  <Material Name="Thatch_End">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">MESH</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Models\Cubes\Thatch_End_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Cubes\Thatch_End_ng.dds</Parameter>
+    <Parameter Name="AddMapsTexture">Textures\Models\Cubes\Thatch_End_add.dds</Parameter>
+  </Material>
+  
+  <!-- Daub -->
+
+  <Material Name="Daub">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">MESH</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Models\Cubes\Daub_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Cubes\Daub_ng.dds</Parameter>
+    <Parameter Name="AddMapsTexture">Textures\Models\Cubes\Daub_add.dds</Parameter>
+  </Material>
+  
+  <Material Name="Cobblestone">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">MESH</Parameter>
+    <Parameter Name="ParallaxHeight">0.023</Parameter>
+    <Parameter Name="ParallaxBackOffset">0.8</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Models\Cubes\Cobblestone_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Cubes\Cobblestone_ng.dds</Parameter>
+    <Parameter Name="AddMapsTexture">Textures\Models\Cubes\Cobblestone_add.dds</Parameter> 
+  </Material>
+
+  <!-- Cobblestones_V1 -->
+  
+  <Material Name="Cobblestone_V1">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+	<Parameter Name="ParallaxHeight">0.023</Parameter>
+	<Parameter Name="ParallaxBackOffset">0.8</Parameter>
+	<!-- <Parameter Name="ParallaxCutout">true</Parameter> -->
+    <Parameter Name="Technique">MESH</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Models\Stones\Cobblestone\Cobblestone_V1_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Stones\Cobblestone\Cobblestone_V1_ng.dds</Parameter>
+    <Parameter Name="AddMapsTexture">Textures\Models\Stones\Cobblestone\Cobblestone_V1_add.dds</Parameter>
+  </Material>
+  
+  
+    <!-- Cobblestones_V1_LOD -->
+  
+  <Material Name="Cobblestone_V1_LOD">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">MESH</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Models\Stones\Cobblestone\Cobblestone_V1_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Stones\Cobblestone\Cobblestone_V1_ng.dds</Parameter>
+    <Parameter Name="AddMapsTexture">Textures\Models\Stones\Cobblestone\Cobblestone_V1_add.dds</Parameter>
+  </Material>
+  
+    <!-- Cobblestones_V2 -->
+  
+  <Material Name="Cobblestone_V2">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+	<Parameter Name="ParallaxHeight">0.019</Parameter>
+	<Parameter Name="ParallaxBackOffset">0.8</Parameter>
+	<!-- <Parameter Name="ParallaxCutout">true</Parameter> -->
+    <Parameter Name="Technique">MESH</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Models\Stones\Cobblestone\Cobblestone_V2_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Stones\Cobblestone\Cobblestone_V2_ng.dds</Parameter>
+    <Parameter Name="AddMapsTexture">Textures\Models\Stones\Cobblestone\Cobblestone_V2_add.dds</Parameter>
+  </Material>
+  
+      <!-- Cobblestones_V2_LOD -->
+  
+  <Material Name="Cobblestone_V2_LOD">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">MESH</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Models\Stones\Cobblestone\Cobblestone_V2_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Stones\Cobblestone\Cobblestone_V2_ng.dds</Parameter>
+    <Parameter Name="AddMapsTexture">Textures\Models\Stones\Cobblestone\Cobblestone_V2_add.dds</Parameter>
+  </Material>
+  
+  
+      <!-- Cobblestones_V3 -->
+  
+  <Material Name="Cobblestone_V3">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+	<Parameter Name="ParallaxHeight">0.027</Parameter>
+	<Parameter Name="ParallaxBackOffset">0.8</Parameter>
+	<!-- <Parameter Name="ParallaxCutout">true</Parameter> -->
+    <Parameter Name="Technique">MESH</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Models\Stones\Cobblestone\Cobblestone_V3_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Stones\Cobblestone\Cobblestone_V3_ng.dds</Parameter>
+    <Parameter Name="AddMapsTexture">Textures\Models\Stones\Cobblestone\Cobblestone_V3_add.dds</Parameter>
+  </Material>
+  
+        <!-- Cobblestones_V3_LOD -->
+  
+  <Material Name="Cobblestone_V3_LOD">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">MESH</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Models\Stones\Cobblestone\Cobblestone_V3_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Stones\Cobblestone\Cobblestone_V3_ng.dds</Parameter>
+    <Parameter Name="AddMapsTexture">Textures\Models\Stones\Cobblestone\Cobblestone_V3_add.dds</Parameter>
+  </Material>
+  
+  
+      <!-- Cobblestones_V4 -->
+  
+  <Material Name="Cobblestone_V4">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+	<Parameter Name="ParallaxHeight">0.017</Parameter>
+	<Parameter Name="ParallaxBackOffset">0.8</Parameter>
+	<!-- <Parameter Name="ParallaxCutout">true</Parameter> -->
+    <Parameter Name="Technique">MESH</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Models\Stones\Cobblestone\Cobblestone_V4_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Stones\Cobblestone\Cobblestone_V4_ng.dds</Parameter>
+    <Parameter Name="AddMapsTexture">Textures\Models\Stones\Cobblestone\Cobblestone_V4_add.dds</Parameter>
+  </Material>
+  
+        <!-- Cobblestones_V4_LOD -->
+  
+  <Material Name="Cobblestone_V4_LOD">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">MESH</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Models\Stones\Cobblestone\Cobblestone_V4_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Stones\Cobblestone\Cobblestone_V4_ng.dds</Parameter>
+    <Parameter Name="AddMapsTexture">Textures\Models\Stones\Cobblestone\Cobblestone_V4_add.dds</Parameter>
+  </Material>
+  
+  
+        <!-- DamagedCobblestones_V1 -->
+  
+  <Material Name="DamagedCobblestones_V1">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+<!-- 	<Parameter Name="ParallaxHeight">0.008</Parameter>
+	<Parameter Name="ParallaxBackOffset">0.0</Parameter> -->
+	<!-- <Parameter Name="ParallaxCutout">true</Parameter> -->
+    <Parameter Name="Technique">MESH</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Models\Stones\CobbleStone\DamagedCobblestone_V1_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Stones\CobbleStone\DamagedCobblestone_V1_ng.dds</Parameter>
+    <Parameter Name="AddMapsTexture">Textures\Models\Stones\CobbleStone\DamagedCobblestone_V1_add.dds</Parameter>
+  </Material>
+  
+          <!-- DamagedCobblestones_V1_LOD -->
+  
+  <Material Name="DamagedCobblestones_V1_LOD">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">MESH</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Models\Stones\CobbleStone\DamagedCobblestone_V1_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Stones\CobbleStone\DamagedCobblestone_V1_ng.dds</Parameter>
+    <Parameter Name="AddMapsTexture">Textures\Models\Stones\CobbleStone\DamagedCobblestone_V1_add.dds</Parameter>
+  </Material>
+
+  <!-- FlatStone -->
+  
+  <Material Name="StoneFlat_V1">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">MESH</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Models\Stones\StoneFlat\StoneFlat_v1_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Stones\StoneFlat\StoneFlat_v1_ng.dds</Parameter>
+    <Parameter Name="AddMapsTexture">Textures\Models\Stones\StoneFlat\StoneFlat_v1_add.dds</Parameter>
+  </Material>
+  
+    <!-- FlatStone_LOD -->
+  
+  <Material Name="StoneFlat_V1_LOD">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">MESH</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Models\Stones\StoneFlat\StoneFlat_v1_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Stones\StoneFlat\StoneFlat_v1_ng.dds</Parameter>
+    <Parameter Name="AddMapsTexture">Textures\Models\Stones\StoneFlat\StoneFlat_v1_add.dds</Parameter>
+  </Material>
+  
+  
+  <!-- PillarStone -->
+  
+  
+  <Material Name="StonePillar_V1">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">MESH</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Models\Stones\StonePillar\StonePillar_V1_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Stones\StonePillar\StonePillar_V1_ng.dds</Parameter>
+    <Parameter Name="AddMapsTexture">Textures\Models\Stones\StonePillar\StonePillar_V1_add.dds</Parameter>
+  </Material>
+  
+  <Material Name="StonePillar_V2">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">MESH</Parameter>
+<!-- 	<Parameter Name="ParallaxHeight">0.012</Parameter>
+	<Parameter Name="ParallaxBackOffset">0.36</Parameter> -->
+    <Parameter Name="ColorMetalTexture">Textures\Models\Stones\StonePillar\StonePillar_V2_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Stones\StonePillar\StonePillar_V2_ng.dds</Parameter>
+    <Parameter Name="AddMapsTexture">Textures\Models\Stones\StonePillar\StonePillar_V2_add.dds</Parameter>
+  </Material>
+  
+    <Material Name="StonePillar_V2_LOD">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">MESH</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Models\Stones\StonePillar\StonePillar_V2_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Stones\StonePillar\StonePillar_V2_ng.dds</Parameter>
+    <Parameter Name="AddMapsTexture">Textures\Models\Stones\StonePillar\StonePillar_V2_add.dds</Parameter>
+  </Material>
+  
+  
+  
+  <!-- LogWoods -->
+  
+  <Material Name="LogWood01">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">MESH</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Models\Woods\LogWood01_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Woods\LogWood01_ng.dds</Parameter>
+    <Parameter Name="AddMapsTexture">Textures\Models\Woods\LogWood01_add.dds</Parameter>
+  </Material>
+  
+  <Material Name="LogWood02">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">MESH</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Models\Woods\LogWood02_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Woods\LogWood02_ng.dds</Parameter>
+    <Parameter Name="AddMapsTexture">Textures\Models\Woods\LogWood02_add.dds</Parameter>
+  </Material>
+  
+  <Material Name="WoodFineOld01">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">MESH</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Models\Woods\WoodFineOld01_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Woods\WoodFineOld01_ng.dds</Parameter>
+    <Parameter Name="AddMapsTexture">Textures\Models\Woods\WoodFineOld01_add.dds</Parameter>
+  </Material>
+  
+  <Material Name="WoodFineOldEdges01">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">MESH</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Models\Woods\WoodFineOldEdges01_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Woods\WoodFineOldEdges01_ng.dds</Parameter>
+    <Parameter Name="AddMapsTexture">Textures\Models\Woods\WoodFineOldEdges01_add.dds</Parameter>
+  </Material>
+  
+  <Material Name="RoughWood">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">MESH</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Models\Woods\RoughWood01_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Woods\RoughWood01_ng.dds</Parameter>
+    <Parameter Name="AddMapsTexture">Textures\Models\Woods\RoughWood01_add.dds</Parameter>
+  </Material>
+  
+  
+  <Material Name="RoofWood_V1">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">MESH</Parameter>
+    <Parameter Name="ParallaxHeight">0.050</Parameter>
+	 <Parameter Name="ParallaxBackOffset">1.0</Parameter>
+	 <!-- <Parameter Name="ParallaxCutout">true</Parameter> -->
+    <Parameter Name="ColorMetalTexture">Textures\Models\Woods\RoofWood_V1_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Woods\RoofWood_V1_ng.dds</Parameter>
+    <Parameter Name="AddMapsTexture">Textures\Models\Woods\RoofWood_V1_add.dds</Parameter>
+  </Material>
+  
+  
+  
+  <Material Name="RoofWoodInner_V1">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">MESH</Parameter>
+    <Parameter Name="ParallaxHeight">0.030</Parameter>
+	 <Parameter Name="ParallaxBackOffset">1.0</Parameter>
+	 <!-- <Parameter Name="ParallaxCutout">true</Parameter> -->
+    <Parameter Name="ColorMetalTexture">Textures\Models\Woods\RoofWoodInner_V1_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Woods\RoofWoodInner_V1_ng.dds</Parameter>
+    <Parameter Name="AddMapsTexture">Textures\Models\Woods\RoofWoodInner_V1_add.dds</Parameter>
+  </Material>
+  
+  <Material Name="OldMetal01">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">MESH</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Models\Metals\OldMetal01_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Metals\OldMetal01_ng.dds</Parameter>
+    <Parameter Name="AddMapsTexture">Textures\Models\Metals\OldMetal01_add.dds</Parameter>
+  </Material>
+  
+  <!-- PalisadesLODs -->
+  
+  <Material Name="PalisadeLOD">
+    <Parameter Name="SpecularIntensity">0</Parameter>
+    <Parameter Name="SpecularPower">2</Parameter>
+    <Parameter Name="DiffuseColorX">255</Parameter>
+    <Parameter Name="DiffuseColorY">255</Parameter>
+    <Parameter Name="DiffuseColorZ">255</Parameter>
+    <Parameter Name="Technique">MESH</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Models\Cubes\PalisadeLOD_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Cubes\PalisadeLOD_ng.dds</Parameter>
+    <Parameter Name="AddMapsTexture">Textures\Models\Cubes\PalisadeLOD_add.dds</Parameter>
+  </Material>
+  
+  <!-- Trees 2018 -->
+
+    <Material Name="SpruceBranches">
+        <Parameter Name="Technique">FOLIAGE</Parameter>
+        <Parameter Name="ColorMetalTexture">Textures\Models\Environment\Trees\SpruceBranches_cm.dds</Parameter>
+        <Parameter Name="NormalGlossTexture">Textures\Models\Environment\Trees\SpruceBranches_ng.dds</Parameter>
+        <Parameter Name="AlphamaskTexture">Textures\Models\Environment\Trees\SpruceBranches_alphamask.dds</Parameter>
+        <Parameter Name="AddMapsTexture">Textures\Models\Environment\Trees\SpruceBranches_add.dds</Parameter>
+<!--         <Parameter Name="WindScale">0.008</Parameter>
+        <Parameter Name="WindFrequency">4</Parameter> -->
+    </Material>
+    <Material Name="SpruceBark">
+        <Parameter Name="Technique">MESH</Parameter>
+        <Parameter Name="ColorMetalTexture">Textures\Models\Environment\Trees\PineBark_cm.dds</Parameter>
+        <Parameter Name="NormalGlossTexture">Textures\Models\Environment\Trees\PineBark_ng.dds</Parameter>
+        <Parameter Name="AddMapsTexture">Textures\Models\Environment\Trees\PineBark_add.dds</Parameter>
+    </Material>
+    <Material Name="LeafConifersLOD3">
+        <Parameter Name="Technique">ALPHA_MASKED</Parameter>
+        <Parameter Name="ColorMetalTexture">Textures\Models\Environment\Trees\LeafConifersLOD3_cm.dds</Parameter>
+        <Parameter Name="NormalGlossTexture">Textures\Models\Environment\Trees\LeafConifersLOD3_ng.dds</Parameter>
+        <Parameter Name="AlphamaskTexture">Textures\Models\Environment\Trees\LeafConifersLOD3_alphamask.dds</Parameter>
+        <Parameter Name="AddMapsTexture">Textures\Models\Environment\Trees\LeafConifersLOD3_add.dds</Parameter>
+    </Material>
+
+    <Material Name="BirchBark">
+        <Parameter Name="Technique">MESH</Parameter>
+        <Parameter Name="ColorMetalTexture">Textures\Models\Environment\Trees\BirchBark_cm.dds</Parameter>
+        <Parameter Name="NormalGlossTexture">Textures\Models\Environment\Trees\BirchBark_ng.dds</Parameter>
+    </Material>
+    <Material Name="BirchBranches">
+        <Parameter Name="Technique">ALPHA_MASKED</Parameter>
+        <Parameter Name="ColorMetalTexture">Textures\Models\Environment\Trees\BirchBranches_cm.dds</Parameter>
+        <Parameter Name="NormalGlossTexture">Textures\Models\Environment\Trees\BirchBranches_ng.dds</Parameter>
+        <Parameter Name="AlphamaskTexture">Textures\Models\Environment\Trees\BirchBranches_alphamask.dds</Parameter>
+    </Material>
+
+    <Material Name="PineBark">
+        <Parameter Name="Technique">MESH</Parameter>
+        <Parameter Name="ColorMetalTexture">Textures\Models\Environment\Trees\PineBark_cm.dds</Parameter>
+        <Parameter Name="NormalGlossTexture">Textures\Models\Environment\Trees\PineBark_ng.dds</Parameter>
+        <Parameter Name="AddMapsTexture">Textures\Models\Environment\Trees\PineBark_add.dds</Parameter>
+    </Material>
+    <Material Name="PineBranches">
+        <Parameter Name="Technique">FOLIAGE</Parameter>
+        <Parameter Name="ColorMetalTexture">Textures\Models\Environment\Trees\PineBranches_cm.dds</Parameter>
+        <Parameter Name="NormalGlossTexture">Textures\Models\Environment\Trees\PineBranches_ng.dds</Parameter>
+        <Parameter Name="AlphamaskTexture">Textures\Models\Environment\Trees\PineBranches_alphamask.dds</Parameter>
+        <Parameter Name="AddMapsTexture">Textures\Models\Environment\Trees\PineBranches_add.dds</Parameter>
+<!--         <Parameter Name="WindScale">0.008</Parameter>
+        <Parameter Name="WindFrequency">4</Parameter> -->
+    </Material>
+  
+  
+</MaterialsLib>

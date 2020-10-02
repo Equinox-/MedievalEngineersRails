@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Model Name="Scene">
+	<Parameter Name="RescaleFactor">1.00</Parameter>
+</Model>

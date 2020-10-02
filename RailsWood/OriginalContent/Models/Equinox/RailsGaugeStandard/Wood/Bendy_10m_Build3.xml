@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Model Name="BendableRailSegment_10m">
+	<Parameter Name="RescaleFactor">1.0</Parameter>
+
+  <MaterialRef Name="BlockSheet" />
+  <MaterialRef Name="Steel_Worn_Rusted" />
+  <MaterialRef Name="Steel_Worn" />
+  <MaterialRef Name="RoughWood_Tarred" />
+  <MaterialRef Name="RoughWood01_Tarred" />
+  <MaterialRef Name="RoughWood01_Edges_Tarred" />
+  
+  <MaterialRef Name="RoughWood" />
+  <MaterialRef Name="RoughWood01" />
+  <MaterialRef Name="RoughWood01_Edges" />
+  <LOD Distance="30">
+    <Model>Models\Equinox\RailsGaugeStandard\Wood\Bendy_10m_Build3_LOD1</Model>
+  </LOD>
+</Model>

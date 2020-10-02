@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<Model Name="Default">
+  <Parameter Name="RescaleFactor">1.0</Parameter>
+  <Material Name="SledgeHammer">
+    <Parameter Name="Technique">MESH</Parameter>
+    <Parameter Name="DiffuseTexture">Textures\Models\Weapons\SledgeHammer_de.dds</Parameter>
+    <Parameter Name="ColorMetalTexture">Textures\Models\Weapons\SledgeHammer_cm.dds</Parameter>
+    <Parameter Name="NormalGlossTexture">Textures\Models\Weapons\SledgeHammer_ng.dds</Parameter>
+    <Parameter Name="AddTexture">Textures\Models\Weapons\SledgeHammer_add.dds</Parameter>
+  </Material>
+  <MaterialRef Name="BlockSheet02" />
+</Model>
