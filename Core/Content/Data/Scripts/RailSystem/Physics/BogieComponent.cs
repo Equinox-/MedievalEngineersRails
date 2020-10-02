@@ -8,13 +8,18 @@ using Equinox76561198048419394.RailSystem.Construction;
 using Equinox76561198048419394.RailSystem.Definition;
 using Equinox76561198048419394.RailSystem.Util;
 using Equinox76561198048419394.RailSystem.Util.Curve;
+using Havok;
 using Sandbox.Engine.Physics;
 using Sandbox.Game.Entities.Entity.Stats;
 using Sandbox.Game.EntityComponents.Character;
+using Sandbox.Game.EntityComponents.Grid;
 using Sandbox.ModAPI;
 using VRage.Components;
+using VRage.Components.Block;
 using VRage.Components.Entity;
+using VRage.Components.Entity.CubeGrid;
 using VRage.Components.Physics;
+using VRage.Components.Session;
 using VRage.Definitions.Components.Character;
 using VRage.Entities.Gravity;
 using VRage.Game;
@@ -23,6 +28,7 @@ using VRage.Game.Entity;
 using VRage.Game.ObjectBuilders.ComponentSystem;
 using VRage.ObjectBuilders;
 using VRage.ObjectBuilders.Components.Entity.Stats;
+using VRage.Scene;
 using VRage.Session;
 using VRage.Utils;
 using VRageMath;
@@ -31,11 +37,23 @@ namespace Equinox76561198048419394.RailSystem.Physics
 {
     [MyComponent(typeof(MyObjectBuilder_BogieComponent))]
     [MyDependency(typeof(MyModelAttachmentComponent), Critical = false, Recursive = false)]
+    [MyDependency(typeof(MyBlockComponent), Critical = true)]
     [MyDefinitionRequired(typeof(BogieComponentDefinition))]
     public class BogieComponent : MyEntityComponent
     {
         public BogieComponentDefinition Definition { get; private set; }
         private readonly PowerObserver _powerObserver = new PowerObserver();
+
+        [Automatic]
+        private readonly MyBlockComponent _blockComponent = null;
+
+        [Automatic]
+        private readonly MyModelAttachmentComponent _attacher = null;
+
+        private const int SEQUENTIAL_SLEEP_TICKS_BEFORE_PAUSE = 60;
+        private const int ATTEMPT_SLEEP_EVERY = 60;
+        private int _nextSleepAttempt = 0;
+        private int _sequentialSleepingTicks = 0;
 
         public override void Init(MyEntityComponentDefinition definition)
         {
@@ -57,12 +75,10 @@ namespace Equinox76561198048419394.RailSystem.Physics
 
         private BendyLayer Graph;
 
-        private MyModelAttachmentComponent _attacher;
-
         public override void OnAddedToScene()
         {
+            base.OnAddedToScene();
             Graph = MySession.Static.Components.Get<BendyController>()?.GetOrCreateLayer(Definition.Layer);
-            _attacher = Container.Get<MyModelAttachmentComponent>();
             if (_attacher != null)
             {
                 _attacher.OnEntityAttached += FixupSkinEntity;
@@ -70,7 +86,8 @@ namespace Equinox76561198048419394.RailSystem.Physics
                     FixupSkinEntity(_attacher, e);
             }
 
-            base.OnAddedToScene();
+            _blockComponent.Move += BlockMoved;
+            BlockMoved(_blockComponent, _blockComponent.GridData);
             _powerObserver.RequiredPower = Definition.NeedsPower;
         }
 
@@ -94,7 +111,52 @@ namespace Equinox76561198048419394.RailSystem.Physics
             if (_attacher != null)
             {
                 _attacher.OnEntityAttached -= FixupSkinEntity;
-                _attacher = null;
+            }
+
+            _blockComponent.Move -= BlockMoved;
+            BlockMoved(null, null);
+        }
+
+        private MyPhysicsComponentBase _gridPhysicsComponent;
+        private MyPositionComponentBase _gridPositionComponent;
+
+        private void BlockMoved(MyBlockComponent block, MyGridDataComponent gridData)
+        {
+            var nextGridPhys = gridData?.Container?.Get<MyPhysicsComponentBase>();
+            var nextGridPos = gridData?.Container?.Get<MyPositionComponentBase>();
+            if (nextGridPos == _gridPositionComponent && nextGridPhys == _gridPhysicsComponent)
+                return;
+            if (_gridPositionComponent != null)
+                _gridPositionComponent.OnPositionChanged -= WakePhysics;
+            _gridPhysicsComponent = nextGridPhys;
+            _gridPositionComponent = nextGridPos;
+            if (_gridPositionComponent != null)
+                WakePhysics(null);
+            else
+                RemoveFixedUpdate(Simulate);
+        }
+
+        private bool _physicsAwake;
+
+        private void WakePhysics(MyPositionComponentBase obj)
+        {
+            if (_gridPositionComponent != null)
+                _gridPositionComponent.OnPositionChanged -= WakePhysics;
+            if (!_physicsAwake)
+            {
+                _physicsAwake = true;
+                AddFixedUpdate(Simulate);
+            }
+        }
+
+        private void SleepPhysics()
+        {
+            if (_physicsAwake)
+            {
+                if (_gridPositionComponent != null)
+                    _gridPositionComponent.OnPositionChanged += WakePhysics;
+                _physicsAwake = false;
+                RemoveFixedUpdate(Simulate);
             }
         }
 
@@ -151,63 +213,43 @@ namespace Equinox76561198048419394.RailSystem.Physics
                 k.Get<MyAnimationControllerComponent>()?.TriggerAction(AnimRailSync);
         }
 
-        [FixedUpdate]
-        private void Simulate()
+        private struct SimulationResult
         {
-            var root = Entity;
-            while (root != null && root.Physics == null)
-                root = root.Parent;
-            if (root?.Physics == null || root.Physics.IsStatic)
-            {
-                if (!RailConstants.Debug.DrawBogiePhysics)
-                    return;
+            public bool Active;
+            public float AnimationVelocity;
 
-                var drawPivot = Entity.GetPosition() + 4 * Entity.PositionComp.WorldMatrix.Up;
-                var colorTarget = new Vector4(1, 1, 0, 1);
-                MySimpleObjectDraw.DrawLine(Entity.GetPosition(), drawPivot, DebugMtl, ref colorTarget,
-                    .01f);
-                return;
-            }
+            public FindEdgeResult FindEdgeResult;
 
-            // Clean good controllers
-            {
-                _goodControllers.Clear();
-                FindAttachedAnimControllers(Entity, _goodControllers);
+            public bool AllowDeactivation;
+            public Vector3 PoweredImpulse;
+            public Vector3 ConstraintImpulse;
+            public Vector3 AngularImpulse;
+        }
 
-                _removedControllers.Clear();
-                foreach (var k in _activeControllers)
-                    if (!_goodControllers.Contains(k))
-                        _removedControllers.Add(k);
+        private struct FindEdgeResult
+        {
+            public float EdgeFactor;
+            public double Score;
+            public Vector3 Tangent;
+            public Edge Edge;
+            public RailSegmentComponent SegmentDefinition;
+            public RailSegmentDefinition.RailSegmentCaps SegmentCaps;
 
-                foreach (var k in _removedControllers)
-                    _activeControllers.Remove(k);
-                _removedControllers.Clear();
+            public Vector3 Normal;
+            public Vector3 Up;
+            public Vector3D Position;
+        }
 
-                var sync = false;
-                foreach (var k in _goodControllers)
-                    if (_activeControllers.Add(k))
-                        sync = true;
+        private bool TryFindEdge(out FindEdgeResult result)
+        {
+            result = default;
 
-                if (sync)
-                {
-                    AddScheduledCallback(ControllerSync, 30);
-                }
-            }
-
-
-            var physics = root.Physics;
-            var pivotWorld = Entity.PositionComp.WorldMatrix.Translation;
-
-            var best = double.MaxValue;
-            var bestTangent = Vector3.Zero;
-            Edge bestEdge = null;
-            RailSegmentComponent bestEdgeSegment;
-            RailSegmentDefinition.RailSegmentCaps? bestEdgeCaps = null;
-            float bestTime = 0;
-            using (var e = Graph.Edges.SortedByDistance(pivotWorld))
+            var position = Entity.PositionComp.WorldMatrix.Translation;
+            result.Score = Definition.DetachDistance + TotalBias;
+            using (var e = Graph.Edges.SortedByDistance(position))
                 while (e.MoveNext())
                 {
-                    if (Math.Sqrt(e.Current.DistanceSquared) - TotalBias > best)
+                    if (Math.Sqrt(e.Current.DistanceSquared) - TotalBias > result.Score)
                         break;
                     var edge = (Edge) e.Current.UserData;
                     if (edge.Curve == null)
@@ -217,15 +259,15 @@ namespace Equinox76561198048419394.RailSystem.Physics
                     if (edgeSegment == null || !edgeCaps.HasValue)
                         continue; // no capabilities at this stage
                     float t0 = 0, t1 = 1;
-                    CurveExtensions.NearestPoint(edge.Curve, pivotWorld, 16, ref t0, ref t1);
+                    CurveExtensions.NearestPoint(edge.Curve, position, 16, ref t0, ref t1);
                     var p0 = edge.Curve.Sample(t0);
                     var p1 = edge.Curve.Sample(t1);
                     var dir = p1 - p0;
-                    var factor = (float) MathHelper.Clamp(dir.Dot(pivotWorld - p0) / dir.LengthSquared(), 0, 1);
+                    var factor = (float) MathHelper.Clamp(dir.Dot(position - p0) / dir.LengthSquared(), 0, 1);
                     var t = t0 + (t1 - t0) * factor;
                     var pos = edge.Curve.Sample(t);
-                    var dist = Vector3D.Distance(pos, pivotWorld);
-                    if (dist - TotalBias > best)
+                    var score = Vector3D.Distance(pos, position);
+                    if (score - TotalBias > result.Score)
                         continue;
                     var tangent = (Vector3) edge.Curve.SampleDerivative(t);
                     tangent.Normalize();
@@ -236,110 +278,109 @@ namespace Equinox76561198048419394.RailSystem.Physics
                         switched = edge.From.IsSwitchedTo(edge.To);
                     else if (t >= 1 - switchingEpsilon)
                         switched = edge.To.IsSwitchedTo(edge.From);
+                    var forwardDotTangent = Entity.PositionComp.WorldMatrix.Forward.Dot(tangent);
+                    if (forwardDotTangent < 0)
+                    {
+                        forwardDotTangent = -forwardDotTangent;
+                        tangent = -tangent;
+                    }
+
                     if (switched)
-                        dist -= SwitchingDistanceBias + AlignmentTangentBias;
+                        score -= SwitchingDistanceBias + AlignmentTangentBias;
                     else
-                        dist -= AlignmentTangentBias * Math.Abs(Entity.PositionComp.WorldMatrix.Forward.Dot(tangent));
+                        score -= AlignmentTangentBias * forwardDotTangent;
 
                     if (RailConstants.Debug.DrawBogieEdges)
                         edge.Draw(0, 1, switched ? new Vector4(0, 1, 0, 1) : new Vector4(1, 0, 1, 1), 2);
 
                     // ReSharper disable once InvertIf
-                    if (dist < best)
+                    if (score < result.Score)
                     {
-                        best = dist;
-                        bestTangent = tangent;
-                        bestEdge = edge;
-                        bestEdgeSegment = edgeSegment;
-                        bestEdgeCaps = edgeCaps;
-                        bestTime = t;
+                        result.Score = score;
+                        result.Tangent = tangent;
+                        result.Edge = edge;
+                        result.SegmentDefinition = edgeSegment;
+                        result.SegmentCaps = edgeCaps.Value;
+                        result.EdgeFactor = t;
                     }
                 }
 
-            var selfVelocity = physics.GetVelocityAtPoint(pivotWorld);
-            SetAnimVar(SpeedZVar, selfVelocity.Dot((Vector3) Entity.PositionComp.WorldMatrix.Forward));
-            if (bestEdge == null)
-            {
-                if (!RailConstants.Debug.DrawBogiePhysics)
-                    return;
-
-                var drawPivot = pivotWorld + 4 * Entity.PositionComp.WorldMatrix.Up;
-                var colorTarget = new Vector4(1, 0, 0, 1);
-                MySimpleObjectDraw.DrawLine(pivotWorld, drawPivot, DebugMtl, ref colorTarget,
-                    .01f);
-                return;
-            }
-
-            if (best > Definition.DetachDistance)
-            {
-                if (!RailConstants.Debug.DrawBogiePhysics)
-                    return;
-
-                var drawPivot = pivotWorld + 4 * Entity.PositionComp.WorldMatrix.Up;
-                var colorTarget = new Vector4(1, 0, 1, 1);
-                MySimpleObjectDraw.DrawLine(pivotWorld, drawPivot, DebugMtl, ref colorTarget,
-                    .01f);
-                return;
-            }
-
-            var up = (Vector3) Vector3D.Lerp(bestEdge.From.Up, bestEdge.To.Up, bestTime);
+            if (result.Edge == null || result.Score > Definition.DetachDistance)
+                return false;
+            result.Up = (Vector3) Vector3D.Lerp(result.Edge.From.Up, result.Edge.To.Up, result.EdgeFactor);
             // Not aligned vertically, abort
-            if (Entity.PositionComp.WorldMatrix.Up.Dot(up) < 0.5)
-            {
+            if (Entity.PositionComp.WorldMatrix.Up.Dot(result.Up) < 0.5)
+                return false;
+
+            result.Position = result.Edge.Curve.Sample(result.EdgeFactor) + result.Up * Definition.VerticalOffset;
+            result.Normal = Vector3.Cross(result.Tangent, result.Up);
+            result.Normal.Normalize();
+
+            result.Up = Vector3.Cross(result.Normal, result.Tangent);
+            result.Up.Normalize();
+            return true;
+        }
+
+        private void SimulationDryRun(out SimulationResult simResult)
+        {
+            simResult = default;
+            simResult.Active = false;
+            if (_gridPhysicsComponent == null || _gridPhysicsComponent.IsStatic)
                 return;
-            }
+            if (!TryFindEdge(out simResult.FindEdgeResult))
+                return;
+            simResult.Active = true;
+            ref var edgeResult = ref simResult.FindEdgeResult;
 
-            if (Entity.PositionComp.WorldMatrix.Forward.Dot(bestTangent) < 0)
-                bestTangent = -bestTangent;
-            var curvePosition = bestEdge.Curve.Sample(bestTime) + up * Definition.VerticalOffset;
-            var normal = Vector3.Cross(bestTangent, up);
-            normal.Normalize();
+            var position = Entity.GetPosition();
+            simResult.AnimationVelocity = _gridPhysicsComponent.GetVelocityAtPoint(position).Dot((Vector3) Entity.PositionComp.WorldMatrix.Forward);
 
-            up = Vector3.Cross(normal, bestTangent);
-            up.Normalize();
+            simResult.ConstraintImpulse = Vector3.Zero;
+            simResult.AllowDeactivation = true;
+            var effectiveMass = _gridPhysicsComponent.Mass;
+            var inertiaTensor = _gridPhysicsComponent.InertiaTensor;
 
-            var impulse = Vector3.Zero;
-            var allowDeactivation = true;
-            var effectiveMass = root.Physics.Mass;
-            var inertiaTensor = root.Physics.InertiaTensor;
+            ref var up = ref edgeResult.Up;
+            ref var tangent = ref edgeResult.Tangent;
+            ref var normal = ref edgeResult.Normal;
+            ref var curvePosition = ref edgeResult.Position;
 
             var qCurrent = Quaternion.CreateFromRotationMatrix(Entity.PositionComp.WorldMatrix);
-            var qDesired = Quaternion.CreateFromRotationMatrix(Matrix.CreateWorld(Vector3.Zero, bestTangent, up));
+            var qDesired = Quaternion.CreateFromRotationMatrix(Matrix.CreateWorld(Vector3.Zero, tangent, up));
             var qConj = Quaternion.Multiply(Quaternion.Conjugate(qCurrent), qDesired);
             var localAngularDesired = 2 * qConj.W * new Vector3(qConj.X, qConj.Y, qConj.Z);
             if (localAngularDesired.LengthSquared() > .01f)
-                allowDeactivation = false;
+                simResult.AllowDeactivation = false;
             var desiredAngular = Vector3.Transform(localAngularDesired, qCurrent) * 2;
-            var rotApply = desiredAngular;
-            var dAngAccel = desiredAngular - 0.25f * physics.AngularVelocity;
-            
-            var dAngAccelUp = Vector3.Dot(dAngAccel , up) * up;
+            var dAngAccel = desiredAngular - 0.25f * _gridPhysicsComponent.AngularVelocity;
+
+            var dAngAccelUp = Vector3.Dot(dAngAccel, up) * up;
             var dAngAccelOther = dAngAccel - dAngAccelUp;
             var dAngAccelCorrected = (dAngAccelUp * Definition.OrientationConvergenceFactorHorizontal) +
                                      (dAngAccelOther * Definition.OrientationConvergenceFactor);
-            var angularImpulse = Vector3.TransformNormal(dAngAccelCorrected, inertiaTensor) / MyEngineConstants.UPDATE_STEP_SIZE_IN_SECONDS;
-            var com = physics.GetCenterOfMassWorld();
+            simResult.AngularImpulse = Vector3.TransformNormal(dAngAccelCorrected, inertiaTensor) / MyEngineConstants.UPDATE_STEP_SIZE_IN_SECONDS;
+            var gridVelocity = _gridPhysicsComponent.LinearVelocity;
 
             // a) spring joint along normal to get dot(normal, (pivot*matrix - position)) == 0
-            var err = (Vector3) (curvePosition - pivotWorld);
+            var err = (Vector3) (curvePosition - position);
 
-            // preemptive up force to counteract gravity.  Use root entity's position not its COM because that's what MyGridRigidBodyComponent does
-            var gravityHere = MyGravityProviderSystem.CalculateTotalGravityInPoint(root.GetPosition());
-            impulse += Vector3.Dot(gravityHere, up) * up * physics.Mass * MyEngineConstants.UPDATE_STEP_SIZE_IN_SECONDS;
+            // preemptive up force to counteract gravity.
+            var gravityHere = MyGravityProviderSystem.CalculateTotalGravityInPoint(position);
+            simResult.ConstraintImpulse += Vector3.Dot(gravityHere, up) * up * effectiveMass * MyEngineConstants.UPDATE_STEP_SIZE_IN_SECONDS;
 
-            impulse += SolveImpulse(err, normal, physics.LinearVelocity, effectiveMass);
+            simResult.ConstraintImpulse += SolveImpulse(err, normal, gridVelocity, effectiveMass);
 
             // b) half spring joint along up to get dot(up, (pivot*matrix - position)) >= 0
-            impulse += SolveImpulse(err, up, physics.LinearVelocity, effectiveMass, 1); // only up force
+            simResult.ConstraintImpulse += SolveImpulse(err, up, gridVelocity, effectiveMass, 1); // only up force
 
             if (err.LengthSquared() > .01f)
-                allowDeactivation = false;
+                simResult.AllowDeactivation = false;
 
             var braking = false;
             // Hack until I fix EquinoxCore
             if (Definition.MaxVelocity > 0 && (_powerObserver.IsPowered || Definition.NeedsPower == PowerObserver.RequiredPowerEnum.None))
             {
-                var cvel = physics.LinearVelocity.Dot(bestTangent);
+                var trackVelocity = gridVelocity.Dot(tangent);
                 var velocityMod = 0f;
 
                 // get nearest character
@@ -351,7 +392,7 @@ namespace Equinox76561198048419394.RailSystem.Physics
                     var component = player?.Get<MyCharacterMovementComponent>();
                     if (component == null)
                         continue;
-                    var control = Vector3.TransformNormal(component.MoveIndicator, player.WorldMatrix).Dot(bestTangent);
+                    var control = Vector3.TransformNormal(component.MoveIndicator, player.WorldMatrix).Dot(tangent);
                     totalControl += control;
                     controllers++;
 
@@ -365,9 +406,9 @@ namespace Equinox76561198048419394.RailSystem.Physics
                     sprinters++;
                 }
 
-                if (controllers > 0)
+                if (controllers > 0 && Math.Abs(totalControl) > 1e-3f)
                 {
-                    braking |= Math.Sign(cvel) != Math.Sign(totalControl) && Math.Abs(cvel) > 0.01 &&
+                    braking |= Math.Sign(trackVelocity) != Math.Sign(totalControl) && Math.Abs(trackVelocity) > 0.01 &&
                                Math.Abs(totalControl) > 0.01;
                     SetAnimVar(BrakingVar, braking ? 1 : 0);
                     _powerFactor = MathHelper.Clamp(_powerFactor * (1 - PowerSmooth) + totalControl * PowerSmooth, -1, 1);
@@ -375,127 +416,165 @@ namespace Equinox76561198048419394.RailSystem.Physics
                         _powerFactor = 0;
 
                     var velocityLimit = Definition.MaxVelocity * velocityMod;
-                    velocityLimit = Math.Min(velocityLimit, bestEdgeCaps.Value.MaxSpeed);
+                    velocityLimit = Math.Min(velocityLimit, edgeResult.SegmentCaps.MaxSpeed);
 
-                    var forceFactorBase = MathHelper.Clamp(1 - Math.Abs(cvel) / velocityLimit, 0, 1);
+                    var forceFactorBase = MathHelper.Clamp(1 - Math.Abs(trackVelocity) / velocityLimit, 0, 1);
                     var forceFactorControl = Math.Abs(_powerFactor);
                     if (sprinters > 0)
                         forceFactorControl *= 5 * ((float) sprinters) / controllers;
                     forceFactorControl *= .9f + controllers * .1f;
 
                     var dir = Math.Sign(_powerFactor);
-                    if (dir != Math.Sign(cvel))
+                    if (dir != Math.Sign(trackVelocity))
                         forceFactorBase = 1;
 
-                    var force = Definition.MaxForce * forceFactorControl * forceFactorBase * dir * bestTangent *
-                                MyEngineConstants.UPDATE_STEP_SIZE_IN_SECONDS;
-                    physics.AddForce(MyPhysicsForceType.APPLY_WORLD_IMPULSE_AND_WORLD_ANGULAR_IMPULSE, force, com,
-                        Vector3.Zero);
+                    simResult.PoweredImpulse = Definition.MaxForce * forceFactorControl * forceFactorBase * dir * tangent *
+                                               MyEngineConstants.UPDATE_STEP_SIZE_IN_SECONDS;
+                    simResult.AllowDeactivation = false;
                 }
             }
 
 
             Vector3 frictiveImpulse;
             {
-                var frictiveNormalForce = Math.Max(0, impulse.Dot(up) / MyEngineConstants.UPDATE_STEP_SIZE_IN_SECONDS);
+                var frictiveNormalForce = Math.Max(0, simResult.ConstraintImpulse.Dot(up) / MyEngineConstants.UPDATE_STEP_SIZE_IN_SECONDS);
 
                 var frictiveCoefficient = Math.Max(Definition.CoefficientOfFriction, braking ? Definition.BrakingCoefficientOfFriction : 0);
-                if (physics.LinearVelocity.LengthSquared() > .01f)
+                if (gridVelocity.LengthSquared() > .01f)
                     frictiveCoefficient *= 0.75f;
-                var frictiveForce = frictiveCoefficient * (bestEdgeCaps?.Friction ?? 1) * frictiveNormalForce;
+                var frictiveForce = frictiveCoefficient * edgeResult.SegmentCaps.Friction * frictiveNormalForce;
 
                 // clamp frictive impulse to at-max stopping.
                 var tangentMomentumAfterUpdate =
-                    (physics.Mass * (physics.LinearVelocity + gravityHere * MyEngineConstants.UPDATE_STEP_SIZE_IN_SECONDS) + impulse).Dot(bestTangent);
+                    (effectiveMass * (gridVelocity + gravityHere * MyEngineConstants.UPDATE_STEP_SIZE_IN_SECONDS) + simResult.ConstraintImpulse).Dot(
+                        tangent);
 
                 var frictiveFloatImpulse = frictiveForce * MyEngineConstants.UPDATE_STEP_SIZE_IN_SECONDS;
 
                 if (frictiveFloatImpulse > Math.Abs(tangentMomentumAfterUpdate))
                     // Stationary, allow deactivation
-                    frictiveImpulse = -tangentMomentumAfterUpdate * bestTangent;
+                    frictiveImpulse = -tangentMomentumAfterUpdate * tangent;
                 else
                 {
-                    frictiveImpulse = -Math.Sign(tangentMomentumAfterUpdate) * frictiveFloatImpulse * bestTangent;
-                    allowDeactivation = false;
+                    frictiveImpulse = -Math.Sign(tangentMomentumAfterUpdate) * frictiveFloatImpulse * tangent;
+                    simResult.AllowDeactivation = false;
                 }
 
-                impulse += frictiveImpulse;
+                simResult.ConstraintImpulse += frictiveImpulse;
             }
+
+            return;
+        }
+
+        [Update(MyEngineConstants.UPDATE_STEP_SIZE_IN_MILLISECONDS * 10)]
+        private void FindControllers(long dt)
+        {
+            _goodControllers.Clear();
+            FindAttachedAnimControllers(Entity, _goodControllers);
+
+            _removedControllers.Clear();
+            foreach (var k in _activeControllers)
+                if (!_goodControllers.Contains(k))
+                    _removedControllers.Add(k);
+
+            foreach (var k in _removedControllers)
+                _activeControllers.Remove(k);
+            _removedControllers.Clear();
+
+            var sync = false;
+            var wake = false;
+            foreach (var k in _goodControllers)
+            {
+                if (_activeControllers.Add(k))
+                    sync = wake = true;
+                var ctl = k?.Get<MyCharacterMovementComponent>();
+                if (ctl != null && ctl.MoveIndicator != Vector3.Zero)
+                    wake = true;
+            }
+
+            if (sync)
+                AddScheduledCallback(ControllerSync, 30);
+            if (wake)
+                WakePhysics(null);
+        }
+
+        [FixedUpdate]
+        private void Simulate()
+        {
+            var position = Entity.GetPosition();
+            SimulationDryRun(out var simulationResult);
+            if (!simulationResult.Active)
+            {
+                SleepPhysics();
+                return;
+            }
+
+            SetAnimVar(SpeedZVar, simulationResult.AnimationVelocity);
 
             if (!MyAPIGateway.Utilities.IsDedicated && RailConstants.Debug.DrawBogiePhysics)
             {
-                var drawPivot = pivotWorld + 4 * up;
+                var drawPivot = position + 4 * simulationResult.FindEdgeResult.Up;
                 var colorTarget = Vector4.One;
-                MySimpleObjectDraw.DrawLine(pivotWorld, curvePosition, DebugMtl, ref colorTarget,
-                    .01f);
-
-                var colorMarker = new Vector4(0, 1, 0, 1);
-                MySimpleObjectDraw.DrawLine(drawPivot, drawPivot + frictiveImpulse * 10, DebugMtl, ref colorMarker,
+                MySimpleObjectDraw.DrawLine(position, simulationResult.FindEdgeResult.Position, DebugMtl, ref colorTarget,
                     .01f);
 
                 var colorImpulse = new Vector4(1, 0, 0, 1);
-                MySimpleObjectDraw.DrawLine(drawPivot, drawPivot + impulse, DebugMtl, ref colorImpulse,
+                MySimpleObjectDraw.DrawLine(drawPivot, drawPivot + (simulationResult.PoweredImpulse + simulationResult.ConstraintImpulse), DebugMtl,
+                    ref colorImpulse,
                     .01f);
 
                 var colorAngImpulse = new Vector4(0, 0, 1, 1);
-                MySimpleObjectDraw.DrawLine(drawPivot, drawPivot + rotApply, DebugMtl, ref colorAngImpulse,
+                MySimpleObjectDraw.DrawLine(drawPivot, drawPivot + simulationResult.AngularImpulse, DebugMtl, ref colorAngImpulse,
                     .01f);
+
+                var allowed = simulationResult.AllowDeactivation ? new Vector4(0, 1, 0, 1) : new Vector4(1, 0, 0, 1);
+                var sleeping = _gridPhysicsComponent.IsActive ? new Vector4(1, 0, 0, 1) : new Vector4(0, 1, 0, 1);
+                var v0 = position + simulationResult.FindEdgeResult.Up * 2;
+                var v1 = position + simulationResult.FindEdgeResult.Up * 2.2f;
+                var shift = simulationResult.FindEdgeResult.Tangent * .2f;
+                MySimpleObjectDraw.DrawLine(v0 + shift, v1 + shift, DebugMtl, ref allowed, 0.1f);
+                MySimpleObjectDraw.DrawLine(v0 - shift, v1 - shift, DebugMtl, ref sleeping, 0.1f);
             }
 
-            if (allowDeactivation)
+            if (simulationResult.AllowDeactivation)
             {
-                // Immediately update gravity so that the delayed gravity updates don't
-                // wake the body up.
-                physics.Gravity = gravityHere;
-                physics.Sleep();
-                if (!physics.IsActive)
-                    return;
+                if (_nextSleepAttempt <= 0)
+                {
+                    if (AttemptPhysicsSleep(_gridPhysicsComponent.Entity))
+                    {
+                        if (_sequentialSleepingTicks < SEQUENTIAL_SLEEP_TICKS_BEFORE_PAUSE)
+                            _sequentialSleepingTicks++;
+                        else
+                            SleepPhysics();
+                        return;
+                    }
+
+                    // We attempted to sleep, but failed.  Try again in ATTEMPT_SLEEP_EVERY
+                    _nextSleepAttempt = ATTEMPT_SLEEP_EVERY;
+                }
+                else
+                {
+                    // We could sleep, but we're still on cooldown -- decrease cooldown.
+                    _nextSleepAttempt--;
+                }
+            }
+            else
+            {
+                // We can't sleep -- reset cooldown
+                _nextSleepAttempt = 0;
             }
 
-            physics.AddForce(MyPhysicsForceType.APPLY_WORLD_IMPULSE_AND_WORLD_ANGULAR_IMPULSE, impulse, com, Vector3.Zero);
-            physics.AddForce(MyPhysicsForceType.APPLY_WORLD_IMPULSE_AND_WORLD_ANGULAR_IMPULSE, Vector3.Zero, pivotWorld, angularImpulse);
-        }
+            _sequentialSleepingTicks = 0;
 
-        private const float _edgeWidth = 0.05f;
-        private const float _nodeWidth = 0.01f;
-        private static Vector4 _edgeColor = new Vector4(0, 0, 1, 0.1f);
-        private static readonly Vector4 _edgeColorBad = new Vector4(1, 0, 0, 0.1f);
-        private static readonly Vector4 _nodeColor = new Vector4(0, 0, 1, 0.1f);
-        private static readonly MyStringId _squareMaterial = MyStringId.GetOrCompute("Square");
-        private const float _nodeMarkerSize = 1;
-        private const float _edgeMarkerVertOffset = 0.325f;
+            _gridPhysicsComponent.AddForce(MyPhysicsForceType.APPLY_WORLD_IMPULSE_AND_WORLD_ANGULAR_IMPULSE,
+                simulationResult.ConstraintImpulse + simulationResult.PoweredImpulse, _gridPhysicsComponent.GetCenterOfMassWorld(), Vector3.Zero);
+            _gridPhysicsComponent.AddForce(MyPhysicsForceType.APPLY_WORLD_IMPULSE_AND_WORLD_ANGULAR_IMPULSE, Vector3.Zero, Entity.GetPosition(),
+                simulationResult.AngularImpulse);
+        }
 
 
         private const float PowerSmooth = .005f;
         private float _powerFactor;
-
-        private static Vector3 SolveAngularVel(Vector3 from, Vector3 to, bool reversible)
-        {
-            if (from.Dot(to) < 0 && reversible)
-                from = -from;
-            var axis = Vector3.Cross(from, to);
-            return axis / (2 * MyEngineConstants.UPDATE_STEP_SIZE_IN_SECONDS);
-        }
-
-        private static Matrix CreateInertiaTensor(MyEntity e)
-        {
-            var scale = e.PositionComp.LocalAABB.Size;
-            scale *= scale;
-            var sv = e.Physics.Mass / 12;
-
-            var m = Matrix.CreateScale(sv * (scale.Y + scale.Z), sv * (scale.X + scale.Z), sv * (scale.X + scale.Y));
-            return (Matrix) e.PositionComp.WorldMatrixInvScaled.GetOrientation() * m *
-                   (Matrix) e.PositionComp.WorldMatrix.GetOrientation();
-        }
-
-        private static Vector3 SolveImpulse(Vector3 desired, Vector3 actual, Matrix tensor)
-        {
-            var vel = desired.Normalize();
-            var actualVel = actual.Dot(desired);
-
-            var actualDv = desired * (vel - actualVel);
-            return Vector3.TransformNormal(actualDv, tensor);
-        }
 
         private static Vector3 SolveImpulse(Vector3 error, Vector3 dir, Vector3 vel,
             float mass, int signFlags = 3)
@@ -510,6 +589,79 @@ namespace Equinox76561198048419394.RailSystem.Physics
             if ((signFlags & 2) == 0 && errorOnAxis < 0)
                 return Vector3.Zero;
             return dir * (desiredVel - velOnAxis) * mass;
+        }
+
+        private static bool CanSleepPhysics(MyPhysicsComponentBase check, MyPhysicsComponentBase relativeTo)
+        {
+            const double toleranceLinear = .025f;
+            const double toleranceAngular = .1f;
+            var checkLinVel = check.LinearVelocity.LengthSquared();
+            var checkAngVel = check.AngularVelocity.LengthSquared();
+            if (checkLinVel < toleranceLinear && checkAngVel < toleranceAngular)
+                return true;
+            if (relativeTo == null)
+                return false;
+            checkLinVel = Math.Abs(checkLinVel - relativeTo.LinearVelocity.LengthSquared());
+            checkAngVel = Math.Abs(checkAngVel - relativeTo.AngularVelocity.LengthSquared());
+            return checkLinVel < toleranceLinear && checkAngVel < toleranceAngular;
+        }
+        
+        private static bool AttemptPhysicsSleep(MyEntity start)
+        {
+            var relativeTo = start.Get<MyPhysicsComponentBase>();
+            using (PoolManager.Get(out HashSet<MyGroup> visitedGroups))
+            using (PoolManager.Get(out HashSet<MyEntity> visitedEntities))
+            using (PoolManager.Get(out List<MyEntity> pruningEntities))
+            using (PoolManager.Get(out Queue<MyEntity> queue))
+            {
+                visitedEntities.Clear();
+                visitedGroups.Clear();
+                queue.Clear();
+
+                queue.Enqueue(start);
+                visitedEntities.Add(start);
+                while (queue.Count > 0)
+                {
+                    var e = queue.Dequeue();
+                    if (e.Components.TryGet(out MyBlockComponent block))
+                    {
+                        if (visitedEntities.Add(block.GridData.Entity))
+                            queue.Enqueue(block.GridData.Entity);
+                        continue;
+                    }
+
+                    if (!e.Components.TryGet<MyPhysicsComponentBase>(out var physicsComponent) || physicsComponent.IsStatic || !physicsComponent.Enabled)
+                        continue;
+                    if (e.Components.TryGet<MyCharacterPhysics>(out var characterPhysics) && characterPhysics.Enabled)
+                        return false;
+                    if (relativeTo != physicsComponent && !CanSleepPhysics(physicsComponent, relativeTo))
+                        return false;
+
+                    foreach (var group in MySession.Static.Scene.GetEntityGroups(e.Id))
+                        if (visitedGroups.Add(group))
+                            foreach (var entity in group.Entities)
+                                if (visitedEntities.Add(entity))
+                                    queue.Enqueue(entity);
+
+                    var queryVol = e.PositionComp.WorldVolume;
+                    queryVol.Radius += 1;
+                    pruningEntities.Clear();
+                    MyGamePruningStructure.GetTopMostEntitiesInSphere(in queryVol, pruningEntities, MyEntityQueryType.Dynamic);
+                    foreach (var nearby in pruningEntities)
+                        if (visitedEntities.Add(nearby) && nearby.PositionComp.WorldVolume.Intersects(queryVol))
+                            queue.Enqueue(nearby);
+                }
+                
+                foreach (var ent in visitedEntities)
+                {
+                    var gridPhysics = ent.Get<MyGridRigidBodyComponent>();
+                    if (gridPhysics == null) continue;
+                    gridPhysics.Gravity = MyGravityProviderSystem.CalculateTotalGravityInPoint(ent.PositionComp.GetPosition());
+                    gridPhysics.Sleep();
+                }
+
+                return true;
+            }
         }
     }
 

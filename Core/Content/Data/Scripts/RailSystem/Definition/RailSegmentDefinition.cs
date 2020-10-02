@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Xml.Serialization;
+using Equinox76561198048419394.RailSystem.Bendy;
+using VRage.Components;
 using VRage.Game;
 using VRage.Game.Definitions;
 using VRage.Logging;
@@ -10,6 +12,7 @@ using VRage.ObjectBuilders;
 namespace Equinox76561198048419394.RailSystem.Definition
 {
     [MyDefinitionType(typeof(MyObjectBuilder_RailSegmentDefinition))]
+    [MyDependency(typeof(BendyComponentDefinition))]
     public class RailSegmentDefinition : MyEntityComponentDefinition
     {
         public struct RailSegmentCaps
