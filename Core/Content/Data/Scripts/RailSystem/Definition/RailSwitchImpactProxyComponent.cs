@@ -3,10 +3,8 @@ using Sandbox.ModAPI;
 using VRage.Components.Interfaces;
 using VRage.Game;
 using VRage.Game.Components;
-using VRage.Game.ModAPI;
 using VRage.Game.ObjectBuilders.ComponentSystem;
 using VRage.ObjectBuilders;
-using VRage.Utils;
 
 namespace Equinox76561198048419394.RailSystem.Definition
 {

@@ -58,6 +58,8 @@ ProjectSection(SolutionItems) = preProject
 	ModPackFun\Content\Data\WoodAdjustments.sbc = ModPackFun\Content\Data\WoodAdjustments.sbc
 EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Core.Tests", "Core.Tests\Core.Tests.csproj", "{0305B255-A402-4789-86BB-1EE2283D34EE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -65,5 +67,7 @@ Global
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{C071F54D-FA03-463F-AB16-79FD984A7FF4}.Debug|x64.ActiveCfg = Debug|x64
 		{C071F54D-FA03-463F-AB16-79FD984A7FF4}.Debug|x64.Build.0 = Debug|x64
+		{0305B255-A402-4789-86BB-1EE2283D34EE}.Debug|x64.ActiveCfg = Debug|x64
+		{0305B255-A402-4789-86BB-1EE2283D34EE}.Debug|x64.Build.0 = Debug|x64
 	EndGlobalSection
 EndGlobal

@@ -236,10 +236,10 @@ namespace Equinox76561198048419394.RailSystem.Bendy
 
         public override void OnRemovedFromScene()
         {
-            base.OnRemovedFromScene();
             _skeletonComponent = null;
             CloseNodesAndEdges();
             Graph = null;
+            base.OnRemovedFromScene();
         }
 
         private void CloseNodesAndEdges()
@@ -284,7 +284,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy
                     return i;
             return -1;
         }
-        
+
         public int IndexOfEdge(Edge n)
         {
             if (Edges == null)

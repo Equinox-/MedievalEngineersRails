@@ -1,5 +1,4 @@
-﻿using System.Runtime.Remoting.Contexts;
-using System.Xml.Serialization;
+﻿using System.Xml.Serialization;
 using Equinox76561198048419394.Core.Util;
 using VRage.Game;
 using VRage.Game.Definitions;

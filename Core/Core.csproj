@@ -629,6 +629,7 @@
     <Compile Include="Content\Data\Scripts\RailSystem\Definition\SwitchableNodeData.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Physics\BogieComponent.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Physics\BogieComponentDefinition.cs" />
+    <Compile Include="Content\Data\Scripts\RailSystem\Physics\RailwayPhysicsGroup.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Quest\Conditions\QuestConditionConstructable.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Quest\Conditions\QuestConditionGrading.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Quest\Conditions\QuestConditionPlanBendy.cs" />
@@ -644,12 +645,14 @@
     <Compile Include="Content\Data\Scripts\RailSystem\Util\DbvtExtensions.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Util\EnvironmentExtensions.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Util\FastRiggedCopyHack.cs" />
+    <Compile Include="Content\Data\Scripts\RailSystem\Util\IEquatableAndHash.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Util\MemStream.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Util\MessageUtil.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Util\MiscExtensions.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Util\PoolManager.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Util\Range.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Util\ReadonlyList.cs" />
+    <Compile Include="Content\Data\Scripts\RailSystem\Util\RootEntityRef.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Util\ShellEnumerator.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Util\SphericalExtensions.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Util\TriangleUtil.cs" />

@@ -5,7 +5,6 @@ using ProtoBuf;
 using VRage.Collections;
 using VRage.Components;
 using VRage.Game;
-using VRage.Game.Components;
 using VRage.ObjectBuilders;
 using VRage.Session;
 

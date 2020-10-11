@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using Sandbox.Game.Entities;
 using Sandbox.Game.WorldEnvironment;
-using VRage.Components.Session;
 using VRage.Game.Entity;
 using VRageMath;
 

@@ -1,11 +1,9 @@
-using System;
 using System.Collections.Generic;
 using Sandbox.ModAPI;
 using VRage.Components;
 using VRage.Components.Entity.Camera;
 using VRage.Game;
 using VRage.Game.Components;
-using VRage.Game.Entity;
 using VRage.Game.ModAPI;
 using VRage.Utils;
 using VRageMath;

@@ -14,7 +14,6 @@ using Sandbox.Game.EntityComponents.Character;
 using Sandbox.Game.Inventory;
 using Sandbox.ModAPI;
 using VRage.Components.Entity.Camera;
-using VRage.Components.Session;
 using VRage.Entities.Gravity;
 using VRage.Game;
 using VRage.Game.Definitions;

@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Xml.Serialization;
 using Equinox76561198048419394.RailSystem.Bendy;
+using Equinox76561198048419394.RailSystem.Physics;
 using Equinox76561198048419394.RailSystem.Util;
 using Sandbox.ModAPI;
 using VRage.Components;
@@ -17,9 +18,16 @@ namespace Equinox76561198048419394.RailSystem.Definition
     [MyDefinitionRequired(typeof(RailSegmentDefinition))]
     [MyDependency(typeof(BendyComponent))]
     [ReplicatedComponent]
-    public class RailSegmentComponent : MyEntityComponent, IMyEventProxy, IComponentDebugDraw
+    public class RailSegmentComponent : MyEntityComponent, IMyEventProxy, IComponentDebugDraw, IRailPhysicsComponent
     {
         public RailSegmentDefinition Definition { get; private set; }
+
+        public RailPhysicsNode PhysicsNode { get; }
+
+        public RailSegmentComponent()
+        {
+            PhysicsNode = new RailPhysicsNode(this);
+        }
 
         public override void Init(MyEntityComponentDefinition definition)
         {
@@ -29,11 +37,23 @@ namespace Equinox76561198048419394.RailSystem.Definition
 
         private BendyComponent _bendy;
 
+        public override void OnAddedToContainer()
+        {
+            base.OnAddedToContainer();
+            PhysicsNode.AddToContainer();
+        }
+
+        public override void OnBeforeRemovedFromContainer()
+        {
+            PhysicsNode.RemoveFromContainer();
+            base.OnBeforeRemovedFromContainer();
+        }
+
         public override void OnAddedToScene()
         {
             base.OnAddedToScene();
             _bendy = Container.Get<BendyComponent>();
-            
+
             AddScheduledCallback(FirstUpdate);
         }
 
@@ -90,16 +110,19 @@ namespace Equinox76561198048419394.RailSystem.Definition
                 MyEventContext.ValidationFailed();
                 return;
             }
+
             if (junction >= _bendy.Nodes.Length)
             {
                 MyEventContext.ValidationFailed();
                 return;
             }
+
             if (target >= _bendy.Nodes.Length)
             {
                 MyEventContext.ValidationFailed();
                 return;
             }
+
             var junctionNode = _bendy.Nodes[junction];
             var targetNode = _bendy.Nodes[target];
             var edge = junctionNode.ConnectionTo(targetNode);
@@ -108,6 +131,7 @@ namespace Equinox76561198048419394.RailSystem.Definition
                 MyEventContext.ValidationFailed();
                 return;
             }
+
             SwitchableNodeData.GetOrCreate(junctionNode).SideOrCreateFor(targetNode).SwitchToInternal(edge);
         }
 

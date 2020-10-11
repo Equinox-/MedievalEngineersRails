@@ -1,7 +1,5 @@
 ﻿using System;
 using VRage.Components.Entity.CubeGrid;
-using VRage.Definitions.Grid;
-using VRage.Game;
 using VRageMath;
 
 namespace Equinox76561198048419394.RailSystem.Util

@@ -8,7 +8,6 @@ using Equinox76561198048419394.RailSystem.Construction;
 using Equinox76561198048419394.RailSystem.Definition;
 using Equinox76561198048419394.RailSystem.Util;
 using Equinox76561198048419394.RailSystem.Util.Curve;
-using Havok;
 using Sandbox.Engine.Physics;
 using Sandbox.Game.Entities.Entity.Stats;
 using Sandbox.Game.EntityComponents.Character;
@@ -39,7 +38,7 @@ namespace Equinox76561198048419394.RailSystem.Physics
     [MyDependency(typeof(MyModelAttachmentComponent), Critical = false, Recursive = false)]
     [MyDependency(typeof(MyBlockComponent), Critical = true)]
     [MyDefinitionRequired(typeof(BogieComponentDefinition))]
-    public class BogieComponent : MyEntityComponent
+    public class BogieComponent : MyEntityComponent, IRailPhysicsComponent
     {
         public BogieComponentDefinition Definition { get; private set; }
         private readonly PowerObserver _powerObserver = new PowerObserver();
@@ -55,6 +54,13 @@ namespace Equinox76561198048419394.RailSystem.Physics
         private int _nextSleepAttempt = 0;
         private int _sequentialSleepingTicks = 0;
 
+        public RailPhysicsNode PhysicsNode { get; }
+
+        public BogieComponent()
+        {
+            PhysicsNode = new RailPhysicsNode(this);
+        }
+
         public override void Init(MyEntityComponentDefinition definition)
         {
             base.Init(definition);
@@ -65,11 +71,13 @@ namespace Equinox76561198048419394.RailSystem.Physics
         {
             base.OnAddedToContainer();
             _powerObserver.OnAddedToContainer(Container);
+            PhysicsNode.AddToContainer();
         }
 
         public override void OnBeforeRemovedFromContainer()
         {
             _powerObserver.OnRemovedFromContainer();
+            PhysicsNode.RemoveFromContainer();
             base.OnBeforeRemovedFromContainer();
         }
 
@@ -240,6 +248,11 @@ namespace Equinox76561198048419394.RailSystem.Physics
             public Vector3D Position;
         }
 
+        private static RailSegmentComponent RailSegmentFor(Edge edge)
+        {
+            return edge.Owner.Container.Get<RailSegmentComponent>();
+        }
+
         private bool TryFindEdge(out FindEdgeResult result)
         {
             result = default;
@@ -254,7 +267,7 @@ namespace Equinox76561198048419394.RailSystem.Physics
                     var edge = (Edge) e.Current.UserData;
                     if (edge.Curve == null)
                         continue;
-                    var edgeSegment = edge.Owner.Entity.Components.Get<RailSegmentComponent>();
+                    var edgeSegment = RailSegmentFor(edge);
                     var edgeCaps = edgeSegment?.Definition.CapabilitiesFor(edge.Owner.Entity.GetBuildRatio());
                     if (edgeSegment == null || !edgeCaps.HasValue)
                         continue; // no capabilities at this stage
@@ -329,6 +342,35 @@ namespace Equinox76561198048419394.RailSystem.Physics
                 return;
             if (!TryFindEdge(out simResult.FindEdgeResult))
                 return;
+
+
+            using (VRage.Library.Collections.PoolManager.Get(out HashSet<RailPhysicsNode> forRemoval))
+            {
+                PhysicsNode.GetNeighbors(forRemoval);
+                // Add neighbor edges to the nearby node
+                var searchNode = simResult.FindEdgeResult.EdgeFactor < 0.5 ? simResult.FindEdgeResult.Edge.From : simResult.FindEdgeResult.Edge.To;
+                foreach (var edge in searchNode.Edges)
+                {
+                    var physicsNode = RailSegmentFor(edge)?.PhysicsNode;
+                    if (physicsNode != null && !forRemoval.Remove(physicsNode))
+                        PhysicsNode.Link(physicsNode);
+                }
+
+                // Don't remove anything within two hops
+                foreach (var neighbor1 in searchNode.Neighbors)
+                foreach (var edge in neighbor1.Edges)
+                {
+                    if (forRemoval.Count == 0)
+                        break;
+                    var physicsNode = RailSegmentFor(edge)?.PhysicsNode;
+                    if (physicsNode != null)
+                        forRemoval.Remove(physicsNode);
+                }
+
+                foreach (var removal in forRemoval)
+                    PhysicsNode.Unlink(removal);
+            }
+
             simResult.Active = true;
             ref var edgeResult = ref simResult.FindEdgeResult;
 
@@ -605,7 +647,7 @@ namespace Equinox76561198048419394.RailSystem.Physics
             checkAngVel = Math.Abs(checkAngVel - relativeTo.AngularVelocity.LengthSquared());
             return checkLinVel < toleranceLinear && checkAngVel < toleranceAngular;
         }
-        
+
         private static bool AttemptPhysicsSleep(MyEntity start)
         {
             var relativeTo = start.Get<MyPhysicsComponentBase>();
@@ -651,7 +693,7 @@ namespace Equinox76561198048419394.RailSystem.Physics
                         if (visitedEntities.Add(nearby) && nearby.PositionComp.WorldVolume.Intersects(queryVol))
                             queue.Enqueue(nearby);
                 }
-                
+
                 foreach (var ent in visitedEntities)
                 {
                     var gridPhysics = ent.Get<MyGridRigidBodyComponent>();

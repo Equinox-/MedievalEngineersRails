@@ -13,7 +13,6 @@ using VRage.Game.Components;
 using VRage.Game.Entity;
 using VRage.Game.ObjectBuilders.ComponentSystem;
 using VRage.ObjectBuilders;
-using VRage.Utils;
 using VRageMath;
 // ReSharper disable ConditionIsAlwaysTrueOrFalse
 

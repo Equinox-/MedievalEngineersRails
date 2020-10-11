@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Xml.Serialization;
 using Equinox76561198048419394.Core.Util;
 using Equinox76561198048419394.RailSystem.Bendy;
+using Equinox76561198048419394.RailSystem.Physics;
 using Equinox76561198048419394.RailSystem.Util;
 using Medieval.Entities.UseObject;
 using Sandbox.ModAPI;
@@ -23,6 +24,7 @@ using VRage.ObjectBuilders;
 using VRage.Session;
 using VRage.Utils;
 using VRageMath;
+using PoolManager = VRage.Library.Collections.PoolManager;
 
 namespace Equinox76561198048419394.RailSystem.Definition
 {
@@ -32,7 +34,7 @@ namespace Equinox76561198048419394.RailSystem.Definition
     [MyDependency(typeof(MyModelAttachmentComponent), Critical = false)]
     [ReplicatedComponent]
     public class RailSwitchExternalComponent : MyEntityComponent, IMyGenericUseObjectInterface, IMyComponentEventProvider, IMyEventProxy, IRailSwitch,
-        IComponentDebugDraw
+        IComponentDebugDraw, IRailPhysicsComponent
     {
         private const string EventName = "Switched";
 
@@ -42,16 +44,25 @@ namespace Equinox76561198048419394.RailSystem.Definition
         private MyComponentEventBus _eventBus;
         private MyModelAttachmentComponent _modelAttachment;
         private BendyController _bendyController;
+        
+        public RailPhysicsNode PhysicsNode { get; }
+
+        public RailSwitchExternalComponent()
+        {
+            PhysicsNode = new RailPhysicsNode(this);
+        }
 
         public override void OnAddedToContainer()
         {
             base.OnAddedToContainer();
             _eventBus = Container.Get<MyComponentEventBus>();
             _modelAttachment = Container.Get<MyModelAttachmentComponent>();
+            PhysicsNode.AddToContainer();
         }
 
         public override void OnBeforeRemovedFromContainer()
         {
+            PhysicsNode.RemoveFromContainer();
             _eventBus = null;
             _modelAttachment = null;
             base.OnBeforeRemovedFromContainer();
@@ -303,11 +314,31 @@ namespace Equinox76561198048419394.RailSystem.Definition
                     _controllerJunction.NeighborRemoved += NeighborsChanged;
                 }
             }
+
+            LinkNeighbors();
         }
 
         private void NeighborsChanged(Node self, Node target, Edge via)
         {
             MarkDirty();
+        }
+
+        private void LinkNeighbors()
+        {
+            using (PoolManager.Get(out HashSet<RailPhysicsNode> neighborsForRemoval))
+            {
+                PhysicsNode.GetNeighbors(neighborsForRemoval);
+                if (_controllerJunction != null)
+                    foreach (var edge in _controllerJunction.Edges)
+                    {
+                        var neighbor = edge.Owner?.Container?.Get<IRailPhysicsComponent>()?.PhysicsNode;
+                        if (neighbor != null && !neighborsForRemoval.Remove(neighbor))
+                            PhysicsNode.Link(neighbor);
+                    }
+
+                foreach (var neighbor in neighborsForRemoval)
+                    PhysicsNode.Unlink(neighbor);
+            }
         }
 
         public RailSwitchExternalComponentDefinition Definition { get; private set; }

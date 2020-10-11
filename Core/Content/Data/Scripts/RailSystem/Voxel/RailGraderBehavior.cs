@@ -18,7 +18,6 @@ using VRage.Definitions.Inventory;
 using VRage.Game;
 using VRage.Game.Definitions;
 using VRage.Game.Entity;
-using VRage.Logging;
 using VRage.Network;
 using VRage.ObjectBuilders;
 using VRage.ObjectBuilders.Definitions.Equipment;
@@ -33,7 +32,7 @@ namespace Equinox76561198048419394.RailSystem.Voxel
     [StaticEventOwner]
     public class RailGraderBehavior : MyToolBehaviorBase
     {
-        private const double GRADE_SCAN_DISTANCE = 25D;
+        private const double GradeScanDistance = 25D;
 
         public MyEntity Owner => Holder;
 
@@ -244,7 +243,7 @@ namespace Equinox76561198048419394.RailSystem.Voxel
         private void GatherGradeComponents(Vector3D pos)
         {
             _gradeComponents.Clear();
-            var sphere = new BoundingSphereD(pos, GRADE_SCAN_DISTANCE);
+            var sphere = new BoundingSphereD(pos, GradeScanDistance);
             var tmp = MyEntities.GetEntitiesInSphere(ref sphere);
             using (tmp.GetClearToken())
             {

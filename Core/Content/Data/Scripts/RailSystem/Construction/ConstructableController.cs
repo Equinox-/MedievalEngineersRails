@@ -4,7 +4,6 @@ using Sandbox.ModAPI;
 using VRage.Components;
 using VRage.Definitions.Inventory;
 using VRage.Game;
-using VRage.Game.Components;
 using VRage.Network;
 using VRage.ObjectBuilders;
 using VRage.Session;

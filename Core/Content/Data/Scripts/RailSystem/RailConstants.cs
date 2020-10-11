@@ -1,6 +1,5 @@
 ﻿using Equinox76561198048419394.RailSystem.Bendy.Shape;
 using Equinox76561198048419394.RailSystem.Definition;
-using Equinox76561198048419394.RailSystem.Physics;
 using VRage.Components;
 
 namespace Equinox76561198048419394.RailSystem
