@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using VRage.Collections;
 using VRageMath;
@@ -23,13 +24,12 @@ namespace Equinox76561198048419394.RailSystem.Util
             }
         }
 
-        public static IEnumerator<NearestNodeResult> SortedByDistance(this MyDynamicAABBTreeD tree,
-            Vector3D test)
+        public static IEnumerator<NearestNodeResult> SortedByDistance(this MyDynamicAABBTreeD tree, Vector3D test, double maxDistanceSq = double.PositiveInfinity)
         {
             NearestNodeQuery query;
             if (!_cache.TryDequeue(out query))
                 query = new NearestNodeQuery(_cache);
-            query.Init(test, tree);
+            query.Init(test, tree, maxDistanceSq);
             return query;
         }
 
@@ -37,6 +37,7 @@ namespace Equinox76561198048419394.RailSystem.Util
         {
             private Vector3D _vec;
             private MyDynamicAABBTreeD _tree;
+            private double _maxDistanceSq;
             private readonly MyConcurrentQueue<NearestNodeQuery> _cache;
             private readonly MyBinaryHeap<double, int> _tmp = new MyBinaryHeap<double, int>();
 
@@ -45,10 +46,11 @@ namespace Equinox76561198048419394.RailSystem.Util
                 _cache = cache;
             }
 
-            public void Init(Vector3D v, MyDynamicAABBTreeD tree)
+            public void Init(Vector3D v, MyDynamicAABBTreeD tree, double maxDistanceSq)
             {
                 _vec = v;
                 _tree = tree;
+                _maxDistanceSq = maxDistanceSq;
                 Reset();
             }
 
@@ -58,7 +60,8 @@ namespace Equinox76561198048419394.RailSystem.Util
                 Vector3D tmp;
                 Vector3D.Clamp(ref _vec, ref box.Min, ref box.Max, out tmp);
                 var dist = Vector3D.DistanceSquared(tmp, _vec);
-                _tmp.Insert(node, dist);
+                if (dist <= _maxDistanceSq)
+                    _tmp.Insert(node, dist);
             }
 
             public void Dispose()

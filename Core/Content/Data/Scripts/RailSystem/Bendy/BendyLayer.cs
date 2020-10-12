@@ -53,7 +53,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy
             return from.ConnectionTo(to);
         }
 
-        public Node NearestNode(Vector3D v)
+        public Node NearestNode(Vector3D v, double maxDistanceSq = double.PositiveInfinity)
         {
             using (var e = Nodes.SortedByDistance(v))
                 if (e.MoveNext())
@@ -63,7 +63,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy
 
         public Node GetNode(Vector3D pos)
         {
-            var nearest = NearestNode(pos);
+            var nearest = NearestNode(pos, RailConstants.NodeMergeDistanceSq);
             if (nearest != null && Vector3D.DistanceSquared(nearest.Position, pos) < RailConstants.NodeMergeDistanceSq)
                 return nearest;
             return null;
@@ -71,7 +71,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy
 
         public Node GetOrCreateNode(Vector3D pos, Vector3D? up = null, bool desirePin = false)
         {
-            var nearest = NearestNode(pos);
+            var nearest = NearestNode(pos, RailConstants.NodeMergeDistanceSq);
             if (nearest != null && Vector3D.DistanceSquared(nearest.Position, pos) < RailConstants.NodeMergeDistanceSq)
             {
                 if (!desirePin || Vector3D.DistanceSquared(nearest.Position, pos) < .05f * .05f)

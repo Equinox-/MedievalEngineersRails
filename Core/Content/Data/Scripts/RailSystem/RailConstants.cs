@@ -22,15 +22,15 @@ namespace Equinox76561198048419394.RailSystem
 
         static RailConstants()
         {
-            DebugOff();
-            // DebugOn();
+            // DebugOff();
+            DebugOn();
         }
 
         public static void DebugOn()
         {
             Debug = new DebugOptions
             {
-                AssertsWithStacks = false, DrawGraphEdges = true, DrawGraphNodes = true, DrawBogiePhysics = false,
+                AssertsWithStacks = false, DrawGraphEdges = false, DrawGraphNodes = false, DrawBogiePhysics = true,
                 DrawBendyPhysics = false, DrawSwitchControllers = true, DrawBogieEdges = true, DrawGradingShapes = true
             };
             DebugCommit();

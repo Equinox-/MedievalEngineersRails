@@ -59,10 +59,23 @@ namespace Equinox76561198048419394.RailSystem.Definition
 
     public static class SwitchableNodeExtensions
     {
+        /// <summary>
+        /// Is the given other node switched to.  This method returns false
+        /// for nodes without switching capability.
+        /// </summary>
         public static bool IsSwitchedTo(this Node junction, Node other)
         {
             var data = junction.Get<SwitchableNodeData>();
             return data != null && data.IsSwitchedTo(other);
+        }
+
+        /// <summary>
+        /// Is the given other node not switched to.  This method returns true
+        /// for nodes without switching capability.
+        /// </summary>
+        public static bool IsNotSwitchedTo(this Node junction, Node other)
+        {
+            return !(junction.Get<SwitchableNodeData>()?.SideFor(other)?.IsSwitchedTo(other) ?? true);
         }
 
         public static void SwitchTo(this Node junction, Node destination)

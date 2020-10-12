@@ -157,7 +157,9 @@ namespace Equinox76561198048419394.RailSystem.Bendy
         /// <returns></returns>
         public Node Opposition(Node n)
         {
-            return From == n ? To : From;
+            if (From == n)
+                return To;
+            return To == n ? From : null;
         }
 
         public Vector3 EdgeTangent => Vector3.Normalize(To.Position - From.Position);

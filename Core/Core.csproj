@@ -630,6 +630,8 @@
     <Compile Include="Content\Data\Scripts\RailSystem\Physics\BogieComponent.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Physics\BogieComponentDefinition.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Physics\RailwayPhysicsGroup.cs" />
+    <Compile Include="Content\Data\Scripts\RailSystem\Physics\SerializableEdge.cs" />
+    <Compile Include="Content\Data\Scripts\RailSystem\Physics\SleepUtility.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Quest\Conditions\QuestConditionConstructable.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Quest\Conditions\QuestConditionGrading.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Quest\Conditions\QuestConditionPlanBendy.cs" />

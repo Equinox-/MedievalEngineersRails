@@ -11,14 +11,13 @@ using Equinox76561198048419394.RailSystem.Util.Curve;
 using Sandbox.Engine.Physics;
 using Sandbox.Game.Entities.Entity.Stats;
 using Sandbox.Game.EntityComponents.Character;
-using Sandbox.Game.EntityComponents.Grid;
 using Sandbox.ModAPI;
+using VRage;
 using VRage.Components;
 using VRage.Components.Block;
 using VRage.Components.Entity;
 using VRage.Components.Entity.CubeGrid;
 using VRage.Components.Physics;
-using VRage.Components.Session;
 using VRage.Definitions.Components.Character;
 using VRage.Entities.Gravity;
 using VRage.Game;
@@ -27,7 +26,6 @@ using VRage.Game.Entity;
 using VRage.Game.ObjectBuilders.ComponentSystem;
 using VRage.ObjectBuilders;
 using VRage.ObjectBuilders.Components.Entity.Stats;
-using VRage.Scene;
 using VRage.Session;
 using VRage.Utils;
 using VRageMath;
@@ -40,7 +38,7 @@ namespace Equinox76561198048419394.RailSystem.Physics
     [MyDefinitionRequired(typeof(BogieComponentDefinition))]
     public class BogieComponent : MyEntityComponent, IRailPhysicsComponent
     {
-        public BogieComponentDefinition Definition { get; private set; }
+        private BogieComponentDefinition Definition { get; set; }
         private readonly PowerObserver _powerObserver = new PowerObserver();
 
         [Automatic]
@@ -49,10 +47,13 @@ namespace Equinox76561198048419394.RailSystem.Physics
         [Automatic]
         private readonly MyModelAttachmentComponent _attacher = null;
 
-        private const int SEQUENTIAL_SLEEP_TICKS_BEFORE_PAUSE = 60;
-        private const int ATTEMPT_SLEEP_EVERY = 60;
+        private const int SequentialSleepTicksBeforePause = 60;
+        private const int AttemptSleepEvery = 60;
+
         private int _nextSleepAttempt = 0;
         private int _sequentialSleepingTicks = 0;
+
+        private readonly SerializableEdge _prevEdge = new SerializableEdge();
 
         public RailPhysicsNode PhysicsNode { get; }
 
@@ -81,12 +82,12 @@ namespace Equinox76561198048419394.RailSystem.Physics
             base.OnBeforeRemovedFromContainer();
         }
 
-        private BendyLayer Graph;
+        private BendyLayer _graph;
 
         public override void OnAddedToScene()
         {
             base.OnAddedToScene();
-            Graph = MySession.Static.Components.Get<BendyController>()?.GetOrCreateLayer(Definition.Layer);
+            _graph = MySession.Static.Components.Get<BendyController>()?.GetOrCreateLayer(Definition.Layer);
             if (_attacher != null)
             {
                 _attacher.OnEntityAttached += FixupSkinEntity;
@@ -223,7 +224,11 @@ namespace Equinox76561198048419394.RailSystem.Physics
 
         private struct SimulationResult
         {
+            /// <summary>
+            /// Is non-static and near a bendy edge.
+            /// </summary>
             public bool Active;
+
             public float AnimationVelocity;
 
             public FindEdgeResult FindEdgeResult;
@@ -240,7 +245,6 @@ namespace Equinox76561198048419394.RailSystem.Physics
             public double Score;
             public Vector3 Tangent;
             public Edge Edge;
-            public RailSegmentComponent SegmentDefinition;
             public RailSegmentDefinition.RailSegmentCaps SegmentCaps;
 
             public Vector3 Normal;
@@ -253,13 +257,57 @@ namespace Equinox76561198048419394.RailSystem.Physics
             return edge.Owner.Container.Get<RailSegmentComponent>();
         }
 
+        private bool CanUseEdge(Edge prevEdgeReal, Edge edge)
+        {
+            if (prevEdgeReal == null || prevEdgeReal == edge)
+                return true;
+
+            Node commonJunction;
+            if (prevEdgeReal.Opposition(edge.From) != null)
+                commonJunction = edge.From;
+            else if (prevEdgeReal.Opposition(edge.To) != null)
+                commonJunction = edge.To;
+            else
+                commonJunction = null;
+            if (commonJunction == null)
+                return true;
+
+            var edgeOpposite = edge.Opposition(commonJunction);
+            var sourceNode = prevEdgeReal.Opposition(commonJunction);
+            var sourceNodeData = commonJunction.Get<SwitchableNodeData>();
+            var switchableSourceData = sourceNodeData?.SideFor(sourceNode);
+            var switchableThisData = sourceNodeData?.SideFor(edgeOpposite);
+
+            if (switchableSourceData == null || switchableThisData == null)
+                return true;
+
+            if (switchableSourceData == switchableThisData)
+            {
+                if (RailConstants.Debug.DrawBogieEdges)
+                    edge.Draw(0, 1, new Vector4(1, 0, 0, 1), 2);
+                // We're coming from this direction, and it isn't the edge we used in the previous tick,
+                // so we can't jump to it.
+                return false;
+            }
+
+            if (switchableThisData.SwitchedEdge == edge)
+                return true;
+
+            if (RailConstants.Debug.DrawBogieEdges)
+                edge.Draw(0, 1, new Vector4(1, 0, 0, 1), 2);
+            // We're coming from this direction, and it isn't the edge we used in the previous tick,
+            // so we can't jump to it.
+            return false;
+        }
+
         private bool TryFindEdge(out FindEdgeResult result)
         {
             result = default;
 
+            var prevEdgeReal = _prevEdge?.GetEdge(_graph);
             var position = Entity.PositionComp.WorldMatrix.Translation;
             result.Score = Definition.DetachDistance + TotalBias;
-            using (var e = Graph.Edges.SortedByDistance(position))
+            using (var e = _graph.Edges.SortedByDistance(position))
                 while (e.MoveNext())
                 {
                     if (Math.Sqrt(e.Current.DistanceSquared) - TotalBias > result.Score)
@@ -271,6 +319,10 @@ namespace Equinox76561198048419394.RailSystem.Physics
                     var edgeCaps = edgeSegment?.Definition.CapabilitiesFor(edge.Owner.Entity.GetBuildRatio());
                     if (edgeSegment == null || !edgeCaps.HasValue)
                         continue; // no capabilities at this stage
+
+                    if (!CanUseEdge(prevEdgeReal, edge))
+                        continue;
+
                     float t0 = 0, t1 = 1;
                     CurveExtensions.NearestPoint(edge.Curve, position, 16, ref t0, ref t1);
                     var p0 = edge.Curve.Sample(t0);
@@ -312,7 +364,6 @@ namespace Equinox76561198048419394.RailSystem.Physics
                         result.Score = score;
                         result.Tangent = tangent;
                         result.Edge = edge;
-                        result.SegmentDefinition = edgeSegment;
                         result.SegmentCaps = edgeCaps.Value;
                         result.EdgeFactor = t;
                     }
@@ -338,9 +389,7 @@ namespace Equinox76561198048419394.RailSystem.Physics
         {
             simResult = default;
             simResult.Active = false;
-            if (_gridPhysicsComponent == null || _gridPhysicsComponent.IsStatic)
-                return;
-            if (!TryFindEdge(out simResult.FindEdgeResult))
+            if (_gridPhysicsComponent == null || _gridPhysicsComponent.IsStatic || !TryFindEdge(out simResult.FindEdgeResult))
                 return;
 
 
@@ -477,7 +526,6 @@ namespace Equinox76561198048419394.RailSystem.Physics
             }
 
 
-            Vector3 frictiveImpulse;
             {
                 var frictiveNormalForce = Math.Max(0, simResult.ConstraintImpulse.Dot(up) / MyEngineConstants.UPDATE_STEP_SIZE_IN_SECONDS);
 
@@ -493,6 +541,7 @@ namespace Equinox76561198048419394.RailSystem.Physics
 
                 var frictiveFloatImpulse = frictiveForce * MyEngineConstants.UPDATE_STEP_SIZE_IN_SECONDS;
 
+                Vector3 frictiveImpulse;
                 if (frictiveFloatImpulse > Math.Abs(tangentMomentumAfterUpdate))
                     // Stationary, allow deactivation
                     frictiveImpulse = -tangentMomentumAfterUpdate * tangent;
@@ -504,12 +553,10 @@ namespace Equinox76561198048419394.RailSystem.Physics
 
                 simResult.ConstraintImpulse += frictiveImpulse;
             }
-
-            return;
         }
 
         [Update(MyEngineConstants.UPDATE_STEP_SIZE_IN_MILLISECONDS * 10)]
-        private void FindControllers(long dt)
+        public void FindControllers(long dt)
         {
             _goodControllers.Clear();
             FindAttachedAnimControllers(Entity, _goodControllers);
@@ -545,6 +592,7 @@ namespace Equinox76561198048419394.RailSystem.Physics
         {
             var position = Entity.GetPosition();
             SimulationDryRun(out var simulationResult);
+            _prevEdge.SetEdge(simulationResult.FindEdgeResult.Edge);
             if (!simulationResult.Active)
             {
                 SleepPhysics();
@@ -576,15 +624,22 @@ namespace Equinox76561198048419394.RailSystem.Physics
                 var shift = simulationResult.FindEdgeResult.Tangent * .2f;
                 MySimpleObjectDraw.DrawLine(v0 + shift, v1 + shift, DebugMtl, ref allowed, 0.1f);
                 MySimpleObjectDraw.DrawLine(v0 - shift, v1 - shift, DebugMtl, ref sleeping, 0.1f);
+
+                var currPrevEdge = _prevEdge.GetEdge(_graph);
+                if (currPrevEdge != null)
+                {
+                    var prevNodeLink = new Vector4(1, 1, 1, 1);
+                    currPrevEdge.Draw(0, 1, prevNodeLink, 4);
+                }
             }
 
             if (simulationResult.AllowDeactivation)
             {
                 if (_nextSleepAttempt <= 0)
                 {
-                    if (AttemptPhysicsSleep(_gridPhysicsComponent.Entity))
+                    if (SleepUtility.AttemptPhysicsSleep(_gridPhysicsComponent.Entity))
                     {
-                        if (_sequentialSleepingTicks < SEQUENTIAL_SLEEP_TICKS_BEFORE_PAUSE)
+                        if (_sequentialSleepingTicks < SequentialSleepTicksBeforePause)
                             _sequentialSleepingTicks++;
                         else
                             SleepPhysics();
@@ -592,7 +647,7 @@ namespace Equinox76561198048419394.RailSystem.Physics
                     }
 
                     // We attempted to sleep, but failed.  Try again in ATTEMPT_SLEEP_EVERY
-                    _nextSleepAttempt = ATTEMPT_SLEEP_EVERY;
+                    _nextSleepAttempt = AttemptSleepEvery;
                 }
                 else
                 {
@@ -633,77 +688,23 @@ namespace Equinox76561198048419394.RailSystem.Physics
             return dir * (desiredVel - velOnAxis) * mass;
         }
 
-        private static bool CanSleepPhysics(MyPhysicsComponentBase check, MyPhysicsComponentBase relativeTo)
+        public override bool IsSerialized => _prevEdge.GetEdge(_graph) != null;
+
+        public override MyObjectBuilder_EntityComponent Serialize(bool copy = false)
         {
-            const double toleranceLinear = .025f;
-            const double toleranceAngular = .1f;
-            var checkLinVel = check.LinearVelocity.LengthSquared();
-            var checkAngVel = check.AngularVelocity.LengthSquared();
-            if (checkLinVel < toleranceLinear && checkAngVel < toleranceAngular)
-                return true;
-            if (relativeTo == null)
-                return false;
-            checkLinVel = Math.Abs(checkLinVel - relativeTo.LinearVelocity.LengthSquared());
-            checkAngVel = Math.Abs(checkAngVel - relativeTo.AngularVelocity.LengthSquared());
-            return checkLinVel < toleranceLinear && checkAngVel < toleranceAngular;
+            var ob = (MyObjectBuilder_BogieComponent) base.Serialize(copy);
+            var currEdge = _prevEdge.GetEdge(_graph);
+            ob.PrevEdgeFrom = currEdge?.From.Position;
+            ob.PrevEdgeTo = currEdge?.To.Position;
+            return ob;
         }
 
-        private static bool AttemptPhysicsSleep(MyEntity start)
+        public override void Deserialize(MyObjectBuilder_EntityComponent builder)
         {
-            var relativeTo = start.Get<MyPhysicsComponentBase>();
-            using (PoolManager.Get(out HashSet<MyGroup> visitedGroups))
-            using (PoolManager.Get(out HashSet<MyEntity> visitedEntities))
-            using (PoolManager.Get(out List<MyEntity> pruningEntities))
-            using (PoolManager.Get(out Queue<MyEntity> queue))
-            {
-                visitedEntities.Clear();
-                visitedGroups.Clear();
-                queue.Clear();
-
-                queue.Enqueue(start);
-                visitedEntities.Add(start);
-                while (queue.Count > 0)
-                {
-                    var e = queue.Dequeue();
-                    if (e.Components.TryGet(out MyBlockComponent block))
-                    {
-                        if (visitedEntities.Add(block.GridData.Entity))
-                            queue.Enqueue(block.GridData.Entity);
-                        continue;
-                    }
-
-                    if (!e.Components.TryGet<MyPhysicsComponentBase>(out var physicsComponent) || physicsComponent.IsStatic || !physicsComponent.Enabled)
-                        continue;
-                    if (e.Components.TryGet<MyCharacterPhysics>(out var characterPhysics) && characterPhysics.Enabled)
-                        return false;
-                    if (relativeTo != physicsComponent && !CanSleepPhysics(physicsComponent, relativeTo))
-                        return false;
-
-                    foreach (var group in MySession.Static.Scene.GetEntityGroups(e.Id))
-                        if (visitedGroups.Add(group))
-                            foreach (var entity in group.Entities)
-                                if (visitedEntities.Add(entity))
-                                    queue.Enqueue(entity);
-
-                    var queryVol = e.PositionComp.WorldVolume;
-                    queryVol.Radius += 1;
-                    pruningEntities.Clear();
-                    MyGamePruningStructure.GetTopMostEntitiesInSphere(in queryVol, pruningEntities, MyEntityQueryType.Dynamic);
-                    foreach (var nearby in pruningEntities)
-                        if (visitedEntities.Add(nearby) && nearby.PositionComp.WorldVolume.Intersects(queryVol))
-                            queue.Enqueue(nearby);
-                }
-
-                foreach (var ent in visitedEntities)
-                {
-                    var gridPhysics = ent.Get<MyGridRigidBodyComponent>();
-                    if (gridPhysics == null) continue;
-                    gridPhysics.Gravity = MyGravityProviderSystem.CalculateTotalGravityInPoint(ent.PositionComp.GetPosition());
-                    gridPhysics.Sleep();
-                }
-
-                return true;
-            }
+            base.Deserialize(builder);
+            var ob = (MyObjectBuilder_BogieComponent) builder;
+            if (ob.PrevEdgeFrom != null && ob.PrevEdgeTo != null)
+                _prevEdge.SetEdge(ob.PrevEdgeFrom.Value, ob.PrevEdgeTo.Value);
         }
     }
 
@@ -711,5 +712,8 @@ namespace Equinox76561198048419394.RailSystem.Physics
     [XmlSerializerAssembly("MedievalEngineers.ObjectBuilders.XmlSerializers")]
     public class MyObjectBuilder_BogieComponent : MyObjectBuilder_EntityComponent
     {
+        public SerializableVector3D? PrevEdgeFrom;
+
+        public SerializableVector3D? PrevEdgeTo;
     }
 }
