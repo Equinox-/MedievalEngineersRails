@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
+using System.Reflection;
 using System.Xml.Serialization;
 using Equinox76561198048419394.RailSystem.Util;
 using VRage;
@@ -18,6 +19,15 @@ namespace Equinox76561198048419394.RailSystem.Physics
     [MyGroup(typeof(MyObjectBuilder_RailwayPhysicsGroup))]
     public sealed class RailwayPhysicsGroup : MyGroupMultiLink<RailwayPhysicsLinkData>
     {
+        static RailwayPhysicsGroup()
+        {
+            // Horrible, horrible hack
+            var defaultGroupFilter = typeof(MySceneCollector).GetField("Default", BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+            if (defaultGroupFilter == null) return;
+            var originalFilter = (GroupFilter) defaultGroupFilter.GetValue(null);
+            defaultGroupFilter.SetValue(null, (GroupFilter) (group => originalFilter(@group) && @group.GetType() != typeof(RailwayPhysicsGroup)));
+        }
+
         public new HashSetReader<RailwayPhysicsLinkData> GetLinks(MyEntity left, MyEntity right)
         {
             return LinkData.TryGet(new Edge(left, right), out var links) ? links : default(HashSetReader<RailwayPhysicsLinkData>);
