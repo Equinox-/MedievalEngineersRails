@@ -22,8 +22,7 @@ namespace Equinox76561198048419394.RailSystem
 
         static RailConstants()
         {
-            // DebugOff();
-            DebugOn();
+            DebugOff();
         }
 
         public static void DebugOn()
@@ -42,7 +41,7 @@ namespace Equinox76561198048419394.RailSystem
             DebugCommit();
         }
 
-        private static void DebugCommit()
+        public static void DebugCommit()
         {
             DebugDraw.SetEnabled(typeof(RailSwitchExternalComponent), Debug.DrawSwitchControllers);
             DebugDraw.SetEnabled(typeof(RailSegmentComponent), Debug.DrawSwitchControllers);

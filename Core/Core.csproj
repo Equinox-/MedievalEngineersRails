@@ -636,6 +636,7 @@
     <Compile Include="Content\Data\Scripts\RailSystem\Quest\Conditions\QuestConditionGrading.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Quest\Conditions\QuestConditionPlanBendy.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\RailConstants.cs" />
+    <Compile Include="Content\Data\Scripts\RailSystem\RailwayDebugDraw.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Util\Assert.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Util\Curve\CubicCurve.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Util\Curve\CubicSphericalCurve.cs" />
