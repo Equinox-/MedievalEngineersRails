@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿using System;
 using System.Collections.Generic;
 using System.Xml.Serialization;
 using Equinox76561198048419394.Core.Controller;
@@ -440,10 +440,11 @@ namespace Equinox76561198048419394.RailSystem.Physics
             var qDesired = Quaternion.CreateFromRotationMatrix(Matrix.CreateWorld(Vector3.Zero, tangent, up));
             var qConj = Quaternion.Multiply(Quaternion.Conjugate(qCurrent), qDesired);
             var localAngularDesired = 2 * qConj.W * new Vector3(qConj.X, qConj.Y, qConj.Z);
-            if (localAngularDesired.LengthSquared() > .01f)
+            var gridAngularVelocity = _gridPhysicsComponent.AngularVelocity;
+            if (localAngularDesired.LengthSquared() > .01f && gridAngularVelocity.LengthSquared() > 1e-2f)
                 simResult.AllowDeactivation = false;
             var desiredAngular = Vector3.Transform(localAngularDesired, qCurrent) * 2;
-            var dAngAccel = desiredAngular - 0.25f * _gridPhysicsComponent.AngularVelocity;
+            var dAngAccel = desiredAngular - 0.25f * gridAngularVelocity;
 
             var dAngAccelUp = Vector3.Dot(dAngAccel, up) * up;
             var dAngAccelOther = dAngAccel - dAngAccelUp;
@@ -464,7 +465,8 @@ namespace Equinox76561198048419394.RailSystem.Physics
             // b) half spring joint along up to get dot(up, (pivot*matrix - position)) >= 0
             simResult.ConstraintImpulse += SolveImpulse(err, up, gridVelocity, effectiveMass, 1); // only up force
 
-            if (err.LengthSquared() > .01f)
+            // Is the grid notably moving at all, and (side-to-side spring too far || up spring too far || moving along tangent) 
+            if (gridVelocity.LengthSquared() > 1e-2f && (Math.Abs(err.Dot(normal)) > .01f || Math.Max(0, err.Dot(up)) > .025f || Math.Abs(gridVelocity.Dot(tangent)) > .01f))
                 simResult.AllowDeactivation = false;
 
             var braking = false;
@@ -543,13 +545,9 @@ namespace Equinox76561198048419394.RailSystem.Physics
 
                 Vector3 frictiveImpulse;
                 if (frictiveFloatImpulse > Math.Abs(tangentMomentumAfterUpdate))
-                    // Stationary, allow deactivation
                     frictiveImpulse = -tangentMomentumAfterUpdate * tangent;
                 else
-                {
                     frictiveImpulse = -Math.Sign(tangentMomentumAfterUpdate) * frictiveFloatImpulse * tangent;
-                    simResult.AllowDeactivation = false;
-                }
 
                 simResult.ConstraintImpulse += frictiveImpulse;
             }
