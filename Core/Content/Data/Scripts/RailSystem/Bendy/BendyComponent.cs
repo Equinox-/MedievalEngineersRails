@@ -36,29 +36,32 @@ namespace Equinox76561198048419394.RailSystem.Bendy
 
         public override MyObjectBuilder_EntityComponent Serialize(bool copy = false)
         {
-            if (Entity != null && Entity.InScene)
-                CacheMovableData();
-            return new MyObjectBuilder_BendyComponent
+            lock (_movableNodeData)
             {
-                Overrides = _movableNodeData.Select(x => new MyObjectBuilder_BendyComponent.NodePose
+                if (Entity != null && Entity.InScene)
+                    CacheMovableData(_movableNodeData);
+                return new MyObjectBuilder_BendyComponent
                 {
-                    Index = x.Key,
-                    Position = x.Value.Position,
-                    Up = x.Value.Up
-                }).ToArray()
-            };
+                    Overrides = _movableNodeData.Select(x => new MyObjectBuilder_BendyComponent.NodePose
+                    {
+                        Index = x.Key,
+                        Position = x.Value.Position,
+                        Up = x.Value.Up
+                    }).ToArray()
+                };
+            }
         }
 
-        private void CacheMovableData()
+        private void CacheMovableData(Dictionary<uint, MyObjectBuilder_BendyComponent.NodePose> movableNodes)
         {
             if (Nodes == null || Definition == null || Nodes.All(x => x == null))
                 return;
-            _movableNodeData.Clear();
+            movableNodes.Clear();
             for (var i = 0; i < Math.Min(Definition.Nodes.Count, Nodes.Length); i++)
                 if (Definition.Nodes[i].Movable && Nodes[i] != null)
                 {
                     var inv = Entity.PositionComp.WorldMatrixInvScaled;
-                    _movableNodeData[(uint) i] = new MyObjectBuilder_BendyComponent.NodePose
+                    movableNodes[(uint) i] = new MyObjectBuilder_BendyComponent.NodePose
                     {
                         Index = (uint) i,
                         Position = (Vector3) Vector3D.Transform(Nodes[i].Position, inv),
@@ -74,13 +77,16 @@ namespace Equinox76561198048419394.RailSystem.Bendy
         {
             base.Deserialize(bbase);
             var ob = (MyObjectBuilder_BendyComponent) bbase;
-            _movableNodeData.Clear();
-            if (ob.Overrides != null)
-                foreach (var k in ob.Overrides)
-                    _movableNodeData[k.Index] = k;
+            lock (_movableNodeData)
+            {
+                _movableNodeData.Clear();
+                if (ob.Overrides != null)
+                    foreach (var k in ob.Overrides)
+                        _movableNodeData[k.Index] = k;
 
-            if (Entity != null && Entity.InScene)
-                ReloadNodesAndEdges();
+                if (Entity != null && Entity.InScene)
+                    ReloadNodesAndEdges(_movableNodeData);
+            }
         }
 
         #endregion
@@ -102,14 +108,18 @@ namespace Equinox76561198048419394.RailSystem.Bendy
             base.OnAddedToScene();
             Graph = MySession.Static.Components.Get<BendyController>().GetOrCreateLayer(Definition.Layer);
             _skeletonComponent = Entity.Components.Get<MySkeletonComponent>();
-            ReloadNodesAndEdges();
+            lock (_movableNodeData)
+            {
+                ReloadNodesAndEdges(_movableNodeData);
+            }
+
             if (_skeletonComponent != null)
                 _skeletonComponent.OnReloadBones += OnBonesReloaded;
         }
 
-        private void ReloadNodesAndEdges()
+        private void ReloadNodesAndEdges(Dictionary<uint, MyObjectBuilder_BendyComponent.NodePose> movableNodeData)
         {
-            CloseNodesAndEdges();
+            CloseNodesAndEdges(movableNodeData);
             if (Graph == null)
                 return;
             var entityMatrix = Entity.PositionComp.WorldMatrix;
@@ -117,7 +127,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy
             for (var i = 0; i < Nodes.Length; i++)
             {
                 MyObjectBuilder_BendyComponent.NodePose data;
-                if (_movableNodeData.TryGetValue((uint) i, out data))
+                if (movableNodeData.TryGetValue((uint) i, out data))
                 {
                     Nodes[i] = Graph.GetOrCreateNode(Vector3D.Transform((Vector3) data.Position, ref entityMatrix),
                         Vector3D.Transform((Vector3) data.Up, ref entityMatrix));
@@ -237,14 +247,18 @@ namespace Equinox76561198048419394.RailSystem.Bendy
         public override void OnRemovedFromScene()
         {
             _skeletonComponent = null;
-            CloseNodesAndEdges();
+            lock (_movableNodeData)
+            {
+                CloseNodesAndEdges(_movableNodeData);
+            }
+
             Graph = null;
             base.OnRemovedFromScene();
         }
 
-        private void CloseNodesAndEdges()
+        private void CloseNodesAndEdges(Dictionary<uint, MyObjectBuilder_BendyComponent.NodePose> movableNodeData)
         {
-            CacheMovableData();
+            CacheMovableData(movableNodeData);
             if (Edges != null)
                 for (var i = 0; i < Edges.Length; i++)
                 {
