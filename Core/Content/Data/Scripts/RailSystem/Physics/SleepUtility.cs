@@ -68,7 +68,7 @@ namespace Equinox76561198048419394.RailSystem.Physics
                                     queue.Enqueue(entity);
 
                     var queryVol = e.PositionComp.WorldVolume;
-                    queryVol.Radius += 1;
+                    queryVol.Radius += 10;
                     pruningEntities.Clear();
                     MyGamePruningStructure.GetTopMostEntitiesInSphere(in queryVol, pruningEntities, MyEntityQueryType.Dynamic);
                     foreach (var nearby in pruningEntities)

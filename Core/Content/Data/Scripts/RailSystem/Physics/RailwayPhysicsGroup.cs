@@ -16,16 +16,24 @@ using PoolManager = VRage.Library.Collections.PoolManager;
 
 namespace Equinox76561198048419394.RailSystem.Physics
 {
+    #if VRAGE_VERSION_0
+    [MyGroup(typeof(MyObjectBuilder_RailwayPhysicsGroup), Flags = GroupFlags.Default | GroupFlags.ExcludeFromDefaultCollector)]
+    #else
     [MyGroup(typeof(MyObjectBuilder_RailwayPhysicsGroup))]
+    #endif
     public sealed class RailwayPhysicsGroup : MyGroupMultiLink<RailwayPhysicsLinkData>
     {
+        public static readonly bool Enabled = false;
+        
         static RailwayPhysicsGroup()
         {
+            #if !VRAGE_VERSION_0
             // Horrible, horrible hack
             var defaultGroupFilter = typeof(MySceneCollector).GetField("Default", BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
             if (defaultGroupFilter == null) return;
             var originalFilter = (GroupFilter) defaultGroupFilter.GetValue(null);
             defaultGroupFilter.SetValue(null, (GroupFilter) (group => originalFilter(@group) && @group.GetType() != typeof(RailwayPhysicsGroup)));
+            #endif
         }
 
         public new HashSetReader<RailwayPhysicsLinkData> GetLinks(MyEntity left, MyEntity right)
@@ -90,7 +98,7 @@ namespace Equinox76561198048419394.RailSystem.Physics
         private readonly MyEntityComponent _target;
         private RootEntityRef _rootRef;
 
-        private static bool IsAuthority => MyMultiplayer.IsServer;
+        public static bool IsAuthority => MyMultiplayer.IsServer;
 
         public RailPhysicsNode(MyEntityComponent target)
         {

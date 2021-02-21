@@ -325,6 +325,8 @@ namespace Equinox76561198048419394.RailSystem.Definition
 
         private void LinkNeighbors()
         {
+            if (!RailPhysicsNode.IsAuthority)
+                return;
             using (PoolManager.Get(out HashSet<RailPhysicsNode> neighborsForRemoval))
             {
                 PhysicsNode.GetNeighbors(neighborsForRemoval);
@@ -332,7 +334,7 @@ namespace Equinox76561198048419394.RailSystem.Definition
                     foreach (var edge in _controllerJunction.Edges)
                     {
                         var neighbor = edge.Owner?.Container?.Get<IRailPhysicsComponent>()?.PhysicsNode;
-                        if (neighbor != null && !neighborsForRemoval.Remove(neighbor))
+                        if (RailwayPhysicsGroup.Enabled && neighbor != null && !neighborsForRemoval.Remove(neighbor))
                             PhysicsNode.Link(neighbor);
                     }
 
