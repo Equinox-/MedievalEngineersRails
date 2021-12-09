@@ -1,14 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Equinox76561198048419394.Core.Util;
 using Equinox76561198048419394.RailSystem.Util;
 using Sandbox.Game.Entities;
 using Sandbox.ModAPI;
+using VRage.Components.Entity.CubeGrid;
+using VRage.Components.Session;
 using VRage.Entities.Gravity;
 using VRage.Game.Entity;
 using VRage.Logging;
 using VRage.Network;
 using VRage.Session;
+using VRage.Utils;
 using VRage.Voxels;
 using VRageMath;
 
@@ -30,10 +34,51 @@ namespace Equinox76561198048419394.RailSystem.Voxel
         private static readonly List<MyVoxelBase> _workingVoxels = new List<MyVoxelBase>();
         private static readonly List<MyEntity> _dynamicEntities = new List<MyEntity>();
 
+        private const double GradeScanDistance = 25D;
+
+        public static void GatherGradeComponents(Vector3D pos, List<RailGradeComponent> output, float radius)
+        {
+            using (PoolManager.Get(out List<MyEntity> entities))
+            {
+                MyGamePruningStructure.GetTopMostEntitiesInSphere(new BoundingSphereD(pos, radius + GradeScanDistance), entities);
+                foreach (var ent in entities)
+                    GatherGradeComponents(pos, ent, output, radius);
+            }
+        }
+
+        private static void GatherGradeComponents(Vector3D pos, MyEntity entity, List<RailGradeComponent> output, float radius)
+        {
+            foreach (var c in entity.Components)
+                if (c is RailGradeComponent k && ((k.Excavation != null && k.Excavation.IsInside(pos, radius))
+                                                  || (k.Support != null && k.Support.IsInside(pos, radius))))
+                    output.Add(k);
+            if (!entity.Components.TryGet(out MyGridHierarchyComponent hierarchyComponent)) return;
+            using (PoolManager.Get(out List<MyEntity> children)) {
+                hierarchyComponent.QuerySphere(new BoundingSphereD(pos, radius + GradeScanDistance), children);
+                foreach (var child in children)
+                    GatherGradeComponents(pos, child, output, radius);
+            }
+        }
+
+        private static readonly MyStringId _fillColor = MyStringId.GetOrCompute("RailGradeFill");
+        private static readonly MyStringId _excavateColor = MyStringId.GetOrCompute("RailGradeExcavate");
+        public static void DebugDrawGradeComponents(Vector3D position)
+        {
+            using (PoolManager.Get(out List<RailGradeComponent> components))
+            {
+                GatherGradeComponents(position, components, 5);
+                foreach (var gradeComp in components)
+                {
+                    gradeComp.Support?.Draw(_fillColor);
+                    gradeComp.Excavation?.Draw(_excavateColor);
+                }
+            }
+        }
+
         public static bool DoGrading(
             IReadOnlyList<IRailGradeComponent> components, Vector3D target, float radius, uint availableForDeposit,
             uint availableForExcavate,
-            uint[] excavatedByMaterial, byte materialToDeposit, out uint totalDeposited, out uint totalExcavated,
+            VoxelMiningBuffer excavatedByMaterial, byte materialToDeposit, out uint totalDeposited, out uint totalExcavated,
             bool testDynamic, out bool triedToChange, out bool intersectedDynamic)
         {
             try
@@ -93,11 +138,11 @@ namespace Equinox76561198048419394.RailSystem.Voxel
                     var cval = _storage.Get(MyStorageDataTypeEnum.Content, ref dataCoord);
 
                     byte? excavationDensity = null;
-                    if (cval > 0 && (!triedToChange || availableForExcavate > 0))
                     {
                         float density = 0;
-                        foreach (var c in excavate.Where(x => x != null))
-                            density = Math.Max(density, c.GetDensity(ref worldCoord));
+                        foreach (var c in excavate)
+                            if (c != null)
+                                density = Math.Max(density, c.GetDensity(ref worldCoord));
                         if (density > 0)
                             excavationDensity = (byte) ((1 - density) * byte.MaxValue);
                     }
@@ -106,25 +151,31 @@ namespace Equinox76561198048419394.RailSystem.Voxel
                     if (cval < byte.MaxValue && (!triedToChange || availableForDeposit > 0))
                     {
                         float density = 0;
-                        foreach (var c in fill.Where(x => x != null))
-                            density = Math.Max(density, c.GetDensity(ref worldCoord));
+                        foreach (var c in fill)
+                            if (c != null)
+                                density = Math.Max(density, c.GetDensity(ref worldCoord));
                         if (density > 0)
-                            fillDensity = (byte) (density * byte.MaxValue);
+                        {
+                            var fillVal = (byte) (density * byte.MaxValue);
+                            if (excavationDensity.HasValue)
+                                fillVal = Math.Min(fillVal, excavationDensity.Value);
+                            fillDensity = fillVal;
+                        }
                     }
+
 
                     if ((!fillDensity.HasValue || cval >= fillDensity.Value) &&
                         (!excavationDensity.HasValue || cval <= excavationDensity.Value))
                         continue;
 
-                    if (excavationDensity.HasValue && excavationDensity.Value < cval)
+                    if (excavationDensity < cval)
                     {
                         triedToChange = true;
                         var toExtract = (uint) Math.Min(availableForExcavate, cval - excavationDensity.Value);
                         if (toExtract > 0)
                         {
                             var mid = _storage.Get(MyStorageDataTypeEnum.Material, ref dataCoord);
-                            if (excavatedByMaterial != null && mid < excavatedByMaterial.Length)
-                                excavatedByMaterial[mid] += toExtract;
+                            excavatedByMaterial?.Add(mid, (int) toExtract);
                             DisableFarming(worldCoord);
                             _storage.Set(MyStorageDataTypeEnum.Content, ref dataCoord, (byte) (cval - toExtract));
                             totalExcavated += toExtract;
@@ -146,7 +197,7 @@ namespace Equinox76561198048419394.RailSystem.Voxel
                     {
                         var test = worldCoord;
                         test += 2 * Vector3D.Normalize(
-                                    MyGravityProviderSystem.CalculateNaturalGravityInPoint(worldCoord));
+                            MyGravityProviderSystem.CalculateNaturalGravityInPoint(worldCoord));
                         Vector3I vtest;
                         MyVoxelCoordSystems.WorldPositionToVoxelCoord(voxel.PositionLeftBottomCorner, ref test,
                             out vtest);

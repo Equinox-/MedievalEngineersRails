@@ -3,7 +3,7 @@ using VRageMath;
 
 namespace Equinox76561198048419394.RailSystem.Util.Curve
 {
-    public struct QuadraticCurve : ICurve
+    public readonly struct QuadraticCurve : ICurve
     {
         public readonly Vector3D P0, P1, P2;
 

@@ -1,4 +1,4 @@
-﻿﻿using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Xml.Serialization;
 using Equinox76561198048419394.Core.Controller;
@@ -24,11 +24,13 @@ using VRage.Game;
 using VRage.Game.Components;
 using VRage.Game.Entity;
 using VRage.Game.ObjectBuilders.ComponentSystem;
+using VRage.Input.Devices.Keyboard;
 using VRage.ObjectBuilders;
 using VRage.ObjectBuilders.Components.Entity.Stats;
 using VRage.Session;
 using VRage.Utils;
 using VRageMath;
+using VRageRender;
 
 namespace Equinox76561198048419394.RailSystem.Physics
 {
@@ -371,7 +373,7 @@ namespace Equinox76561198048419394.RailSystem.Physics
 
             if (result.Edge == null || result.Score > Definition.DetachDistance)
                 return false;
-            result.Up = (Vector3) Vector3D.Lerp(result.Edge.From.Up, result.Edge.To.Up, result.EdgeFactor);
+            result.Up = Vector3.Lerp(result.Edge.From.Up, result.Edge.To.Up, result.EdgeFactor);
             // Not aligned vertically, abort
             if (Entity.PositionComp.WorldMatrix.Up.Dot(result.Up) < 0.5)
                 return false;
@@ -385,23 +387,19 @@ namespace Equinox76561198048419394.RailSystem.Physics
             return true;
         }
 
-        private void SimulationDryRun(out SimulationResult simResult)
+        private void LinkNeighbors(in FindEdgeResult edgeResult)
         {
-            simResult = default;
-            simResult.Active = false;
-            if (_gridPhysicsComponent == null || _gridPhysicsComponent.IsStatic || !TryFindEdge(out simResult.FindEdgeResult))
+            if (!RailPhysicsNode.IsAuthority)
                 return;
-
-
             using (VRage.Library.Collections.PoolManager.Get(out HashSet<RailPhysicsNode> forRemoval))
             {
                 PhysicsNode.GetNeighbors(forRemoval);
                 // Add neighbor edges to the nearby node
-                var searchNode = simResult.FindEdgeResult.EdgeFactor < 0.5 ? simResult.FindEdgeResult.Edge.From : simResult.FindEdgeResult.Edge.To;
+                var searchNode = edgeResult.EdgeFactor < 0.5 ? edgeResult.Edge.From : edgeResult.Edge.To;
                 foreach (var edge in searchNode.Edges)
                 {
                     var physicsNode = RailSegmentFor(edge)?.PhysicsNode;
-                    if (physicsNode != null && !forRemoval.Remove(physicsNode))
+                    if (RailwayPhysicsGroup.Enabled && physicsNode != null && !forRemoval.Remove(physicsNode))
                         PhysicsNode.Link(physicsNode);
                 }
 
@@ -419,15 +417,76 @@ namespace Equinox76561198048419394.RailSystem.Physics
                 foreach (var removal in forRemoval)
                     PhysicsNode.Unlink(removal);
             }
+        }
 
-            simResult.Active = true;
-            ref var edgeResult = ref simResult.FindEdgeResult;
+        private void SolveTorque(ref FindEdgeResult edgeResult, ref SimulationResult simResult)
+        {
+            ref var up = ref edgeResult.Up;
+            ref var tangent = ref edgeResult.Tangent;
 
+            var inertiaTensor = _gridPhysicsComponent.InertiaTensor;
+            var entityWorldMatrix = (Matrix) Entity.PositionComp.WorldMatrix;
+            var gridWorldMatrix = (Matrix) _gridPositionComponent.WorldMatrix;
+            var gridWorldMatrixInv = (Matrix) _gridPositionComponent.WorldMatrixInvScaled;
+
+            var qCurrent = Quaternion.CreateFromRotationMatrix(entityWorldMatrix);
+            var qDesired = Quaternion.CreateFromRotationMatrix(Matrix.CreateWorld(Vector3.Zero, tangent, up));
+            var qErrorEntity = Quaternion.Multiply(Quaternion.Conjugate(qCurrent), qDesired);
+            var angVelDesiredEntity = 2 * qErrorEntity.W * new Vector3(qErrorEntity.X, qErrorEntity.Y, qErrorEntity.Z)
+                                      / MyEngineConstants.UPDATE_STEP_SIZE_IN_SECONDS;
+            var angVelDesiredGrid = Vector3.TransformNormal(Vector3.TransformNormal(angVelDesiredEntity, ref entityWorldMatrix), ref gridWorldMatrixInv);
+            // Don't boost the angular velocity up too high -- 10 rad/sec is the max
+            var angVelScalarSq = angVelDesiredGrid.LengthSquared();
+            if (angVelScalarSq > 100)
+                angVelDesiredGrid *= (float) Math.Sqrt(100 / angVelScalarSq);
+            var angVelCurrentGrid = Vector3.TransformNormal(_gridPhysicsComponent.AngularVelocity, ref gridWorldMatrixInv);
+
+            if (angVelDesiredGrid.LengthSquared() > .01f && angVelCurrentGrid.LengthSquared() > 1e-2f)
+                simResult.AllowDeactivation = false;
+            var localUp = Vector3.TransformNormal(up, ref gridWorldMatrixInv);
+            var angVelDelta = angVelDesiredGrid - angVelCurrentGrid;
+
+            var angVelDeltaUp = Vector3.Dot(angVelDelta, localUp) * localUp;
+            var angVelDeltaOther = angVelDelta - angVelDeltaUp;
+            var angVelDeltaCorrected = (angVelDeltaUp * Definition.OrientationConvergenceFactorHorizontal) +
+                                       (angVelDeltaOther * Definition.OrientationConvergenceFactor);
+            var angularImpulseWorld = Vector3.TransformNormal(Vector3.TransformNormal(angVelDeltaCorrected, inertiaTensor), ref gridWorldMatrix);
+            simResult.AngularImpulse = angularImpulseWorld
+                * RailConstants.AngularConstraintStrength / MyEngineConstants.UPDATE_STEP_SIZE_IN_SECONDS;
+        }
+
+        private void SolveLinearImpulse(ref FindEdgeResult edgeResult, in Vector3 gravityHere, ref SimulationResult simResult)
+        {
             var position = Entity.GetPosition();
-            simResult.AnimationVelocity = _gridPhysicsComponent.GetVelocityAtPoint(position).Dot((Vector3) Entity.PositionComp.WorldMatrix.Forward);
+            var effectiveMass = _gridPhysicsComponent.Mass;
 
-            simResult.ConstraintImpulse = Vector3.Zero;
-            simResult.AllowDeactivation = true;
+            ref var up = ref edgeResult.Up;
+            ref var tangent = ref edgeResult.Tangent;
+            ref var normal = ref edgeResult.Normal;
+            ref var curvePosition = ref edgeResult.Position;
+
+            var gridVelocity = _gridPhysicsComponent.LinearVelocity;
+
+            // a) spring joint along normal to get dot(normal, (pivot*matrix - position)) == 0
+            var err = (Vector3) (curvePosition - position);
+
+            // preemptive up force to counteract gravity.
+            simResult.ConstraintImpulse += Vector3.Dot(gravityHere, up) * up * effectiveMass * MyEngineConstants.UPDATE_STEP_SIZE_IN_SECONDS;
+
+            simResult.ConstraintImpulse += SolveImpulse(err, normal, gridVelocity, effectiveMass);
+
+            // b) half spring joint along up to get dot(up, (pivot*matrix - position)) >= 0
+            simResult.ConstraintImpulse += SolveImpulse(err, up, gridVelocity, effectiveMass, 1); // only up force
+
+            // Is the grid notably moving at all, and (side-to-side spring too far || up spring too far || moving along tangent) 
+            if (gridVelocity.LengthSquared() > 1e-2f &&
+                (Math.Abs(err.Dot(normal)) > .01f || Math.Max(0, err.Dot(up)) > .025f || Math.Abs(gridVelocity.Dot(tangent)) > .01f))
+                simResult.AllowDeactivation = false;
+        }
+
+        private void SolvePhysicsLegacy(ref FindEdgeResult edgeResult, ref SimulationResult simResult)
+        {
+            var position = Entity.GetPosition();
             var effectiveMass = _gridPhysicsComponent.Mass;
             var inertiaTensor = _gridPhysicsComponent.InertiaTensor;
 
@@ -450,7 +509,8 @@ namespace Equinox76561198048419394.RailSystem.Physics
             var dAngAccelOther = dAngAccel - dAngAccelUp;
             var dAngAccelCorrected = (dAngAccelUp * Definition.OrientationConvergenceFactorHorizontal) +
                                      (dAngAccelOther * Definition.OrientationConvergenceFactor);
-            simResult.AngularImpulse = Vector3.TransformNormal(dAngAccelCorrected, inertiaTensor) / MyEngineConstants.UPDATE_STEP_SIZE_IN_SECONDS;
+            simResult.AngularImpulse = Vector3.TransformNormal(dAngAccelCorrected, inertiaTensor)
+                * RailConstants.AngularConstraintStrength / MyEngineConstants.UPDATE_STEP_SIZE_IN_SECONDS;
             var gridVelocity = _gridPhysicsComponent.LinearVelocity;
 
             // a) spring joint along normal to get dot(normal, (pivot*matrix - position)) == 0
@@ -466,8 +526,38 @@ namespace Equinox76561198048419394.RailSystem.Physics
             simResult.ConstraintImpulse += SolveImpulse(err, up, gridVelocity, effectiveMass, 1); // only up force
 
             // Is the grid notably moving at all, and (side-to-side spring too far || up spring too far || moving along tangent) 
-            if (gridVelocity.LengthSquared() > 1e-2f && (Math.Abs(err.Dot(normal)) > .01f || Math.Max(0, err.Dot(up)) > .025f || Math.Abs(gridVelocity.Dot(tangent)) > .01f))
+            if (gridVelocity.LengthSquared() > 1e-2f &&
+                (Math.Abs(err.Dot(normal)) > .01f || Math.Max(0, err.Dot(up)) > .025f || Math.Abs(gridVelocity.Dot(tangent)) > .01f))
                 simResult.AllowDeactivation = false;
+        }
+
+        private void SimulationDryRun(out SimulationResult simResult)
+        {
+            simResult = default;
+            simResult.Active = false;
+            if (_gridPhysicsComponent == null)
+                return;
+            var entityWorldMatrix = Entity.PositionComp.WorldMatrix;
+            var position = entityWorldMatrix.Translation;
+            simResult.AnimationVelocity = _gridPhysicsComponent.GetVelocityAtPoint(position).Dot((Vector3) entityWorldMatrix.Forward);
+            if (_gridPositionComponent == null || _gridPhysicsComponent.IsStatic || !TryFindEdge(out simResult.FindEdgeResult))
+                return;
+            LinkNeighbors(in simResult.FindEdgeResult);
+
+            simResult.Active = true;
+            ref var edgeResult = ref simResult.FindEdgeResult;
+
+            simResult.ConstraintImpulse = Vector3.Zero;
+            simResult.AllowDeactivation = true;
+            var effectiveMass = _gridPhysicsComponent.Mass;
+
+            ref var up = ref edgeResult.Up;
+            ref var tangent = ref edgeResult.Tangent;
+            var gridVelocity = _gridPhysicsComponent.LinearVelocity;
+            var gravityHere = MyGravityProviderSystem.CalculateTotalGravityInPoint(position);
+
+            SolveTorque(ref edgeResult, ref simResult);
+            SolveLinearImpulse(ref edgeResult, in gravityHere, ref simResult);
 
             var braking = false;
             // Hack until I fix EquinoxCore
@@ -593,6 +683,7 @@ namespace Equinox76561198048419394.RailSystem.Physics
             _prevEdge.SetEdge(simulationResult.FindEdgeResult.Edge);
             if (!simulationResult.Active)
             {
+                SetAnimVar(SpeedZVar, 0);
                 SleepPhysics();
                 return;
             }
@@ -614,6 +705,13 @@ namespace Equinox76561198048419394.RailSystem.Physics
                 var colorAngImpulse = new Vector4(0, 0, 1, 1);
                 MySimpleObjectDraw.DrawLine(drawPivot, drawPivot + simulationResult.AngularImpulse, DebugMtl, ref colorAngImpulse,
                     .01f);
+
+                var tensor = (MatrixD) _gridPhysicsComponent.InertiaTensor;
+                tensor /= tensor.Scale.Length();
+                tensor.Translation = Vector3D.Zero;
+                tensor = _gridPositionComponent.WorldMatrix * tensor;
+                tensor.Translation = _gridPhysicsComponent.GetCenterOfMassWorld();
+                MyRenderProxy.DebugDrawOBB(tensor, Color.Red, 1, false, false);
 
                 var allowed = simulationResult.AllowDeactivation ? new Vector4(0, 1, 0, 1) : new Vector4(1, 0, 0, 1);
                 var sleeping = _gridPhysicsComponent.IsActive ? new Vector4(1, 0, 0, 1) : new Vector4(0, 1, 0, 1);
@@ -683,7 +781,7 @@ namespace Equinox76561198048419394.RailSystem.Physics
                 return Vector3.Zero;
             if ((signFlags & 2) == 0 && errorOnAxis < 0)
                 return Vector3.Zero;
-            return dir * (desiredVel - velOnAxis) * mass;
+            return RailConstants.LinearConstraintStrength * dir * (desiredVel - velOnAxis) * mass;
         }
 
         public override bool IsSerialized => _prevEdge.GetEdge(_graph) != null;

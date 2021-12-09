@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Xml.Serialization;
+using Equinox76561198048419394.Core.Util;
 using Equinox76561198048419394.RailSystem.Util;
 using Medieval.Constants;
 using Medieval.GameSystems;
@@ -20,11 +21,13 @@ using VRage.Game.Definitions;
 using VRage.Game.Entity;
 using VRage.Network;
 using VRage.ObjectBuilders;
+using VRage.ObjectBuilders.Definitions;
 using VRage.ObjectBuilders.Definitions.Equipment;
 using VRage.Session;
 using VRage.Systems;
 using VRage.Utils;
 using VRageMath;
+using MessageUtil = Equinox76561198048419394.RailSystem.Util.MessageUtil;
 
 namespace Equinox76561198048419394.RailSystem.Voxel
 {
@@ -32,8 +35,6 @@ namespace Equinox76561198048419394.RailSystem.Voxel
     [StaticEventOwner]
     public class RailGraderBehavior : MyToolBehaviorBase
     {
-        private const double GradeScanDistance = 25D;
-
         public MyEntity Owner => Holder;
 
         public delegate void DelGradeAction(RailGraderBehavior behavior, IReadOnlyCollection<RailGradeComponent> grades, uint added, uint removed);
@@ -49,13 +50,6 @@ namespace Equinox76561198048419394.RailSystem.Voxel
         }
 
         private Vector3D _cachedTargetDirection;
-
-        private void FillGradeComponents(Vector3D pos, MyEntity e)
-        {
-            foreach (var k in e.Components.GetComponents<RailGradeComponent>())
-                if ((k.Excavation != null && k.Excavation.IsInside(pos, 2f)) || (k.Support != null && k.Support.IsInside(pos, 2f)))
-                    _gradeComponents.Add(k);
-        }
 
         protected override bool ValidateTarget()
         {
@@ -73,12 +67,12 @@ namespace Equinox76561198048419394.RailSystem.Voxel
             return _gradeComponents.Count != 0;
         }
 
-        private int _depositAccumulation;
-        private readonly uint[] _excavated = new uint[byte.MaxValue];
+        private readonly VoxelPlacementBuffer _placementBuffer = new VoxelPlacementBuffer();
+        private readonly VoxelMiningBuffer _miningBuffer = new VoxelMiningBuffer();
 
         protected override void Hit()
         {
-            if (!MyAPIGateway.Session.IsServerDecider())
+            if (!WhitelistExtensions.IsServerDecider(MyAPIGateway.Session))
                 return;
             var player = MyAPIGateway.Players.GetPlayerControllingEntity(Holder);
             if (player == null)
@@ -86,7 +80,7 @@ namespace Equinox76561198048419394.RailSystem.Voxel
 
             if (!HasPermission(MyPermissionsConstants.Mining))
             {
-                player.ShowNotification("You don't have permission to terraform here.", 2000, null, new Vector4(1, 0, 0, 1));
+                MessageUtil.ShowNotification(player, "You don't have permission to terraform here.", 2000, null, new Vector4(1, 0, 0, 1));
                 return;
             }
 
@@ -104,15 +98,16 @@ namespace Equinox76561198048419394.RailSystem.Voxel
                 availableForDeposit = Definition.FillVolume;
                 var andHead = -1;
                 var missing = 0;
-                if (!player.IsCreative())
-                    foreach (var item in Definition.FillMaterial.MinedItems)
+                if (!WhitelistExtensions.IsCreative(player))
+                {
+                    var inv = Holder.GetInventory(MyCharacterConstants.MainInventory);
+                    availableForDeposit = Math.Min(availableForDeposit, (uint) _placementBuffer.AvailableVolume(inv, Definition.FillMaterial));
+                    if (availableForDeposit == 0)
                     {
-                        var amount = 0;
-                        foreach (var inv in Holder.Components.GetComponents<MyInventoryBase>())
-                            amount += inv.GetItemAmountFuzzy(item.Key);
-                        amount = amount * Definition.FillMaterial.Volume / item.Value;
-                        if (amount == 0)
+                        foreach (var item in Definition.FillMaterial.Items)
                         {
+                            var amount = inv.GetItemAmountFuzzy(item.Key);
+                            if (amount >= item.Value) continue;
                             if (requiredMaterials == null)
                                 requiredMaterials = new StringBuilder("You require ");
                             var itemDef = MyDefinitionManager.Get<MyInventoryItemDefinition>(item.Key);
@@ -120,9 +115,8 @@ namespace Equinox76561198048419394.RailSystem.Voxel
                             missing++;
                             requiredMaterials.Append(itemDef?.DisplayNameOf() ?? item.Key.ToString()).Append(", ");
                         }
-
-                        availableForDeposit = (uint) Math.Min(availableForDeposit, amount);
                     }
+                }
 
                 if (missing > 0 && requiredMaterials != null)
                 {
@@ -139,63 +133,34 @@ namespace Equinox76561198048419394.RailSystem.Voxel
             bool triedToChange;
             bool intersectedDynamic;
             var result = RailGraderSystem.DoGrading(_gradeComponents, Target.Position, radius, availableForDeposit,
-                availableForExcavate, _excavated, Definition.FillMaterial.Material.Index,
+                availableForExcavate, _miningBuffer, Definition.FillMaterial.Material.Index,
                 out totalDeposited, out totalExcavated, testDynamic: true,
                 triedToChange: out triedToChange, intersectedDynamic: out intersectedDynamic);
 
             #region Give Items
 
             var ranOutOfInventorySpace = false;
-            if (triedToChange && isExcavating && !player.IsCreative())
+            if (triedToChange && isExcavating && !WhitelistExtensions.IsCreative(player))
             {
-                for (var i = 0; i < _excavated.Length; i++)
-                {
-                    if (_excavated[i] == 0) continue;
-                    MyVoxelMiningDefinition.MiningEntry einfo;
-                    if (Definition.ExcavateDefinition == null || !Definition.ExcavateDefinition.MiningEntries.TryGetValue(i, out einfo)) continue;
-                    var outputInventory = Holder.GetInventory(MyCharacterConstants.MainInventory);
-                    var count = (int) Math.Floor(_excavated[i] / (float) einfo.Volume);
-                    if (count == 0) continue;
-                    _excavated[i] -= (uint) Math.Max(0, count * einfo.Volume);
-                    foreach (var k in einfo.MinedItems)
-                    {
-                        var amount = k.Value * count;
-                        if (outputInventory != null && outputInventory.AddItems(k.Key, amount)) continue;
-                        ranOutOfInventorySpace = true;
-                        var pos = MyAPIGateway.Entities.FindFreePlace(Target.Position, radius) ?? Target.Position;
-                        MySession.Static.Components.Get<MyFloatingObjects>()
-                            ?.Spawn(MyInventoryItem.Create(k.Key, amount), MatrixD.CreateTranslation(pos), null);
-                    }
-                }
+                _miningBuffer.PutMaterialsInto(
+                    Holder.GetInventory(MyCharacterConstants.MainInventory),
+                    Definition.ExcavateDefinition);
+                ranOutOfInventorySpace = _miningBuffer.DropMaterials(Target.Position, Definition.ExcavateDefinition);
             }
 
             if (ranOutOfInventorySpace)
-                player.ShowNotification("Inventory is full", color: new Vector4(1, 0, 0, 1));
+                MessageUtil.ShowNotification(player, "Inventory is full", color: new Vector4(1, 0, 0, 1));
 
             #endregion
 
             #region Take Items
 
-            _depositAccumulation += (int) totalDeposited;
-            if (!player.IsCreative())
-                if (_depositAccumulation > 0 && !isExcavating && Definition.FillMaterial.MinedItems != null)
-                {
-                    int amnt = (int) Math.Floor(_depositAccumulation / (float) Definition.FillMaterial.Volume);
-                    _depositAccumulation -= amnt * Definition.FillMaterial.Volume;
-                    if (amnt > 0)
-                        foreach (var k in Definition.FillMaterial.MinedItems)
-                        {
-                            var required = amnt * k.Value;
-                            if (required == 0)
-                                return;
-                            foreach (var inv in Holder.Components.GetComponents<MyInventoryBase>())
-                            {
-                                var count = Math.Min(required, inv.GetItemAmountFuzzy(k.Key));
-                                if (count > 0 && inv.RemoveItemsFuzzy(k.Key, count))
-                                    required -= count;
-                            }
-                        }
-                }
+            if (!WhitelistExtensions.IsCreative(player))
+            {
+                _placementBuffer.ConsumeVolume(
+                    Holder.GetInventory(MyCharacterConstants.MainInventory),
+                    Definition.FillMaterial, (int) totalDeposited);
+            }
 
             #endregion
 
@@ -211,9 +176,9 @@ namespace Equinox76561198048419394.RailSystem.Voxel
             }
 
             if (!isExcavating && intersectedDynamic && triedToChange)
-                player.ShowNotification("Cannot fill where there are players or dynamic grids", color: new Vector4(1, 0, 0, 1));
+                MessageUtil.ShowNotification(player, "Cannot fill where there are players or dynamic grids", color: new Vector4(1, 0, 0, 1));
             if (!isExcavating && requiredMaterials != null && triedToChange)
-                player.ShowNotification(requiredMaterials?.ToString(), color: new Vector4(1, 0, 0, 1));
+                MessageUtil.ShowNotification(player, requiredMaterials?.ToString(), color: new Vector4(1, 0, 0, 1));
         }
 
 
@@ -243,30 +208,14 @@ namespace Equinox76561198048419394.RailSystem.Voxel
         private void GatherGradeComponents(Vector3D pos)
         {
             _gradeComponents.Clear();
-            var sphere = new BoundingSphereD(pos, GradeScanDistance);
-            var tmp = MyEntities.GetEntitiesInSphere(ref sphere);
-            using (tmp.GetClearToken())
-            {
-                foreach (var e in tmp)
-                {
-                    FillGradeComponents(pos, e);
-                }
-            }
+            RailGraderSystem.GatherGradeComponents(pos, _gradeComponents, Math.Max(Definition.ExcavateRadius, Definition.FillRadius));
         }
-
-        private static readonly MyStringId _fillColor = MyStringId.GetOrCompute("RailGradeFill");
-        private static readonly MyStringId _excavateColor = MyStringId.GetOrCompute("RailGradeExcavate");
 
         private void DebugDraw()
         {
             if (Holder == null)
                 return;
-            GatherGradeComponents(Holder.GetPosition());
-            foreach (var gradeComp in _gradeComponents)
-            {
-                gradeComp.Support.Draw(_fillColor);
-                gradeComp.Excavation.Draw(_excavateColor);
-            }
+            RailGraderSystem.DebugDrawGradeComponents(Holder.GetPosition());
         }
 
         private readonly List<RailGradeComponent> _gradeComponents = new List<RailGradeComponent>();
@@ -281,50 +230,10 @@ namespace Equinox76561198048419394.RailSystem.Voxel
         public uint ExcavateVolume { get; private set; }
         public float ExcavateDurabilityPerVol { get; private set; }
 
-        public MiningEntry FillMaterial { get; private set; }
+        public VoxelPlacementBuffer.VoxelPlacementDefinition FillMaterial { get; private set; }
         public float FillRadius { get; private set; }
         public uint FillVolume { get; private set; }
         public float FillDurabilityPerVol { get; private set; }
-
-        public struct MiningEntry
-        {
-            public readonly MyVoxelMaterialDefinition Material;
-            public readonly IReadOnlyDictionary<MyDefinitionId, int> MinedItems;
-            public readonly int Volume;
-
-            public MiningEntry(MyObjectBuilder_VoxelMiningDefinition_MiningDef item)
-            {
-                var dictionary = new Dictionary<MyDefinitionId, int>();
-                if (item.MinedItems != null)
-                {
-                    foreach (MyObjectBuilder_VoxelMiningDefinition_MinedItem minedItem in item.MinedItems)
-                    {
-                        var sid = new SerializableDefinitionId
-                        {
-                            TypeIdString = minedItem.Type,
-                            SubtypeName = minedItem.Subtype
-                        };
-                        dictionary[sid] = minedItem.Amount;
-                    }
-                }
-
-                MinedItems = dictionary;
-
-                var num = item.Volume.HasValue ? Math.Max(item.Volume.Value, 1) : 64;
-                var materialDefinition = MyDefinitionManager.Get<MyVoxelMaterialDefinition>(item.VoxelMaterial);
-                if (materialDefinition == null || materialDefinition.Index == byte.MaxValue)
-                {
-                    MySession.Static.Log.Warning($"Cannot find voxel material {item.VoxelMaterial}");
-                    Material = MyVoxelMaterialDefinition.Default;
-                    Volume = 64;
-                }
-                else
-                {
-                    Material = materialDefinition;
-                    Volume = num;
-                }
-            }
-        }
 
         protected override void Init(MyObjectBuilder_DefinitionBase def)
         {
@@ -338,7 +247,7 @@ namespace Equinox76561198048419394.RailSystem.Voxel
             ExcavateVolume = ob.ExcavateVolume;
             ExcavateDurabilityPerVol = ob.ExcavateDurability / ob.ExcavateVolume;
 
-            FillMaterial = new MiningEntry(ob.FillMaterial);
+            FillMaterial = new VoxelPlacementBuffer.VoxelPlacementDefinition(ob.FillMaterial, Log);
             FillRadius = ob.FillRadius;
             FillVolume = ob.FillVolume;
             FillDurabilityPerVol = ob.FillDurability / ob.FillVolume;
@@ -354,7 +263,7 @@ namespace Equinox76561198048419394.RailSystem.Voxel
         public uint ExcavateVolume;
         public float ExcavateDurability;
 
-        public MyObjectBuilder_VoxelMiningDefinition_MiningDef FillMaterial;
+        public MyObjectBuilder_VoxelMiningDefinition.MiningDef FillMaterial;
         public float FillRadius;
         public uint FillVolume;
         public float FillDurability;

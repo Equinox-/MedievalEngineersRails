@@ -638,6 +638,8 @@
     <Compile Include="Content\Data\Scripts\RailSystem\RailConstants.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\RailwayDebugDraw.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Util\Assert.cs" />
+    <Compile Include="Content\Data\Scripts\RailSystem\Util\Complex.cs" />
+    <Compile Include="Content\Data\Scripts\RailSystem\Util\Curve\ArcCurve2.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Util\Curve\CubicCurve.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Util\Curve\CubicSphericalCurve.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Util\Curve\CurveBlit.cs" />
@@ -645,9 +647,11 @@
     <Compile Include="Content\Data\Scripts\RailSystem\Util\Curve\ICurve.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Util\Curve\LinearCurve.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Util\Curve\QuadraticCurve.cs" />
+    <Compile Include="Content\Data\Scripts\RailSystem\Util\Curve\SpiralSolver.cs" />
+    <Compile Include="Content\Data\Scripts\RailSystem\Util\Curve\WhichSide.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Util\DbvtExtensions.cs" />
-    <Compile Include="Content\Data\Scripts\RailSystem\Util\EnvironmentExtensions.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Util\FastRiggedCopyHack.cs" />
+    <Compile Include="Content\Data\Scripts\RailSystem\Util\FresnelIntegral.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Util\IEquatableAndHash.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Util\MemStream.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Util\MessageUtil.cs" />
@@ -660,6 +664,8 @@
     <Compile Include="Content\Data\Scripts\RailSystem\Util\SphericalExtensions.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Util\TriangleUtil.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Util\UserDataTable.cs" />
+    <Compile Include="Content\Data\Scripts\RailSystem\Util\Vec2Shape.cs" />
+    <Compile Include="Content\Data\Scripts\RailSystem\Util\Vec2Transform.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Util\VectorExtensions.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Util\WhitelistExtensions.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Voxel\EdgeBlit.cs" />
@@ -667,6 +673,7 @@
     <Compile Include="Content\Data\Scripts\RailSystem\Voxel\RailGradeComponentDefinition.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Voxel\RailGrader.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Voxel\RailGraderBehavior.cs" />
+    <Compile Include="Content\Data\Scripts\RailSystem\Voxel\RailGraderComponent.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Voxel\RailGradeShape.cs" />
   </ItemGroup>
   <ItemGroup>

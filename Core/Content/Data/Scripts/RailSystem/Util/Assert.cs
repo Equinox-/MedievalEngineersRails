@@ -42,6 +42,11 @@ namespace Equinox76561198048419394.RailSystem.Util
                 Warn("ASSERT: " + msg + " " + a + " == " + b);
         }
 
+        public static T Definition<T>(MyDefinitionId? definition, string msg) where T : MyDefinitionBase
+        {
+            return definition.HasValue ? Definition<T>(definition.Value, msg) : null;
+        }
+
         public static T Definition<T>(MyDefinitionId definition, string msg) where T : MyDefinitionBase
         {
             var res = MyDefinitionManager.Get<T>(definition);

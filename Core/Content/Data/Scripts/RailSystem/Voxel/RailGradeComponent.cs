@@ -62,8 +62,11 @@ namespace Equinox76561198048419394.RailSystem.Voxel
             {
                 if (_excavationCache != null) return _excavationCache;
                 if (_bendy == null || _bendy.Edges.Length == 0 || !Definition.Excavate.HasValue) return _excavationCache;
-                return _excavationCache =
-                    CompositeGradeShape.Composite(_bendy.Edges.Select(e => Definition.Excavate.Value.CreateShape(new EdgeBlit(e), true)).ToArray());
+                var shapes = _bendy.Edges
+                    .Where(e => e?.Curve != null)
+                    .Select(e => Definition.Excavate.Value.CreateShape(new EdgeBlit(e), true)).ToArray();
+                if (shapes.Length == 0) return _excavationCache;
+                return _excavationCache = CompositeGradeShape.Composite(shapes);
             }
         }
 
@@ -75,8 +78,11 @@ namespace Equinox76561198048419394.RailSystem.Voxel
             {
                 if (_supportCache != null) return _supportCache;
                 if (_bendy == null || _bendy.Edges.Length == 0 || !Definition.Support.HasValue) return _supportCache;
-                return _supportCache =
-                    CompositeGradeShape.Composite(_bendy.Edges.Select(e => Definition.Support.Value.CreateShape(new EdgeBlit(e), false)).ToArray());
+                var shapes = _bendy.Edges
+                    .Where(e => e?.Curve != null)
+                    .Select(e => Definition.Support.Value.CreateShape(new EdgeBlit(e), false)).ToArray();
+                if (shapes.Length == 0) return _supportCache;
+                return _supportCache = CompositeGradeShape.Composite(shapes);
             }
         }
 

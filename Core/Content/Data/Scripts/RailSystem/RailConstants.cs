@@ -66,6 +66,9 @@ namespace Equinox76561198048419394.RailSystem
         /// </summary>
         public const float NodeMergeDistance = 1f;
 
+        public static float AngularConstraintStrength = 1f;
+        public static float LinearConstraintStrength = 1f;
+
         public const float NodeMergeDistanceSq = NodeMergeDistance * NodeMergeDistance;
     }
 }
