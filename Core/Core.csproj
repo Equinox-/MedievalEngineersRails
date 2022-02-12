@@ -629,6 +629,7 @@
     <Compile Include="Content\Data\Scripts\RailSystem\Definition\SwitchableNodeData.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Physics\BogieComponent.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Physics\BogieComponentDefinition.cs" />
+    <Compile Include="Content\Data\Scripts\RailSystem\Physics\CouplerComponent.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Physics\RailwayPhysicsGroup.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Physics\SerializableEdge.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Physics\SleepUtility.cs" />
