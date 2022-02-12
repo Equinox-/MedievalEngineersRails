@@ -247,6 +247,7 @@ namespace Equinox76561198048419394.RailSystem.Physics
 
         public string InteractionDummy;
 
+        [XmlElement("ConnectionTag")]
         public string[] ConnectionTag;
 
         public MyObjectBuilder_EquiPlayerAttachmentComponentDefinition.ActionDesc? CoupleAction;
