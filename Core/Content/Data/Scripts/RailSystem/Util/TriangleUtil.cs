@@ -6,14 +6,14 @@ namespace Equinox76561198048419394.RailSystem.Util
     {
         public struct Triangle
         {
-            public readonly Vector3D Origin;
+            public readonly Vector3 Origin;
             public readonly Vector3 Edge1, Edge2;
 
-            public Triangle(Vector3D a, Vector3D b, Vector3D c, Vector3? desiredNorm = null)
+            public Triangle(Vector3 a, Vector3 b, Vector3 c, Vector3? desiredNorm = null)
             {
                 Origin = a;
-                var tmp1 = (Vector3) (b - a);
-                var tmp2 = (Vector3) (c - a);
+                var tmp1 = b - a;
+                var tmp2 = c - a;
                 if (desiredNorm.HasValue)
                 {
                     var norm = Vector3.Cross(tmp1, tmp2);
@@ -35,22 +35,22 @@ namespace Equinox76561198048419394.RailSystem.Util
             /// <param name="ray"></param>
             /// <param name="t"></param>
             /// <returns></returns>
-            public bool Intersects(ref RayD ray, out double t)
+            public bool Intersects(ref Ray ray, out float t)
             {
-                t = double.NaN;
+                t = float.NaN;
                 const float epsilon = 0.0000001f;
-                Vector3 h = ((Vector3) ray.Direction).Cross(Edge2);
+                var h = ray.Direction.Cross(Edge2);
                 float a = h.Dot(Edge1);
                 if (a > -epsilon && a < epsilon)
                     return false;
                 var f = 1 / a;
-                Vector3D s = ray.Position - Origin;
+                var s = ray.Position - Origin;
                 var u = f * (s.Dot(h));
-                if (u < 0.0 || u > 1.0)
+                if (u < 0f || u > 1f)
                     return false;
-                Vector3D q = s.Cross(Edge1);
+                var q = s.Cross(Edge1);
                 var v = f * ray.Direction.Dot(q);
-                if (v < 0.0 || u + v > 1.0)
+                if (v < 0f || u + v > 1f)
                     return false;
                 t = f * q.Dot(Edge2);
                 return t > epsilon;

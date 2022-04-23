@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Threading;
 using System.Xml.Serialization;
 using Equinox76561198048419394.Core.Util;
 using Equinox76561198048419394.RailSystem.Util;
@@ -16,11 +15,12 @@ using VRage.Game;
 using VRage.Game.Components;
 using VRage.Game.Definitions;
 using VRage.Game.Entity;
-using VRage.Game.Models;
 using VRage.Game.ObjectBuilders.ComponentSystem;
+using VRage.Library.Collections;
 using VRage.Models;
 using VRage.ObjectBuilders;
 using VRage.ObjectBuilders.Definitions;
+using VRage.Session;
 using VRage.Utils;
 using VRageMath;
 
@@ -155,17 +155,19 @@ namespace Equinox76561198048419394.RailSystem.Voxel
                     return;
                 var availableForExcavate = Definition.ExcavateVolume;
 
-                var modified = RailGraderSystem.DoGrading(gradeComponents, position, Definition.Radius,
+                var system = MySession.Static.Components.Get<RailGraderSystem>();
+                var modified = system.DoGrading(gradeComponents, position, Definition.Radius,
                     availableForDeposit,
                     availableForExcavate, _miningBuffer, Definition.FillMaterial.Material.Index,
-                    out var deposited, out var excavated, true, out _, out _);
+                    out var deposited, out var excavated, out _, out _,
+                    out var dynamicEntities, out var voxelEntity, out var voxelRadius);
 
                 if (!modified) return;
                 _eventBus?.Invoke(EventDidWork, true);
                 UseDepositMaterials((int) deposited);
                 GiftMiningMaterials();
-                RailGraderSystem.RaiseDoGrade(gradeComponents, position, Definition.Radius, availableForDeposit, availableForExcavate,
-                    Definition.FillMaterial.Material.Index, excavated, deposited);
+                system.RaiseDoGrade(gradeComponents, position, voxelRadius, availableForDeposit, availableForExcavate,
+                    Definition.FillMaterial.Material.Index, excavated, deposited, voxelEntity.Id, dynamicEntities);
             }
         }
 

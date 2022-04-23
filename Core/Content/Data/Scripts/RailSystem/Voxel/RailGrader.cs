@@ -3,14 +3,17 @@ using System.Collections.Generic;
 using System.Linq;
 using Equinox76561198048419394.Core.Util;
 using Equinox76561198048419394.RailSystem.Util;
+using Equinox76561198048419394.RailSystem.Voxel.Shape;
 using Sandbox.Game.Entities;
 using Sandbox.ModAPI;
 using VRage.Components.Entity.CubeGrid;
 using VRage.Components.Session;
 using VRage.Entities.Gravity;
 using VRage.Game.Entity;
+using VRage.Library.Collections;
 using VRage.Logging;
 using VRage.Network;
+using VRage.Scene;
 using VRage.Session;
 using VRage.Utils;
 using VRage.Voxels;
@@ -18,8 +21,8 @@ using VRageMath;
 
 namespace Equinox76561198048419394.RailSystem.Voxel
 {
-    [StaticEventOwner]
-    public static class RailGraderSystem
+    [MySessionComponent(AllowAutomaticCreation = true, AlwaysOn = true)]
+    public sealed class RailGraderSystem : MySessionComponent
     {
         private static NamedLogger Log
         {
@@ -30,17 +33,26 @@ namespace Equinox76561198048419394.RailSystem.Voxel
             }
         }
 
-        private static readonly MyStorageData _storage = new MyStorageData();
-        private static readonly List<MyVoxelBase> _workingVoxels = new List<MyVoxelBase>();
-        private static readonly List<MyEntity> _dynamicEntities = new List<MyEntity>();
+        private readonly MyStorageData _storage = new MyStorageData();
+
+        // ~4MB of SDF data
+        private readonly LruCache<CachedSdf.CachedSdfKey, CachedSdf> _sdfCache = new LruCache<CachedSdf.CachedSdfKey, CachedSdf>(1024);
 
         private const double GradeScanDistance = 25D;
+
+        protected override void OnUnload()
+        {
+            _sdfCache.Clear();
+            base.OnUnload();
+        }
 
         public static void GatherGradeComponents(Vector3D pos, List<RailGradeComponent> output, float radius)
         {
             using (PoolManager.Get(out List<MyEntity> entities))
             {
-                MyGamePruningStructure.GetTopMostEntitiesInSphere(new BoundingSphereD(pos, radius + GradeScanDistance), entities);
+                MyGamePruningStructure.GetTopMostEntitiesInSphere(
+                    // Gather for a larger radius so we minimize the invalidation performed on the SDF cache
+                    new BoundingSphereD(pos, Math.Max(radius, CachedSdf.CellSize) + GradeScanDistance), entities);
                 foreach (var ent in entities)
                     GatherGradeComponents(pos, ent, output, radius);
             }
@@ -49,19 +61,20 @@ namespace Equinox76561198048419394.RailSystem.Voxel
         private static void GatherGradeComponents(Vector3D pos, MyEntity entity, List<RailGradeComponent> output, float radius)
         {
             foreach (var c in entity.Components)
-                if (c is RailGradeComponent k && ((k.Excavation != null && k.Excavation.IsInside(pos, radius))
-                                                  || (k.Support != null && k.Support.IsInside(pos, radius))))
+                if (c is RailGradeComponent k)
                     output.Add(k);
             if (!entity.Components.TryGet(out MyGridHierarchyComponent hierarchyComponent)) return;
-            using (PoolManager.Get(out List<MyEntity> children)) {
+            using (PoolManager.Get(out List<MyEntity> children))
+            {
                 hierarchyComponent.QuerySphere(new BoundingSphereD(pos, radius + GradeScanDistance), children);
                 foreach (var child in children)
                     GatherGradeComponents(pos, child, output, radius);
             }
         }
 
-        private static readonly MyStringId _fillColor = MyStringId.GetOrCompute("RailGradeFill");
-        private static readonly MyStringId _excavateColor = MyStringId.GetOrCompute("RailGradeExcavate");
+        private static readonly MyStringId FillColor = MyStringId.GetOrCompute("RailGradeFill");
+        private static readonly MyStringId ExcavateColor = MyStringId.GetOrCompute("RailGradeExcavate");
+
         public static void DebugDrawGradeComponents(Vector3D position)
         {
             using (PoolManager.Get(out List<RailGradeComponent> components))
@@ -69,202 +82,189 @@ namespace Equinox76561198048419394.RailSystem.Voxel
                 GatherGradeComponents(position, components, 5);
                 foreach (var gradeComp in components)
                 {
-                    gradeComp.Support?.Draw(_fillColor);
-                    gradeComp.Excavation?.Draw(_excavateColor);
+                    gradeComp.Support?.Draw(FillColor);
+                    gradeComp.Excavation?.Draw(ExcavateColor);
                 }
             }
         }
 
-        public static bool DoGrading(
+        public bool DoGrading(
             IReadOnlyList<IRailGradeComponent> components, Vector3D target, float radius, uint availableForDeposit,
             uint availableForExcavate,
             VoxelMiningBuffer excavatedByMaterial, byte materialToDeposit, out uint totalDeposited, out uint totalExcavated,
-            bool testDynamic, out bool triedToChange, out bool intersectedDynamic)
+            out bool triedToChange, out bool intersectedDynamic, out List<OrientedBoundingBoxD> dynamicEntities,
+            out MyVoxelBase voxel, out int voxelRadius)
         {
-            try
+            voxelRadius = (int)Math.Ceiling(radius);
+            dynamicEntities = new List<OrientedBoundingBoxD>();
+            var sphere = new BoundingSphereD(target, voxelRadius + 2);
+            var tmp = MyEntities.GetTopMostEntitiesInSphere(ref sphere);
+            foreach (var e in tmp)
             {
-                var voxelRadius = (int) Math.Ceiling(radius);
-                {
-                    _dynamicEntities.Clear();
-                    _workingVoxels.Clear();
-                    var sphere = new BoundingSphereD(target, voxelRadius + 2);
-                    var tmp = MyEntities.GetEntitiesInSphere(ref sphere);
-                    using (tmp.GetClearToken())
-                        foreach (var e in tmp)
-                        {
-                            if (e is MyVoxelBase vox)
-                                _workingVoxels.Add(vox);
-                            if (e.Physics != null && !e.Physics.IsStatic)
-                                _dynamicEntities.Add(e);
-                        }
-                }
+                if (e.Physics != null && !e.Physics.IsStatic)
+                    dynamicEntities.Add(new OrientedBoundingBoxD(e.PositionComp.LocalAABB, e.PositionComp.WorldMatrix));
+            }
 
+            tmp.Clear();
+            totalDeposited = 0;
+            totalExcavated = 0;
+            triedToChange = false;
+            intersectedDynamic = false;
+            voxel = MyGamePruningStructureSandbox.GetClosestPlanet(target)?.RootVoxel;
+            if (voxel == null)
+                return false;
+            return DoGradingInternal(components, dynamicEntities, voxel, target, voxelRadius, availableForDeposit,
+                availableForExcavate, excavatedByMaterial, materialToDeposit, out totalDeposited, out totalExcavated,
+                out triedToChange, out intersectedDynamic);
+        }
 
-                totalDeposited = 0;
-                totalExcavated = 0;
-                triedToChange = false;
-                intersectedDynamic = false;
-
+        private bool DoGradingInternal(
+            IReadOnlyList<IRailGradeComponent> components,
+            List<OrientedBoundingBoxD> dynamicEntities,
+            MyVoxelBase voxel,
+            Vector3D target, int voxelRadius, uint availableForDeposit,
+            uint availableForExcavate,
+            VoxelMiningBuffer excavatedByMaterial, byte materialToDeposit, out uint totalDeposited, out uint totalExcavated,
+            out bool triedToChange, out bool intersectedDynamic)
+        {
+            totalDeposited = 0;
+            totalExcavated = 0;
+            triedToChange = false;
+            intersectedDynamic = false;
+            Vector3I center;
+            MyVoxelCoordSystems.WorldPositionToVoxelCoord(voxel.PositionLeftBottomCorner, ref target, out center);
+            var voxMin = center - voxelRadius - 1;
+            var voxMax = center + voxelRadius + 1;
+            _storage.Resize(voxMin, voxMax);
+            voxel.Storage.ReadRange(_storage, MyStorageDataTypeFlags.ContentAndMaterial, 0, voxMin, voxMax);
+            CachedSdf.CachedSdfAccessor fillSdf, excavateSdf;
+            {
                 var fill = new IGradeShape[components.Count];
                 var excavate = new IGradeShape[components.Count];
                 for (var i = 0; i < components.Count; i++)
                     components[i].Unblit(out fill[i], out excavate[i]);
+                fillSdf = new CachedSdf.CachedSdfAccessor(_sdfCache, voxel, CachedSdf.CachedSdfGroup.Fill, in voxMin, in voxMax, fill);
+                excavateSdf = new CachedSdf.CachedSdfAccessor(_sdfCache, voxel, CachedSdf.CachedSdfGroup.Cut, in voxMin, in voxMax, excavate);
+            }
 
-                var voxel = MyGamePruningStructureSandbox.GetClosestPlanet(target)?.RootVoxel;
-                if (voxel == null)
-                    return false;
-                Vector3I center;
-                MyVoxelCoordSystems.WorldPositionToVoxelCoord(voxel.PositionLeftBottomCorner, ref target, out center);
-                var voxMin = center - voxelRadius - 1;
-                var voxMax = center + voxelRadius + 1;
-                _storage.Resize(voxMin, voxMax);
-                voxel.Storage.ReadRange(_storage, MyStorageDataTypeFlags.ContentAndMaterial, 0, voxMin, voxMax);
+            var changed = false;
 
-                var changed = false;
+            #region Mutate
 
-                #region Mutate
+            for (var i = 0;
+                 i <= voxelRadius && (!triedToChange || availableForExcavate > 0 || availableForDeposit > 0);
+                 i++)
+            for (var e = new ShellEnumerator(center - i, center + i);
+                 e.MoveNext() && (!triedToChange || availableForExcavate > 0 || availableForDeposit > 0);)
+            {
+                var vCoord = e.Current;
+                var dataCoord = e.Current - voxMin;
+                Vector3D worldCoord;
+                MyVoxelCoordSystems.VoxelCoordToWorldPosition(voxel.PositionLeftBottomCorner, ref vCoord,
+                    out worldCoord);
+                var cval = _storage.Get(MyStorageDataTypeEnum.Content, ref dataCoord);
 
-                for (var i = 0;
-                    i <= voxelRadius && (!triedToChange || availableForExcavate > 0 || availableForDeposit > 0);
-                    i++)
-                for (var e = new ShellEnumerator(center - i, center + i);
-                    e.MoveNext() && (!triedToChange || availableForExcavate > 0 || availableForDeposit > 0);)
+                byte desiredDensity;
                 {
-                    var vCoord = e.Current;
-                    var dataCoord = e.Current - voxMin;
-                    Vector3D worldCoord;
-                    MyVoxelCoordSystems.VoxelCoordToWorldPosition(voxel.PositionLeftBottomCorner, ref vCoord,
-                        out worldCoord);
-                    var cval = _storage.Get(MyStorageDataTypeEnum.Content, ref dataCoord);
-
-                    byte? excavationDensity = null;
-                    {
-                        float density = 0;
-                        foreach (var c in excavate)
-                            if (c != null)
-                                density = Math.Max(density, c.GetDensity(ref worldCoord));
-                        if (density > 0)
-                            excavationDensity = (byte) ((1 - density) * byte.MaxValue);
-                    }
-
-                    byte? fillDensity = null;
-                    if (cval < byte.MaxValue && (!triedToChange || availableForDeposit > 0))
-                    {
-                        float density = 0;
-                        foreach (var c in fill)
-                            if (c != null)
-                                density = Math.Max(density, c.GetDensity(ref worldCoord));
-                        if (density > 0)
-                        {
-                            var fillVal = (byte) (density * byte.MaxValue);
-                            if (excavationDensity.HasValue)
-                                fillVal = Math.Min(fillVal, excavationDensity.Value);
-                            fillDensity = fillVal;
-                        }
-                    }
-
-
-                    if ((!fillDensity.HasValue || cval >= fillDensity.Value) &&
-                        (!excavationDensity.HasValue || cval <= excavationDensity.Value))
+                    var excavateDensity = (byte)~excavateSdf.QuerySdf(vCoord);
+                    var fillDensity = fillSdf.QuerySdf(vCoord);
+                    if (fillDensity > 0 && excavateDensity < byte.MaxValue)
+                        desiredDensity = excavateDensity <= cval ? excavateDensity : Math.Max(cval, fillDensity);
+                    else if (fillDensity > 0)
+                        desiredDensity = Math.Max(cval, fillDensity);
+                    else if (excavateDensity < byte.MaxValue)
+                        desiredDensity = Math.Min(cval, excavateDensity);
+                    else
                         continue;
-
-                    if (excavationDensity < cval)
-                    {
-                        triedToChange = true;
-                        var toExtract = (uint) Math.Min(availableForExcavate, cval - excavationDensity.Value);
-                        if (toExtract > 0)
-                        {
-                            var mid = _storage.Get(MyStorageDataTypeEnum.Material, ref dataCoord);
-                            excavatedByMaterial?.Add(mid, (int) toExtract);
-                            DisableFarming(worldCoord);
-                            _storage.Set(MyStorageDataTypeEnum.Content, ref dataCoord, (byte) (cval - toExtract));
-                            totalExcavated += toExtract;
-                            availableForExcavate -= toExtract;
-                            changed = true;
-                        }
-
-                        continue;
-                    }
-
-                    if (!fillDensity.HasValue || fillDensity.Value <= cval)
-                        continue;
-                    triedToChange = true;
-                    var toFill = Math.Min(availableForDeposit, fillDensity.Value - cval);
-                    if (toFill <= 0)
-                        continue;
-
-                    // would this deposit in midair?
-                    {
-                        var test = worldCoord;
-                        test += 2 * Vector3D.Normalize(
-                            MyGravityProviderSystem.CalculateNaturalGravityInPoint(worldCoord));
-                        Vector3I vtest;
-                        MyVoxelCoordSystems.WorldPositionToVoxelCoord(voxel.PositionLeftBottomCorner, ref test,
-                            out vtest);
-                        vtest = Vector3I.Clamp(vtest, voxMin, voxMax) - voxMin;
-                        if (vtest != vCoord && _storage.Get(MyStorageDataTypeEnum.Content, ref vtest) == 0)
-                            continue;
-                    }
-
-                    // would it touch something dynamic?
-                    if (testDynamic)
-                    {
-                        var box = new BoundingBoxD(worldCoord - 0.25, worldCoord + 0.25);
-                        var bad = false;
-                        foreach (var k in _dynamicEntities)
-                        {
-                            if (k.PositionComp.WorldAABB.Contains(box) == ContainmentType.Disjoint)
-                                continue;
-                            var obb = new OrientedBoundingBoxD(k.PositionComp.LocalAABB, k.WorldMatrix);
-                            if (!obb.Intersects(ref box)) continue;
-                            bad = true;
-                            break;
-                        }
-
-                        if (bad)
-                        {
-                            intersectedDynamic = true;
-                            continue;
-                        }
-                    }
-
-                    changed = true;
-                    DisableFarming(worldCoord);
-                    availableForDeposit = (uint) (availableForDeposit - toFill);
-                    totalDeposited += (uint) toFill;
-                    _storage.Set(MyStorageDataTypeEnum.Content, ref dataCoord, (byte) (cval + toFill));
-                    if (fillDensity.Value <= cval * 1.25f) continue;
-                    var t = -Vector3I.One;
-                    for (var itrContent = new Vector3I_RangeIterator(ref t, ref Vector3I.One);
-                        itrContent.IsValid();
-                        itrContent.MoveNext())
-                    {
-                        var tpos = dataCoord + itrContent.Current;
-//                    var state = _storage.Get(MyStorageDataTypeEnum.Content, ref tpos);
-//                    if (itrContent.Current == Vector3I.Zero || state == 0)
-                        _storage.Set(MyStorageDataTypeEnum.Material, ref tpos, materialToDeposit);
-                    }
                 }
 
-                #endregion Mutate
+                if (desiredDensity == cval) continue;
 
-                if (changed)
-                    voxel.Storage.WriteRange(_storage, MyStorageDataTypeFlags.ContentAndMaterial, voxMin, voxMax);
+                if (desiredDensity < cval)
+                {
+                    triedToChange = true;
+                    var toExtract = (uint)Math.Min(availableForExcavate, cval - desiredDensity);
+                    if (toExtract > 0)
+                    {
+                        var mid = _storage.Get(MyStorageDataTypeEnum.Material, ref dataCoord);
+                        excavatedByMaterial?.Add(mid, (int)toExtract);
+                        DisableFarming(worldCoord, voxel);
+                        _storage.Set(MyStorageDataTypeEnum.Content, ref dataCoord, (byte)(cval - toExtract));
+                        totalExcavated += toExtract;
+                        availableForExcavate -= toExtract;
+                        changed = true;
+                    }
 
-                return changed;
+                    continue;
+                }
+
+                triedToChange = true;
+                var toFill = Math.Min(availableForDeposit, desiredDensity - cval);
+                if (toFill <= 0)
+                    continue;
+
+                // would this deposit in midair?
+                {
+                    var test = worldCoord;
+                    test += 2 * Vector3D.Normalize(
+                        MyGravityProviderSystem.CalculateNaturalGravityInPoint(worldCoord));
+                    Vector3I vtest;
+                    MyVoxelCoordSystems.WorldPositionToVoxelCoord(voxel.PositionLeftBottomCorner, ref test,
+                        out vtest);
+                    vtest = Vector3I.Clamp(vtest, voxMin, voxMax) - voxMin;
+                    if (vtest != vCoord && _storage.Get(MyStorageDataTypeEnum.Content, ref vtest) == 0)
+                        continue;
+                }
+
+                // would it touch something dynamic?
+                var box = new BoundingBoxD(worldCoord - 0.25, worldCoord + 0.25);
+                var bad = false;
+                foreach (var obb in dynamicEntities)
+                {
+                    if (!obb.Intersects(ref box)) continue;
+                    bad = true;
+                    break;
+                }
+
+                if (bad)
+                {
+                    intersectedDynamic = true;
+                    continue;
+                }
+
+                changed = true;
+                DisableFarming(worldCoord, voxel);
+                availableForDeposit = (uint)(availableForDeposit - toFill);
+                totalDeposited += (uint)toFill;
+                _storage.Set(MyStorageDataTypeEnum.Content, ref dataCoord, (byte)(cval + toFill));
+                if (desiredDensity <= cval * 1.25f) continue;
+                var t = -Vector3I.One;
+                for (var itrContent = new Vector3I_RangeIterator(ref t, ref Vector3I.One);
+                     itrContent.IsValid();
+                     itrContent.MoveNext())
+                {
+                    var tpos = dataCoord + itrContent.Current;
+//                    var state = _storage.Get(MyStorageDataTypeEnum.Content, ref tpos);
+//                    if (itrContent.Current == Vector3I.Zero || state == 0)
+                    _storage.Set(MyStorageDataTypeEnum.Material, ref tpos, materialToDeposit);
+                }
             }
-            finally
-            {
-                _dynamicEntities.Clear();
-                _workingVoxels.Clear();
-            }
+
+            #endregion Mutate
+
+            if (changed)
+                voxel.Storage.WriteRange(_storage, MyStorageDataTypeFlags.ContentAndMaterial, voxMin, voxMax);
+
+            MyLog.Default.WriteLine($"Graded {components.Count}, {totalDeposited}, {totalExcavated}, {changed}");
+            MyLog.Default.Flush();
+
+            return changed;
         }
 
-        private static void DisableFarming(Vector3D pos)
+        private static void DisableFarming(Vector3D pos, MyVoxelBase vox)
         {
             var box = new BoundingBoxD(pos - 1, pos + 1);
-            foreach (var vox in _workingVoxels)
-                vox.DisableFarmingItemsIn(box);
+            vox.DisableFarmingItemsIn(box);
         }
 
 
@@ -272,7 +272,7 @@ namespace Equinox76561198048419394.RailSystem.Voxel
 
         private struct GradingConfig
         {
-            public float Radius;
+            public int Radius;
             public uint DepositAvailable;
             public uint ExcavateAvailable;
             public byte MaterialToDeposit;
@@ -282,10 +282,13 @@ namespace Equinox76561198048419394.RailSystem.Voxel
 
         private static DateTime _lastGradingDesync = new DateTime(0);
 
-        public static void RaiseDoGrade(IEnumerable<RailGradeComponent> components, Vector3D pos, float radius, uint availableForDeposit,
-            uint availableForExcavate, byte fillMaterial, uint totalExcavated, uint totalDeposited)
+        public void RaiseDoGrade(IEnumerable<RailGradeComponent> components, Vector3D pos, int radius, uint availableForDeposit,
+            uint availableForExcavate, byte fillMaterial, uint totalExcavated, uint totalDeposited, EntityId voxelId,
+            List<OrientedBoundingBoxD> dynamicEntities)
         {
-            MyMultiplayerModApi.Static.RaiseStaticEvent((x) => DoGrade, components.Where(x => x.IsValid).Select(x => x.Blit()).ToArray(), pos,
+            MyMultiplayerModApi.Static.RaiseEvent(this, x => x.DoGrade,
+                components.Where(x => x.IsValid).Select(x => x.Blit()).ToArray(),
+                pos,
                 new GradingConfig()
                 {
                     Radius = radius,
@@ -294,24 +297,43 @@ namespace Equinox76561198048419394.RailSystem.Voxel
                     MaterialToDeposit = fillMaterial,
                     ExcavateExpected = totalExcavated,
                     DepositExpected = totalDeposited
-                });
+                },
+                voxelId,
+                dynamicEntities.Select(x => new OrientedBoundingBoxBlit
+                {
+                    Center = x.Center,
+                    HalfExtents = (Vector3)x.HalfExtent,
+                    Orientation = x.Orientation
+                }).ToArray());
         }
 
         [Event]
         [Broadcast]
-        private static void DoGrade(RailGradeComponentBlit[] components, Vector3D target, GradingConfig config)
+        private void DoGrade(RailGradeComponentBlit[] components, Vector3D target, GradingConfig config, EntityId voxelId, OrientedBoundingBoxBlit[] dynamic)
         {
             uint deposited;
             uint excavated;
             bool triedToChange;
             bool intersectedDynamic;
+            if (Scene.TryGetEntity(voxelId, out MyVoxelBase voxel)) return;
             var cbox = new IRailGradeComponent[components.Length];
             for (var i = 0; i < components.Length; i++)
                 cbox[i] = components[i];
-            DoGrading(cbox, target, config.Radius, config.DepositAvailable, config.ExcavateAvailable, null, config.MaterialToDeposit, out deposited,
-                out excavated, true, out triedToChange, out intersectedDynamic);
+            using (PoolManager.Get(out List<OrientedBoundingBoxD> dynamicEntities))
+            {
+                if (dynamic != null)
+                    foreach (var dyn in dynamic)
+                        dynamicEntities.Add(new OrientedBoundingBoxD(dyn.Center, dyn.HalfExtents, dyn.Orientation));
+                DoGradingInternal(cbox, dynamicEntities, voxel, target, config.Radius, config.DepositAvailable, config.ExcavateAvailable,
+                    null, config.MaterialToDeposit, out deposited,
+                    out excavated, out triedToChange, out intersectedDynamic);
+            }
 
-            if (Math.Abs(config.DepositExpected - deposited) <= GradingDesyncTol && Math.Abs(config.ExcavateExpected - excavated) <= GradingDesyncTol) return;
+            if (Math.Abs(config.DepositExpected - deposited) <= GradingDesyncTol
+                && Math.Abs(config.ExcavateExpected - excavated) <= GradingDesyncTol) return;
+
+            var playerPos = MySession.Static.PlayerEntity?.GetPosition();
+            if (playerPos == null || Vector3D.DistanceSquared(playerPos.Value, target) > 100 * 100) return;
 
             Log.Warning($"Grading desync occured!  {config.DepositExpected} != {deposited}, {config.ExcavateExpected} != {excavated}");
             var time = DateTime.Now;
@@ -319,6 +341,13 @@ namespace Equinox76561198048419394.RailSystem.Voxel
             var red = new Vector4(1, 0, 0, 1);
             MyAPIGateway.Utilities.ShowNotification("Grading desync occured!  If you experience movement problems try reconnecting.", 5000, null, red);
             _lastGradingDesync = time;
+        }
+
+        private struct OrientedBoundingBoxBlit
+        {
+            public Vector3D Center;
+            public Vector3 HalfExtents;
+            public Quaternion Orientation;
         }
     }
 }

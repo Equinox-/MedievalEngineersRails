@@ -12,6 +12,7 @@ using VRage.Game;
 using VRage.Game.Components;
 using VRage.Game.Entity;
 using VRage.Game.ObjectBuilders.ComponentSystem;
+using VRage.Library.Collections;
 using VRage.Network;
 using VRage.ObjectBuilders;
 using VRage.ObjectBuilders.Definitions.Inventory;
@@ -492,7 +493,7 @@ namespace Equinox76561198048419394.RailSystem.Construction
                 _component = null;
                 if (_snapshot == null) return;
                 _snapshot.Clear();
-                PoolManager.Return(_snapshot);
+                PoolManager.Return(ref _snapshot);
                 _snapshot = null;
             }
         }

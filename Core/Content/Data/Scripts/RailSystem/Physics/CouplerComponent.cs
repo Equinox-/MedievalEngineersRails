@@ -20,6 +20,7 @@ using VRage.Game.Definitions;
 using VRage.Game.Entity;
 using VRage.Game.Entity.UseObject;
 using VRage.Game.ObjectBuilders.ComponentSystem;
+using VRage.Library.Collections;
 using VRage.Logging;
 using VRage.Network;
 using VRage.ObjectBuilders;

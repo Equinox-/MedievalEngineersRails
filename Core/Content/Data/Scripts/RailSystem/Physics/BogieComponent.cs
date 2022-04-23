@@ -24,7 +24,6 @@ using VRage.Game;
 using VRage.Game.Components;
 using VRage.Game.Entity;
 using VRage.Game.ObjectBuilders.ComponentSystem;
-using VRage.Input.Devices.Keyboard;
 using VRage.ObjectBuilders;
 using VRage.ObjectBuilders.Components.Entity.Stats;
 using VRage.Session;
@@ -675,11 +674,29 @@ namespace Equinox76561198048419394.RailSystem.Physics
                 WakePhysics(null);
         }
 
+        private DateTime _lastErrorLog;
+        private bool _failedPreviousFrame;
+
         [FixedUpdate]
         private void Simulate()
         {
             var position = Entity.GetPosition();
-            SimulationDryRun(out var simulationResult);
+            SimulationResult simulationResult;
+            try
+            {
+                SimulationDryRun(out simulationResult);
+                _failedPreviousFrame = false;
+            }
+            catch (Exception err)
+            {
+                if (!_failedPreviousFrame && (DateTime.Now - _lastErrorLog) > TimeSpan.FromMinutes(1))
+                {
+                    this.GetLogger().Warning($"Failure when running bogie simulation on {Entity.Id}: {err}");
+                    _lastErrorLog = DateTime.Now;
+                }
+                _failedPreviousFrame = true;
+                return;
+            }
             _prevEdge.SetEdge(simulationResult.FindEdgeResult.Edge);
             if (!simulationResult.Active)
             {

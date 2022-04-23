@@ -4,6 +4,7 @@ using System.Xml.Serialization;
 using Equinox76561198048419394.RailSystem.Bendy;
 using Equinox76561198048419394.RailSystem.Construction;
 using Equinox76561198048419394.RailSystem.Util;
+using Equinox76561198048419394.RailSystem.Voxel.Shape;
 using Sandbox.Game.Entities;
 using VRage.Components;
 using VRage.Components.Entity.CubeGrid;

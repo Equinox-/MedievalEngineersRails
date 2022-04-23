@@ -132,10 +132,12 @@ namespace Equinox76561198048419394.RailSystem.Voxel
             uint totalExcavated;
             bool triedToChange;
             bool intersectedDynamic;
-            var result = RailGraderSystem.DoGrading(_gradeComponents, Target.Position, radius, availableForDeposit,
+            var system = MySession.Static.Components.Get<RailGraderSystem>();
+            var result = system.DoGrading(_gradeComponents, Target.Position, radius, availableForDeposit,
                 availableForExcavate, _miningBuffer, Definition.FillMaterial.Material.Index,
-                out totalDeposited, out totalExcavated, testDynamic: true,
-                triedToChange: out triedToChange, intersectedDynamic: out intersectedDynamic);
+                out totalDeposited, out totalExcavated, 
+                triedToChange: out triedToChange, intersectedDynamic: out intersectedDynamic,
+                out var dynamicBoxes, out var voxel, out var voxelRadius);
 
             #region Give Items
 
@@ -170,8 +172,8 @@ namespace Equinox76561198048419394.RailSystem.Voxel
                 if (duraCost > 0)
                     UpdateDurability(-duraCost);
                 GraderUsed?.Invoke(this, _gradeComponents, totalDeposited, totalExcavated);
-                RailGraderSystem.RaiseDoGrade(_gradeComponents, Target.Position, radius, availableForDeposit, availableForExcavate,
-                    Definition.FillMaterial.Material.Index, totalExcavated, totalDeposited);
+                system.RaiseDoGrade(_gradeComponents, Target.Position, voxelRadius, availableForDeposit, availableForExcavate,
+                    Definition.FillMaterial.Material.Index, totalExcavated, totalDeposited, voxel.Id, dynamicBoxes);
                 return;
             }
 
