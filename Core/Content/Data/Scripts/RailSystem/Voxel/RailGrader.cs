@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using Equinox76561198048419394.Core.Util;
 using Equinox76561198048419394.RailSystem.Util;
 using Equinox76561198048419394.RailSystem.Voxel.Shape;
 using Sandbox.Game.Entities;
 using Sandbox.ModAPI;
+using VRage.Components;
+using VRage.Components.Entity.Camera;
 using VRage.Components.Entity.CubeGrid;
 using VRage.Components.Session;
 using VRage.Entities.Gravity;
@@ -18,11 +19,13 @@ using VRage.Session;
 using VRage.Utils;
 using VRage.Voxels;
 using VRageMath;
+using MySession = VRage.Session.MySession;
 
 namespace Equinox76561198048419394.RailSystem.Voxel
 {
     [MySessionComponent(AllowAutomaticCreation = true, AlwaysOn = true)]
-    public sealed class RailGraderSystem : MySessionComponent
+    [StaticEventOwner]
+    public sealed class RailGraderSystem : MySessionComponent, IComponentDebugDraw
     {
         private static NamedLogger Log
         {
@@ -72,21 +75,39 @@ namespace Equinox76561198048419394.RailSystem.Voxel
             }
         }
 
-        private static readonly MyStringId FillColor = MyStringId.GetOrCompute("RailGradeFill");
-        private static readonly MyStringId ExcavateColor = MyStringId.GetOrCompute("RailGradeExcavate");
-
-        public static void DebugDrawGradeComponents(Vector3D position)
+        public void DebugDraw()
         {
-            using (PoolManager.Get(out List<RailGradeComponent> components))
+            var posNullable = MyAPIGateway.Session?.ControlledObject?.GetPosition() ?? MyCameraComponent.ActiveCamera?.GetPosition();
+            if (!posNullable.HasValue) return;
+            var pos = posNullable.Value;
+            if (RailConstants.Debug.DrawGradingFillShapes || RailConstants.Debug.DrawGradingCutShapes)
             {
-                GatherGradeComponents(position, components, 5);
-                foreach (var gradeComp in components)
+                using (PoolManager.Get(out List<RailGradeComponent> components))
                 {
-                    gradeComp.Support?.Draw(FillColor);
-                    gradeComp.Excavation?.Draw(ExcavateColor);
+                    GatherGradeComponents(pos, components, 5);
+                    foreach (var gradeComp in components)
+                    {
+                        if (RailConstants.Debug.DrawGradingFillShapes)
+                            gradeComp.Support?.DrawShape(FillColor);
+                        if (RailConstants.Debug.DrawGradingCutShapes)
+                            gradeComp.Excavation?.DrawShape(ExcavateColor);
+                    }
                 }
             }
+            IReadOnlyList<CachedSdf> forDrawing;
+            if (RailConstants.Debug.DrawSdfCacheCut)
+                forDrawing = _prevCutSdf.CellTable;
+            else if (RailConstants.Debug.DrawSdfCacheFill)
+                forDrawing = _prevFillSdf.CellTable;
+            else
+                forDrawing = null;
+            if (forDrawing == null) return;
+            foreach (var cell in forDrawing)
+                cell.DebugDraw();
         }
+
+        private static readonly MyStringId FillColor = MyStringId.GetOrCompute("RailGradeFill");
+        private static readonly MyStringId ExcavateColor = MyStringId.GetOrCompute("RailGradeExcavate");
 
         public bool DoGrading(
             IReadOnlyList<IRailGradeComponent> components, Vector3D target, float radius, uint availableForDeposit,
@@ -118,6 +139,9 @@ namespace Equinox76561198048419394.RailSystem.Voxel
                 out triedToChange, out intersectedDynamic);
         }
 
+        private CachedSdf.CachedSdfAccessor _prevFillSdf;
+        private CachedSdf.CachedSdfAccessor _prevCutSdf;
+
         private bool DoGradingInternal(
             IReadOnlyList<IRailGradeComponent> components,
             List<OrientedBoundingBoxD> dynamicEntities,
@@ -145,6 +169,8 @@ namespace Equinox76561198048419394.RailSystem.Voxel
                     components[i].Unblit(out fill[i], out excavate[i]);
                 fillSdf = new CachedSdf.CachedSdfAccessor(_sdfCache, voxel, CachedSdf.CachedSdfGroup.Fill, in voxMin, in voxMax, fill);
                 excavateSdf = new CachedSdf.CachedSdfAccessor(_sdfCache, voxel, CachedSdf.CachedSdfGroup.Cut, in voxMin, in voxMax, excavate);
+                _prevFillSdf = fillSdf;
+                _prevCutSdf = excavateSdf;
             }
 
             var changed = false;
@@ -255,9 +281,6 @@ namespace Equinox76561198048419394.RailSystem.Voxel
             if (changed)
                 voxel.Storage.WriteRange(_storage, MyStorageDataTypeFlags.ContentAndMaterial, voxMin, voxMax);
 
-            MyLog.Default.WriteLine($"Graded {components.Count}, {totalDeposited}, {totalExcavated}, {changed}");
-            MyLog.Default.Flush();
-
             return changed;
         }
 
@@ -280,14 +303,40 @@ namespace Equinox76561198048419394.RailSystem.Voxel
             public uint ExcavateExpected;
         }
 
-        private static DateTime _lastGradingDesync = new DateTime(0);
+        private DateTime _lastGradingDesync = new DateTime(0);
+        private long _sentGradingTasks = 0;
 
-        public void RaiseDoGrade(IEnumerable<RailGradeComponent> components, Vector3D pos, int radius, uint availableForDeposit,
+        public void RaiseDoGrade(IReadOnlyList<RailGradeComponent> components, Vector3D pos, int radius, uint availableForDeposit,
             uint availableForExcavate, byte fillMaterial, uint totalExcavated, uint totalDeposited, EntityId voxelId,
             List<OrientedBoundingBoxD> dynamicEntities)
         {
-            MyMultiplayerModApi.Static.RaiseEvent(this, x => x.DoGrade,
-                components.Where(x => x.IsValid).Select(x => x.Blit()).ToArray(),
+            const int gradeComponentBatchSize = 5;
+            const int dynamicEntityBatchSize = 10;
+            var taskId = _sentGradingTasks++;
+            var chunks = 0;
+            for (var i = 0; i < components.Count; i += gradeComponentBatchSize)
+            {
+                var slice = new RailGradeComponentBlit[Math.Min(gradeComponentBatchSize, components.Count - i)];
+                for (var j = 0; j < slice.Length; j++)
+                    slice[j] = components[j + i].Blit();
+                MyMultiplayerModApi.Static.RaiseEvent(this, x => x.DoGradeStageComponents, taskId, slice);
+                chunks++;
+            }
+
+            for (var i = 1; i < dynamicEntities.Count; i += dynamicEntityBatchSize)
+            {
+                var slice = new OrientedBoundingBoxBlit[Math.Min(dynamicEntityBatchSize, dynamicEntities.Count - i)];
+                for (var j = 0; j < slice.Length; j++)
+                {
+                    var dyn = dynamicEntities[i + j];
+                    slice[j] = new OrientedBoundingBoxBlit(dyn);
+                }
+                MyMultiplayerModApi.Static.RaiseEvent(this, x => x.DoGradeStageEntities, taskId, slice);
+                chunks++;
+            }
+
+            MyMultiplayerModApi.Static.RaiseEvent(this, x => x.DoGradeFinish,
+                taskId,
                 pos,
                 new GradingConfig()
                 {
@@ -299,48 +348,127 @@ namespace Equinox76561198048419394.RailSystem.Voxel
                     DepositExpected = totalDeposited
                 },
                 voxelId,
-                dynamicEntities.Select(x => new OrientedBoundingBoxBlit
-                {
-                    Center = x.Center,
-                    HalfExtents = (Vector3)x.HalfExtent,
-                    Orientation = x.Orientation
-                }).ToArray());
+                chunks,
+                dynamicEntities.Count > 0 ? (OrientedBoundingBoxBlit?) new OrientedBoundingBoxBlit(dynamicEntities[0]) : null);
+        }
+
+        private sealed class StagedGradingTask
+        {
+            internal long TaskId;
+            internal int ChunksReceived;
+            internal int? ChunksTotal;
+            internal Vector3D? Target;
+            internal GradingConfig? Config;
+            internal MyVoxelBase Voxel;
+            internal readonly List<IRailGradeComponent> GradeComponents = new List<IRailGradeComponent>();
+            internal readonly List<OrientedBoundingBoxD> DynamicEntities = new List<OrientedBoundingBoxD>();
+
+            internal void Reset()
+            {
+                TaskId = -1;
+                ChunksReceived = 0;
+                ChunksTotal = null;
+                Target = null;
+                Config = null;
+                Voxel = null;
+                GradeComponents.Clear();
+                DynamicEntities.Clear();
+            }
+        }
+
+        private readonly Dictionary<byte, StagedGradingTask> _stagedGradeTasks = new Dictionary<byte, StagedGradingTask>();
+
+        private StagedGradingTask GetStagingTask(long taskId)
+        {
+            var key = (byte)(taskId & 0xFF);
+            if (_stagedGradeTasks.TryGetValue(key, out var task))
+            {
+                if (task.TaskId == taskId) return task;
+                Log.Warning($"Discarding old task {task.TaskId} because new task {taskId} fills same slot");
+                _stagedGradeTasks.Remove(key);
+            }
+
+            task = PoolManager.Get<StagedGradingTask>();
+            task.TaskId = taskId;
+            _stagedGradeTasks.Add(key, task);
+            return task;
         }
 
         [Event]
         [Broadcast]
-        private void DoGrade(RailGradeComponentBlit[] components, Vector3D target, GradingConfig config, EntityId voxelId, OrientedBoundingBoxBlit[] dynamic)
+        [Reliable]
+        private void DoGradeFinish(long taskId, 
+            Vector3D target, GradingConfig config, EntityId voxelId, int totalChunks,
+            OrientedBoundingBoxBlit? dynamicEntity)
         {
-            uint deposited;
-            uint excavated;
-            bool triedToChange;
-            bool intersectedDynamic;
-            if (Scene.TryGetEntity(voxelId, out MyVoxelBase voxel)) return;
-            var cbox = new IRailGradeComponent[components.Length];
-            for (var i = 0; i < components.Length; i++)
-                cbox[i] = components[i];
-            using (PoolManager.Get(out List<OrientedBoundingBoxD> dynamicEntities))
+            var task = GetStagingTask(taskId);
+            task.Target = target;
+            task.Config = config;
+            Scene.TryGetEntity(voxelId, out task.Voxel);
+            task.ChunksTotal = totalChunks;
+            if (dynamicEntity.HasValue)
+                task.DynamicEntities.Add(dynamicEntity.Value.Unblit());
+            task.ChunksReceived++;
+            MaybeFinishTask(taskId, task);
+        }
+
+        [Event]
+        [Broadcast]
+        [Reliable]
+        private void DoGradeStageComponents(long taskId, RailGradeComponentBlit[] components)
+        {
+            var task = GetStagingTask(taskId);
+            foreach (var comp in components)
+                task.GradeComponents.Add(comp);
+            task.ChunksReceived++;
+            MaybeFinishTask(taskId, task);
+        }
+
+        [Event]
+        [Broadcast]
+        [Reliable]
+        private void DoGradeStageEntities(long taskId, OrientedBoundingBoxBlit[] dynamic)
+        {
+            var task = GetStagingTask(taskId);
+            if (dynamic != null)
+                foreach (var dyn in dynamic)
+                    task.DynamicEntities.Add(dyn.Unblit());
+            task.ChunksReceived++;
+            MaybeFinishTask(taskId, task);
+        }
+
+        private void MaybeFinishTask(long taskId, StagedGradingTask task)
+        {
+            if (!task.ChunksTotal.HasValue || task.ChunksReceived < task.ChunksTotal) return;
+            try
             {
-                if (dynamic != null)
-                    foreach (var dyn in dynamic)
-                        dynamicEntities.Add(new OrientedBoundingBoxD(dyn.Center, dyn.HalfExtents, dyn.Orientation));
-                DoGradingInternal(cbox, dynamicEntities, voxel, target, config.Radius, config.DepositAvailable, config.ExcavateAvailable,
-                    null, config.MaterialToDeposit, out deposited,
-                    out excavated, out triedToChange, out intersectedDynamic);
+                if (task.Voxel == null || task.Target == null || task.Config == null) return;
+                var config = task.Config.Value;
+                DoGradingInternal(task.GradeComponents, task.DynamicEntities, task.Voxel, task.Target.Value, config.Radius, config.DepositAvailable,
+                    config.ExcavateAvailable,
+                    null, config.MaterialToDeposit, out var deposited,
+                    out var excavated, out _, out _);
+
+                if (Math.Abs(config.DepositExpected - (int)deposited) <= GradingDesyncTol
+                    && Math.Abs(config.ExcavateExpected - (int)excavated) <= GradingDesyncTol) return;
+
+                var playerPos = MySession.Static.PlayerEntity?.GetPosition();
+                if (playerPos == null || Vector3D.DistanceSquared(playerPos.Value, task.Target.Value) > 100 * 100) return;
+
+                Log.Warning($"Grading desync occured!  {config.DepositExpected} != {deposited}, {config.ExcavateExpected} != {excavated}");
+                var time = DateTime.Now;
+                if ((time - _lastGradingDesync) <= TimeSpan.FromSeconds(30)) return;
+                var red = new Vector4(1, 0, 0, 1);
+                MyAPIGateway.Utilities.ShowNotification("Grading desync occured!  If you experience movement problems try reconnecting.", 5000, null, red);
+                _lastGradingDesync = time;
             }
-
-            if (Math.Abs(config.DepositExpected - deposited) <= GradingDesyncTol
-                && Math.Abs(config.ExcavateExpected - excavated) <= GradingDesyncTol) return;
-
-            var playerPos = MySession.Static.PlayerEntity?.GetPosition();
-            if (playerPos == null || Vector3D.DistanceSquared(playerPos.Value, target) > 100 * 100) return;
-
-            Log.Warning($"Grading desync occured!  {config.DepositExpected} != {deposited}, {config.ExcavateExpected} != {excavated}");
-            var time = DateTime.Now;
-            if ((time - _lastGradingDesync) <= TimeSpan.FromSeconds(30)) return;
-            var red = new Vector4(1, 0, 0, 1);
-            MyAPIGateway.Utilities.ShowNotification("Grading desync occured!  If you experience movement problems try reconnecting.", 5000, null, red);
-            _lastGradingDesync = time;
+            finally
+            {
+                var key = (byte)(taskId & 0xFF);
+                _stagedGradeTasks.Remove(key);
+                task.Reset();
+                PoolManager.Return(ref task);
+            }
         }
 
         private struct OrientedBoundingBoxBlit
@@ -348,6 +476,15 @@ namespace Equinox76561198048419394.RailSystem.Voxel
             public Vector3D Center;
             public Vector3 HalfExtents;
             public Quaternion Orientation;
+
+            internal OrientedBoundingBoxBlit(OrientedBoundingBoxD box)
+            {
+                Center = box.Center;
+                HalfExtents = (Vector3)box.HalfExtent;
+                Orientation = box.Orientation;
+            }
+
+            public OrientedBoundingBoxD Unblit() => new OrientedBoundingBoxD(Center, HalfExtents, Orientation);
         }
     }
 }

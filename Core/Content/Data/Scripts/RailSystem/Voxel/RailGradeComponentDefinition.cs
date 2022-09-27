@@ -34,7 +34,7 @@ namespace Equinox76561198048419394.RailSystem.Voxel
                 Type = s.Type;
             }
 
-            public MeshGradeShape CreateShape(EdgeBlit e, bool invertHeight)
+            public IGradeShape CreateShape(EdgeBlit e, bool invertHeight)
             {
                 var paramsCopy = GradingParams;
                 if (invertHeight)

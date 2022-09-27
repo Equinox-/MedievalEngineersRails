@@ -55,22 +55,24 @@ namespace Equinox76561198048419394.RailSystem.Construction
 
         public override MyObjectBuilder_EntityComponent Serialize(bool copy = false)
         {
-            var ob = new MyObjectBuilder_ConstructableComponent()
-            {
-                BInteg = BuildIntegrity,
-                SPacked = ""
-            };
+            var ob = (MyObjectBuilder_ConstructableComponent)base.Serialize(copy);
+            ob.BInteg = BuildIntegrity;
+            ob.SPacked = "";
             if (_stockpile == null || _stockpile.IsEmpty()) return ob;
 
-            var stream = new MemStream(_stockpile.Items.Count * 2 + 1);
-            stream.Write7BitEncoded((ulong) _stockpile.Items.Count);
-            foreach (var k in _stockpile.Items)
+            using (PoolManager.Get(out MemStream stream))
             {
-                stream.Write7BitEncoded((ulong) Controller.EncodeExisting(k.Key));
-                stream.Write7BitEncoded((ulong) k.Value);
+                stream.Reset();
+                stream.Write7BitEncoded((ulong)_stockpile.Items.Count);
+                foreach (var k in _stockpile.Items)
+                {
+                    stream.Write7BitEncoded((ulong)Controller.EncodeExisting(k.Key));
+                    stream.Write7BitEncoded((ulong)k.Value);
+                }
+
+                ob.SPacked = stream.ToBase64();
             }
 
-            ob.SPacked = stream.ToBase64();
             return ob;
         }
 

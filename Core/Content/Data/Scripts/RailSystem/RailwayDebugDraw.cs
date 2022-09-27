@@ -41,17 +41,27 @@ namespace Equinox76561198048419394.RailSystem
             AddCaption("Railway debug draw", Color.Yellow.ToVector4());
             AddShareFocusHint();
 
+            AddLabel("Graph", Color.Yellow, 1);
             AddCheckBox("Draw graph nodes", () => RailConstants.Debug.DrawGraphNodes, val => Write(out RailConstants.Debug.DrawGraphNodes, val));
             AddCheckBox("Draw graph edges", () => RailConstants.Debug.DrawGraphEdges, val => Write(out RailConstants.Debug.DrawGraphEdges, val));
-            AddCheckBox("Draw grading shapes", () => RailConstants.Debug.DrawGradingShapes, val => Write(out RailConstants.Debug.DrawGradingShapes, val));
             AddCheckBox("Draw switch controllers", () => RailConstants.Debug.DrawSwitchControllers, val => Write(out RailConstants.Debug.DrawSwitchControllers, val));
-            
+
+            m_currentPosition.Y += 0.01f;
+            AddLabel("Grading", Color.Yellow, 1);
+            AddCheckBox("Draw shapes (fill)", () => RailConstants.Debug.DrawGradingFillShapes, val => Write(out RailConstants.Debug.DrawGradingFillShapes, val));
+            AddCheckBox("Draw shapes (cut)", () => RailConstants.Debug.DrawGradingCutShapes, val => Write(out RailConstants.Debug.DrawGradingCutShapes, val));
+            AddCheckBox("Draw SDF cache (fill)", () => RailConstants.Debug.DrawSdfCacheFill, val => Write(out RailConstants.Debug.DrawSdfCacheFill, val));
+            AddCheckBox("Draw SDF cache (cut)", () => RailConstants.Debug.DrawSdfCacheCut, val => Write(out RailConstants.Debug.DrawSdfCacheCut, val));
+            AddCheckBox("Draw SDF cache (density)", () => RailConstants.Debug.DrawSdfDensityField, val => Write(out RailConstants.Debug.DrawSdfDensityField, val));
+
+            m_currentPosition.Y += 0.01f;
+            AddLabel("Physics", Color.Yellow, 1);
             AddCheckBox("Draw bendy physics", () => RailConstants.Debug.DrawBendyPhysics, val => Write(out RailConstants.Debug.DrawBendyPhysics, val));
             AddCheckBox("Draw bogie physics", () => RailConstants.Debug.DrawBogiePhysics, val => Write(out RailConstants.Debug.DrawBogiePhysics, val));
             AddCheckBox("Draw bogie edges", () => RailConstants.Debug.DrawBogieEdges, val => Write(out RailConstants.Debug.DrawBogieEdges, val));
 
-            m_currentPosition.Y += 0.1f;
-            AddCaption("Physics options", Color.Yellow.ToVector4());
+            m_currentPosition.Y += 0.01f;
+            AddLabel("Physics options", Color.Yellow, 1);
             AddSlider("Angular constraint strength", 1, 0, 1, ctl => RailConstants.AngularConstraintStrength = ctl.Value);
             AddSlider("Linear constraint strength", 1, 0, 1, ctl => RailConstants.LinearConstraintStrength = ctl.Value);
         }

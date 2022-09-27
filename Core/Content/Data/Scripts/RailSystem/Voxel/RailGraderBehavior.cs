@@ -194,30 +194,10 @@ namespace Equinox76561198048419394.RailSystem.Voxel
             return MyAreaPermissionSystem.Static == null || MyAreaPermissionSystem.Static.HasPermission(player.IdentityId, Target.Position, id);
         }
 
-        public override void Activate()
-        {
-            if (IsLocallyControlled && RailConstants.Debug.DrawGradingShapes)
-                MySession.Static.Components.Get<MyUpdateComponent>().AddFixedUpdate(DebugDraw);
-            base.Activate();
-        }
-
-        public override void Deactivate()
-        {
-            MySession.Static?.Components.Get<MyUpdateComponent>().RemoveFixedUpdate(DebugDraw);
-            base.Deactivate();
-        }
-
         private void GatherGradeComponents(Vector3D pos)
         {
             _gradeComponents.Clear();
             RailGraderSystem.GatherGradeComponents(pos, _gradeComponents, Math.Max(Definition.ExcavateRadius, Definition.FillRadius));
-        }
-
-        private void DebugDraw()
-        {
-            if (Holder == null)
-                return;
-            RailGraderSystem.DebugDrawGradeComponents(Holder.GetPosition());
         }
 
         private readonly List<RailGradeComponent> _gradeComponents = new List<RailGradeComponent>();

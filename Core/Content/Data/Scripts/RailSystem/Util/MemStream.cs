@@ -8,6 +8,10 @@ namespace Equinox76561198048419394.RailSystem.Util
         private byte[] _backing;
         private int _head;
 
+        public MemStream() : this(128)
+        {
+        }
+
         public MemStream(byte[] backing)
         {
             _backing = backing;
@@ -16,6 +20,11 @@ namespace Equinox76561198048419394.RailSystem.Util
         public MemStream(int capacity)
         {
             _backing = new byte[capacity];
+        }
+
+        public void Reset()
+        {
+            _head = 0;
         }
         
         private void EnsureRemaining(int len)

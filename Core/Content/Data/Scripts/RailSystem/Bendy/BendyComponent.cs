@@ -36,20 +36,24 @@ namespace Equinox76561198048419394.RailSystem.Bendy
 
         public override MyObjectBuilder_EntityComponent Serialize(bool copy = false)
         {
+            var ob = (MyObjectBuilder_BendyComponent)base.Serialize(copy);
             lock (_movableNodeData)
             {
                 if (Entity != null && Entity.InScene)
                     CacheMovableData(_movableNodeData);
-                return new MyObjectBuilder_BendyComponent
+                ob.Overrides = new MyObjectBuilder_BendyComponent.NodePose[_movableNodeData.Count];
+                var i = 0;
+                foreach (var x in _movableNodeData)
                 {
-                    Overrides = _movableNodeData.Select(x => new MyObjectBuilder_BendyComponent.NodePose
+                    ob.Overrides[i++] = new MyObjectBuilder_BendyComponent.NodePose
                     {
                         Index = x.Key,
                         Position = x.Value.Position,
                         Up = x.Value.Up
-                    }).ToArray()
-                };
+                    };
+                }
             }
+            return ob;
         }
 
         private void CacheMovableData(Dictionary<uint, MyObjectBuilder_BendyComponent.NodePose> movableNodes)

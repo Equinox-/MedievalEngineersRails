@@ -1,5 +1,6 @@
 ﻿using Equinox76561198048419394.RailSystem.Bendy.Shape;
 using Equinox76561198048419394.RailSystem.Definition;
+using Equinox76561198048419394.RailSystem.Voxel;
 using VRage.Components;
 
 namespace Equinox76561198048419394.RailSystem
@@ -15,7 +16,12 @@ namespace Equinox76561198048419394.RailSystem
             public bool DrawBendyPhysics;
             public bool DrawSwitchControllers;
             public bool DrawBogieEdges;
-            public bool DrawGradingShapes;
+            public bool DrawGradingFillShapes;
+            public bool DrawGradingCutShapes;
+
+            public bool DrawSdfCacheFill;
+            public bool DrawSdfCacheCut;
+            public bool DrawSdfDensityField;
         }
 
         public static DebugOptions Debug;
@@ -30,7 +36,7 @@ namespace Equinox76561198048419394.RailSystem
             Debug = new DebugOptions
             {
                 AssertsWithStacks = false, DrawGraphEdges = false, DrawGraphNodes = false, DrawBogiePhysics = true,
-                DrawBendyPhysics = false, DrawSwitchControllers = true, DrawBogieEdges = true, DrawGradingShapes = true
+                DrawBendyPhysics = false, DrawSwitchControllers = true, DrawBogieEdges = true, DrawGradingFillShapes = true
             };
             DebugCommit();
         }
@@ -46,6 +52,7 @@ namespace Equinox76561198048419394.RailSystem
             DebugDraw.SetEnabled(typeof(RailSwitchExternalComponent), Debug.DrawSwitchControllers);
             DebugDraw.SetEnabled(typeof(RailSegmentComponent), Debug.DrawSwitchControllers);
             DebugDraw.SetEnabled(typeof(BendyPhysicsComponent), Debug.DrawBendyPhysics);
+            DebugDraw.SetEnabled(typeof(RailGraderSystem), Debug.DrawSdfCacheCut || Debug.DrawSdfCacheFill || Debug.DrawGradingCutShapes || Debug.DrawGradingFillShapes);
         }
 
         // Maximum nodes in a single call

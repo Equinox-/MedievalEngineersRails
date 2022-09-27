@@ -25,6 +25,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy
 
         public BendyLayer GetOrCreateLayer(string id)
         {
+            if (id == null) id = "DefaultLayer";
             BendyLayer res;
             if (!_layers.TryGetValue(id, out res))
             {

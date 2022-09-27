@@ -1,4 +1,5 @@
-﻿using VRageMath;
+﻿using VRage.Utils;
+using VRageMath;
 
 namespace Equinox76561198048419394.RailSystem.Util
 {
@@ -8,25 +9,24 @@ namespace Equinox76561198048419394.RailSystem.Util
         {
             public readonly Vector3 Origin;
             public readonly Vector3 Edge1, Edge2;
+            private Plane _plane;
 
             public Triangle(Vector3 a, Vector3 b, Vector3 c, Vector3? desiredNorm = null)
             {
                 Origin = a;
                 var tmp1 = b - a;
                 var tmp2 = c - a;
-                if (desiredNorm.HasValue)
+                var norm = Vector3.Cross(tmp1, tmp2);
+                if (desiredNorm.HasValue && norm.Dot(desiredNorm.Value) < 0)
                 {
-                    var norm = Vector3.Cross(tmp1, tmp2);
-                    if (norm.Dot(desiredNorm.Value) < 0)
-                    {
-                        Edge2 = tmp1;
-                        Edge1 = tmp2;
-                        return;
-                    }
+                    MyUtils.Swap(ref tmp1, ref tmp2);
+                    norm = -norm;
                 }
 
                 Edge1 = tmp1;
                 Edge2 = tmp2;
+                norm.Normalize();
+                _plane = new Plane(Origin, norm);
             }
 
             /// <summary>

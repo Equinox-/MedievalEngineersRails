@@ -112,8 +112,8 @@ namespace Equinox76561198048419394.RailSystem.Bendy
 
             #region Config
 
-            Layer = def.Layer;
-            if (string.IsNullOrWhiteSpace(Layer))
+            Layer = def.Layer ?? "DefaultLayer";
+            if (string.IsNullOrWhiteSpace(def.Layer))
                 MyDefinitionErrors.Add(def.Package,
                     $"{nameof(BendyComponentDefinition)} {builder.GetId()} has {nameof(Layer)} that is null or whitespace",
                     LogSeverity.Error);

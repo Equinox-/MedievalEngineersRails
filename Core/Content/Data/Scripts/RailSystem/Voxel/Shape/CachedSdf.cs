@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Equinox76561198048419394.Core.Debug;
@@ -8,12 +9,15 @@ using Equinox76561198048419394.Core.Util;
 using Equinox76561198048419394.RailSystem.Voxel.Shape;
 using Sandbox.Game.Entities;
 using Sandbox.ModAPI;
+using VRage.Collections;
 using VRage.Library.Collections;
 using VRage.Library.Threading;
 using VRage.Logging;
 using VRage.Session;
+using VRage.Utils;
 using VRage.Voxels;
 using VRageMath;
+using VRageRender;
 
 namespace Equinox76561198048419394.RailSystem.Voxel
 {
@@ -57,8 +61,11 @@ namespace Equinox76561198048419394.RailSystem.Voxel
         }
 
         private readonly HashSet<object> _shapeCacheKeys = new HashSet<object>();
+        private readonly List<BoundingBoxD> _shapeCacheBoxes = new List<BoundingBoxD>();
         private readonly MyStorageData _sdf = new MyStorageData(MyStorageDataTypeFlags.Content);
         private readonly CachedSdfKey _key;
+        private IGradeShape[] _shapes;
+        private int _generation;
 
         private CachedSdf(CachedSdfKey key)
         {
@@ -72,21 +79,86 @@ namespace Equinox76561198048419394.RailSystem.Voxel
             return 0;
         }
 
+        private static readonly ListReader<Vector3> AxisOptions = new List<Vector3>
+        {
+            Vector3.Right,
+            Vector3.Up,
+            Vector3.Forward,
+        };
+
+        public void DebugDraw()
+        {
+            if (_shapeCacheBoxes.Count == 0) return;
+            var voxelMin = CellSize * _key.Cell;
+            var worldPos = MyAPIGateway.Session?.ControlledObject?.GetPosition();
+            if (worldPos.HasValue)
+            {
+                var worldPosVal = worldPos.Value;
+                MyVoxelCoordSystems.WorldPositionToVoxelCoord(_key.Voxel.PositionLeftBottomCorner, ref worldPosVal, out var voxelCoord);
+                foreach (var voxelPt in new BoundingBoxI(voxelCoord - 1, voxelCoord + 2).EnumeratePoints())
+                {
+                    var localPt = voxelPt - voxelMin;
+                    if (!new BoundingBoxI(Vector3I.Zero, new Vector3I(CellSize - 1)).Contains(localPt))
+                        continue;
+                    var voxelPtTmp = voxelPt;
+                    MyVoxelCoordSystems.VoxelCoordToWorldPosition(_key.Voxel.PositionLeftBottomCorner, ref voxelPtTmp, out var queryCoord);
+                    var density = _sdf.Get(MyStorageDataTypeEnum.Content, ref localPt);
+                    if (density == 0) continue;
+                    foreach (var shape in _shapes)
+                        shape.DrawQuery(queryCoord);
+                    break;
+                }
+            }
+            if (RailConstants.Debug.DrawSdfDensityField)
+            {
+                using (var batch = MyRenderProxy.DebugDrawLine3DOpenBatch(true))
+                {
+                    foreach (var localPoint in new BoundingBoxI(Vector3I.Zero, new Vector3I(CellSize)).EnumeratePoints())
+                    {
+                        var localPointRef = localPoint;
+                        var voxelPoint = voxelMin + localPoint;
+                        MyVoxelCoordSystems.VoxelCoordToWorldPosition(_key.Voxel.PositionLeftBottomCorner, ref voxelPoint, out var worldCoord);
+                        var density = _sdf.Get(MyStorageDataTypeEnum.Content, ref localPointRef);
+                        if (density <= 0) continue;
+                        var size = 0.25f * density / 255;
+                        foreach (var axis in AxisOptions)
+                        {
+                            var space = size * axis;
+                            batch.AddLine(worldCoord - space, Color.Aqua, worldCoord + space, Color.Aqua);
+                        }
+                    }
+                }
+                return;
+            }
+            var voxelMax = CellSize * (_key.Cell + 1); // exclusive
+            MyVoxelCoordSystems.VoxelCoordToWorldPosition(_key.Voxel.PositionLeftBottomCorner, ref voxelMin, out var worldMin);
+            MyVoxelCoordSystems.VoxelCoordToWorldPosition(_key.Voxel.PositionLeftBottomCorner, ref voxelMax, out var worldMax);
+            var worldBounds = new BoundingBoxD(Vector3D.Min(worldMin, worldMax), Vector3D.Max(worldMin, worldMax));
+            MyRenderProxy.DebugDrawAABB(worldBounds, Color.Green);
+            foreach (var shape in _shapeCacheBoxes)
+                MyRenderProxy.DebugDrawAABB(shape, Color.Red);
+            MyRenderProxy.DebugDrawText3D(worldBounds.Center, $"Gen {_generation}", Color.Blue, 0.5f);
+        }
+
         private void SetContents(IGradeShape[] shapes)
         {
             var voxelMin = CellSize * _key.Cell;
             var voxelMax = CellSize * (_key.Cell + 1); // exclusive
             MyVoxelCoordSystems.VoxelCoordToWorldPosition(_key.Voxel.PositionLeftBottomCorner, ref voxelMin, out var worldMin);
             MyVoxelCoordSystems.VoxelCoordToWorldPosition(_key.Voxel.PositionLeftBottomCorner, ref voxelMax, out var worldMax);
-            var worldBounds = new BoundingBoxD(worldMin, worldMax);
+            var worldBounds = new BoundingBoxD(Vector3D.Min(worldMin, worldMax), Vector3D.Max(worldMin, worldMax));
             var recalculating = _shapeCacheKeys.Count > 0;
             using (PoolManager.Get(out HashSet<object> relevantCacheKeys))
             {
+                _shapeCacheBoxes.Clear();
                 foreach (var shape in shapes)
                     shape.CollectCacheKeys((box, key) =>
                     {
                         if (box.Intersects(worldBounds))
+                        {
+                            _shapeCacheBoxes.Add(box);
                             relevantCacheKeys.Add(key);
+                        }
                     });
                 if (relevantCacheKeys.Count == _shapeCacheKeys.Count)
                 {
@@ -106,9 +178,16 @@ namespace Equinox76561198048419394.RailSystem.Voxel
                     }
                 }
 
+                _generation++;
                 _shapeCacheKeys.Clear();
                 foreach (var key in relevantCacheKeys)
                     _shapeCacheKeys.Add(key);
+            }
+
+            if (_shapeCacheKeys.Count == 0)
+            {
+                _sdf.ClearContent(0);
+                return;
             }
 
             var start = GetTimestamp();
@@ -131,13 +210,19 @@ namespace Equinox76561198048419394.RailSystem.Voxel
                 var type = recalculating ? "recalculate" : "calculate";
                 Log.Info($"Cached SDF {type} for {_key.Voxel.Id} at {_key.Cell} ({worldBounds.Center}, {_shapeCacheKeys.Count} shapes, {nonZeroPoints} non-zero points, {dt} ms");
             }
+
+            _shapes = shapes;
         }
+
+        private static readonly MyParallelTask Parallel = new MyParallelTask();
 
         public readonly struct CachedSdfAccessor
         {
             private readonly Vector3I _cellMin;
             private readonly Vector3I _cellTableSize;
             private readonly CachedSdf[] _cellTable;
+
+            public IReadOnlyList<CachedSdf> CellTable => _cellTable;
 
             private int CellIndex(Vector3I cell)
             {
@@ -164,7 +249,7 @@ namespace Equinox76561198048419394.RailSystem.Voxel
                 {
                     waiter.AcquireExclusive();
                     var waiting = _cellTable.Length;
-                    MyAPIGateway.Parallel.ForEach(_cellTable, sdf =>
+                    Parallel.ForEach(_cellTable, sdf =>
                     {
                         lock (sdf)
                         {
