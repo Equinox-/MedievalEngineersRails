@@ -235,6 +235,7 @@ namespace Equinox76561198048419394.RailSystem.Physics
             public FindEdgeResult FindEdgeResult;
 
             public bool AllowDeactivation;
+            public Vector3 Gravity;
             public Vector3 PoweredImpulse;
             public Vector3 ConstraintImpulse;
             public Vector3 AngularImpulse;
@@ -245,12 +246,13 @@ namespace Equinox76561198048419394.RailSystem.Physics
             public float EdgeFactor;
             public double Score;
             public Vector3 Tangent;
-            public Edge Edge;
             public RailSegmentDefinition.RailSegmentCaps SegmentCaps;
 
             public Vector3 Normal;
             public Vector3 Up;
             public Vector3D Position;
+            public IEdge Edge;
+            public MyPhysicsComponentBase Physics;
         }
 
         private static RailSegmentComponent RailSegmentFor(Edge edge)
@@ -301,17 +303,82 @@ namespace Equinox76561198048419394.RailSystem.Physics
             return false;
         }
 
+        private struct PartialFindEdgeResult
+        {
+            public float EdgeFactor;
+            public double Score;
+            public RailSegmentDefinition.RailSegmentCaps SegmentCaps;
+            public IEdge Edge;
+        }
+
+        private static void VisitEdge(
+            IEdge edge,
+            ref Vector3D bogieWorldPos,
+            ref Vector3D bogieWorldTangent,
+            RailSegmentDefinition.RailSegmentCaps edgeCaps,
+            ref PartialFindEdgeResult result)
+        {
+            var invTransform = edge.TransformInv;
+            var bogieLocalPos = Vector3D.TransformNoProjection(ref bogieWorldPos, ref invTransform);
+            var bogieLocalTangent = Vector3D.TransformNormal(bogieWorldTangent, ref invTransform);
+            var curve = edge.Curve;
+            float t0 = 0, t1 = 1;
+            CurveExtensions.NearestPoint(curve, bogieLocalPos, 16, ref t0, ref t1);
+            var p0 = curve.Sample(t0);
+            var p1 = curve.Sample(t1);
+            var dir = p1 - p0;
+            var factor = (float) MathHelper.Clamp(dir.Dot(bogieLocalPos - p0) / dir.LengthSquared(), 0, 1);
+            var t = t0 + (t1 - t0) * factor;
+            var pos = curve.Sample(t);
+            var score = Vector3D.Distance(pos, bogieLocalPos);
+            if (score - TotalBias > result.Score)
+                return;
+            var tangent = (Vector3) curve.SampleDerivative(t);
+            tangent.Normalize();
+
+            const float switchingEpsilon = 0.25f;
+            var switched = false;
+            var realEdge = edge as Edge;
+            if (realEdge != null)
+            {
+                if (t < switchingEpsilon)
+                    switched = realEdge.From.IsSwitchedTo(realEdge.To);
+                else if (t >= 1 - switchingEpsilon)
+                    switched = realEdge.To.IsSwitchedTo(realEdge.From);
+            }
+
+            var forwardDotTangent = Math.Abs(bogieLocalTangent.Dot(tangent));
+            if (switched)
+                score -= SwitchingDistanceBias + AlignmentTangentBias;
+            else
+                score -= AlignmentTangentBias * forwardDotTangent;
+
+            if (RailConstants.Debug.DrawBogieEdges && realEdge != null)
+                realEdge.Draw(0, 1, switched ? new Vector4(0, 1, 0, 1) : new Vector4(1, 0, 1, 1), 2);
+
+            // ReSharper disable once InvertIf
+            if (score < result.Score)
+            {
+                result.Score = score;
+                result.Edge = edge;
+                result.SegmentCaps = edgeCaps;
+                result.EdgeFactor = t;
+            }
+        }
+
         private bool TryFindEdge(out FindEdgeResult result)
         {
-            result = default;
-
             var prevEdgeReal = _prevEdge?.GetEdge(_graph);
-            var position = Entity.PositionComp.WorldMatrix.Translation;
-            result.Score = Definition.DetachDistance + TotalBias;
-            using (var e = _graph.Edges.SortedByDistance(position))
+            var bogiePos = Entity.PositionComp.WorldMatrix.Translation;
+            var bogieTangent = Entity.PositionComp.WorldMatrix.Forward;
+
+            var partialResult = default(PartialFindEdgeResult);
+            partialResult.Score = Definition.DetachDistance + TotalBias;
+            
+            using (var e = _graph.Edges.SortedByDistance(bogiePos))
                 while (e.MoveNext())
                 {
-                    if (Math.Sqrt(e.Current.DistanceSquared) - TotalBias > result.Score)
+                    if (Math.Sqrt(e.Current.DistanceSquared) - TotalBias > partialResult.Score)
                         break;
                     var edge = (Edge) e.Current.UserData;
                     if (edge.Curve == null)
@@ -323,66 +390,53 @@ namespace Equinox76561198048419394.RailSystem.Physics
 
                     if (!CanUseEdge(prevEdgeReal, edge))
                         continue;
+                    VisitEdge(edge, ref bogiePos, ref bogieTangent, edgeCaps.Value, ref partialResult);
+                }
 
-                    float t0 = 0, t1 = 1;
-                    CurveExtensions.NearestPoint(edge.Curve, position, 16, ref t0, ref t1);
-                    var p0 = edge.Curve.Sample(t0);
-                    var p1 = edge.Curve.Sample(t1);
-                    var dir = p1 - p0;
-                    var factor = (float) MathHelper.Clamp(dir.Dot(position - p0) / dir.LengthSquared(), 0, 1);
-                    var t = t0 + (t1 - t0) * factor;
-                    var pos = edge.Curve.Sample(t);
-                    var score = Vector3D.Distance(pos, position);
-                    if (score - TotalBias > result.Score)
-                        continue;
-                    var tangent = (Vector3) edge.Curve.SampleDerivative(t);
-                    tangent.Normalize();
+            using (var e = _graph.DynamicEdges.SortedByDistance(bogiePos))
+                while (e.MoveNext())
+                {
+                    if (Math.Sqrt(e.Current.DistanceSquared) - TotalBias > partialResult.Score)
+                        break;
+                    var component = (DynamicBendyComponent) e.Current.UserData;
+                    var edgeSegment = component.Container.Get<RailSegmentComponent>();
+                    var edgeCaps = edgeSegment?.Definition.CapabilitiesFor(component.Entity.GetBuildRatio());
+                    if (edgeSegment == null || !edgeCaps.HasValue)
+                        continue; // no capabilities at this stage
 
-                    const float switchingEpsilon = 0.25f;
-                    var switched = false;
-                    if (t < switchingEpsilon)
-                        switched = edge.From.IsSwitchedTo(edge.To);
-                    else if (t >= 1 - switchingEpsilon)
-                        switched = edge.To.IsSwitchedTo(edge.From);
-                    var forwardDotTangent = Entity.PositionComp.WorldMatrix.Forward.Dot(tangent);
-                    if (forwardDotTangent < 0)
+                    foreach (var edge in component.LocalEdges)
                     {
-                        forwardDotTangent = -forwardDotTangent;
-                        tangent = -tangent;
-                    }
-
-                    if (switched)
-                        score -= SwitchingDistanceBias + AlignmentTangentBias;
-                    else
-                        score -= AlignmentTangentBias * forwardDotTangent;
-
-                    if (RailConstants.Debug.DrawBogieEdges)
-                        edge.Draw(0, 1, switched ? new Vector4(0, 1, 0, 1) : new Vector4(1, 0, 1, 1), 2);
-
-                    // ReSharper disable once InvertIf
-                    if (score < result.Score)
-                    {
-                        result.Score = score;
-                        result.Tangent = tangent;
-                        result.Edge = edge;
-                        result.SegmentCaps = edgeCaps.Value;
-                        result.EdgeFactor = t;
+                        VisitEdge(edge, ref bogiePos, ref bogieTangent, edgeCaps.Value, ref partialResult);
                     }
                 }
 
-            if (result.Edge == null || result.Score > Definition.DetachDistance)
+            result = default;
+            if (partialResult.Score > Definition.DetachDistance)
                 return false;
-            result.Up = Vector3.Lerp(result.Edge.From.Up, result.Edge.To.Up, result.EdgeFactor);
+            result.EdgeFactor = partialResult.EdgeFactor;
+            result.Score = partialResult.Score;
+            result.SegmentCaps = partialResult.SegmentCaps;
+            var transform = partialResult.Edge.Transform;
+            result.Up = (Vector3) Vector3D.TransformNormal(
+                Vector3D.Lerp(partialResult.Edge.FromUp, partialResult.Edge.ToUp, result.EdgeFactor),
+                ref transform);
             // Not aligned vertically, abort
             if (Entity.PositionComp.WorldMatrix.Up.Dot(result.Up) < 0.5)
                 return false;
 
-            result.Position = result.Edge.Curve.Sample(result.EdgeFactor) + result.Up * Definition.VerticalOffset;
+            result.Position = Vector3D.Transform(partialResult.Edge.Curve.Sample(partialResult.EdgeFactor), ref transform)
+                              + result.Up * Definition.VerticalOffset;
+            result.Tangent = (Vector3) Vector3D.TransformNormal(partialResult.Edge.Curve.SampleDerivative(partialResult.EdgeFactor), ref transform);
+            if (result.Tangent.Dot((Vector3) bogieTangent) < 0)
+                result.Tangent = -result.Tangent;
+            result.Tangent.Normalize();
+
             result.Normal = Vector3.Cross(result.Tangent, result.Up);
             result.Normal.Normalize();
 
             result.Up = Vector3.Cross(result.Normal, result.Tangent);
             result.Up.Normalize();
+            result.Physics = (partialResult.Edge as DynamicBendyComponent.DynamicEdge)?.Owner.Entity.ParentedPhysics();
             return true;
         }
 
@@ -394,23 +448,26 @@ namespace Equinox76561198048419394.RailSystem.Physics
             {
                 PhysicsNode.GetNeighbors(forRemoval);
                 // Add neighbor edges to the nearby node
-                var searchNode = edgeResult.EdgeFactor < 0.5 ? edgeResult.Edge.From : edgeResult.Edge.To;
-                foreach (var edge in searchNode.Edges)
+                if (edgeResult.Edge is Edge realEdge)
                 {
-                    var physicsNode = RailSegmentFor(edge)?.PhysicsNode;
-                    if (RailwayPhysicsGroup.Enabled && physicsNode != null && !forRemoval.Remove(physicsNode))
-                        PhysicsNode.Link(physicsNode);
-                }
+                    var searchNode = edgeResult.EdgeFactor < 0.5 ? realEdge.From : realEdge.To;
+                    foreach (var edge in searchNode.Edges)
+                    {
+                        var physicsNode = RailSegmentFor(edge)?.PhysicsNode;
+                        if (RailwayPhysicsGroup.Enabled && physicsNode != null && !forRemoval.Remove(physicsNode))
+                            PhysicsNode.Link(physicsNode);
+                    }
 
-                // Don't remove anything within two hops
-                foreach (var neighbor1 in searchNode.Neighbors)
-                foreach (var edge in neighbor1.Edges)
-                {
-                    if (forRemoval.Count == 0)
-                        break;
-                    var physicsNode = RailSegmentFor(edge)?.PhysicsNode;
-                    if (physicsNode != null)
-                        forRemoval.Remove(physicsNode);
+                    // Don't remove anything within two hops
+                    foreach (var neighbor1 in searchNode.Neighbors)
+                    foreach (var edge in neighbor1.Edges)
+                    {
+                        if (forRemoval.Count == 0)
+                            break;
+                        var physicsNode = RailSegmentFor(edge)?.PhysicsNode;
+                        if (physicsNode != null)
+                            forRemoval.Remove(physicsNode);
+                    }
                 }
 
                 foreach (var removal in forRemoval)
@@ -454,7 +511,7 @@ namespace Equinox76561198048419394.RailSystem.Physics
                 * RailConstants.AngularConstraintStrength / MyEngineConstants.UPDATE_STEP_SIZE_IN_SECONDS;
         }
 
-        private void SolveLinearImpulse(ref FindEdgeResult edgeResult, in Vector3 gravityHere, ref SimulationResult simResult)
+        private void SolveLinearImpulse(ref FindEdgeResult edgeResult, in Vector3 gravityHere, in Vector3 gridVelocity, ref SimulationResult simResult)
         {
             var position = Entity.GetPosition();
             var effectiveMass = _gridPhysicsComponent.Mass;
@@ -464,13 +521,12 @@ namespace Equinox76561198048419394.RailSystem.Physics
             ref var normal = ref edgeResult.Normal;
             ref var curvePosition = ref edgeResult.Position;
 
-            var gridVelocity = _gridPhysicsComponent.LinearVelocity;
-
             // a) spring joint along normal to get dot(normal, (pivot*matrix - position)) == 0
             var err = (Vector3) (curvePosition - position);
 
             // preemptive up force to counteract gravity.
-            simResult.ConstraintImpulse += Vector3.Dot(gravityHere, up) * up * effectiveMass * MyEngineConstants.UPDATE_STEP_SIZE_IN_SECONDS;
+            var gravityImpulse = Vector3.Dot(gravityHere, up) * up * effectiveMass * MyEngineConstants.UPDATE_STEP_SIZE_IN_SECONDS;
+            simResult.ConstraintImpulse -= gravityImpulse * RailConstants.GravityCompensation;
 
             simResult.ConstraintImpulse += SolveImpulse(err, normal, gridVelocity, effectiveMass);
 
@@ -516,8 +572,8 @@ namespace Equinox76561198048419394.RailSystem.Physics
             var err = (Vector3) (curvePosition - position);
 
             // preemptive up force to counteract gravity.
-            var gravityHere = MyGravityProviderSystem.CalculateTotalGravityInPoint(position);
-            simResult.ConstraintImpulse += Vector3.Dot(gravityHere, up) * up * effectiveMass * MyEngineConstants.UPDATE_STEP_SIZE_IN_SECONDS;
+            simResult.Gravity = MyGravityProviderSystem.CalculateTotalGravityInPoint(position);
+            simResult.ConstraintImpulse += Vector3.Dot(simResult.Gravity, up) * up * effectiveMass * MyEngineConstants.UPDATE_STEP_SIZE_IN_SECONDS;
 
             simResult.ConstraintImpulse += SolveImpulse(err, normal, gridVelocity, effectiveMass);
 
@@ -552,11 +608,11 @@ namespace Equinox76561198048419394.RailSystem.Physics
 
             ref var up = ref edgeResult.Up;
             ref var tangent = ref edgeResult.Tangent;
-            var gridVelocity = _gridPhysicsComponent.LinearVelocity;
+            var gridVelocity = _gridPhysicsComponent.LinearVelocity - (edgeResult.Physics?.GetVelocityAtPoint(edgeResult.Position) ?? Vector3.Zero);
             var gravityHere = MyGravityProviderSystem.CalculateTotalGravityInPoint(position);
 
             SolveTorque(ref edgeResult, ref simResult);
-            SolveLinearImpulse(ref edgeResult, in gravityHere, ref simResult);
+            SolveLinearImpulse(ref edgeResult, in gravityHere, in gridVelocity, ref simResult);
 
             var braking = false;
             // Hack until I fix EquinoxCore
@@ -697,7 +753,7 @@ namespace Equinox76561198048419394.RailSystem.Physics
                 _failedPreviousFrame = true;
                 return;
             }
-            _prevEdge.SetEdge(simulationResult.FindEdgeResult.Edge);
+            _prevEdge.SetEdge(simulationResult.FindEdgeResult.Edge as Edge);
             if (!simulationResult.Active)
             {
                 SetAnimVar(SpeedZVar, 0);
@@ -776,10 +832,24 @@ namespace Equinox76561198048419394.RailSystem.Physics
 
             _sequentialSleepingTicks = 0;
 
+            var totalImpulse = simulationResult.ConstraintImpulse + simulationResult.PoweredImpulse; 
             _gridPhysicsComponent.AddForce(MyPhysicsForceType.APPLY_WORLD_IMPULSE_AND_WORLD_ANGULAR_IMPULSE,
-                simulationResult.ConstraintImpulse + simulationResult.PoweredImpulse, _gridPhysicsComponent.GetCenterOfMassWorld(), Vector3.Zero);
+                totalImpulse, _gridPhysicsComponent.GetCenterOfMassWorld(), Vector3.Zero);
             _gridPhysicsComponent.AddForce(MyPhysicsForceType.APPLY_WORLD_IMPULSE_AND_WORLD_ANGULAR_IMPULSE, Vector3.Zero, Entity.GetPosition(),
                 simulationResult.AngularImpulse);
+
+            if (simulationResult.FindEdgeResult.Physics != null &&
+                !simulationResult.FindEdgeResult.Physics.IsStatic &&
+                (RailConstants.ApplyOppositeDynamicGravityForces || RailConstants.ApplyOppositeDynamicNonGravityForces))
+            {
+                var opposite = -totalImpulse;
+                var gravForce = opposite.Project(simulationResult.Gravity);
+                var nonGravForce = opposite - gravForce;
+                var filtered = (RailConstants.ApplyOppositeDynamicGravityForces ? gravForce : Vector3.Zero) +
+                            (RailConstants.ApplyOppositeDynamicNonGravityForces ? nonGravForce : Vector3.Zero);
+                simulationResult.FindEdgeResult.Physics.AddForce(MyPhysicsForceType.APPLY_WORLD_IMPULSE_AND_WORLD_ANGULAR_IMPULSE,
+                    filtered, simulationResult.FindEdgeResult.Position, Vector3.Zero);
+            }
         }
 
 

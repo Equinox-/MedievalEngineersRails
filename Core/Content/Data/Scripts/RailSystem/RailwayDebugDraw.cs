@@ -64,6 +64,9 @@ namespace Equinox76561198048419394.RailSystem
             AddLabel("Physics options", Color.Yellow, 1);
             AddSlider("Angular constraint strength", 1, 0, 1, ctl => RailConstants.AngularConstraintStrength = ctl.Value);
             AddSlider("Linear constraint strength", 1, 0, 1, ctl => RailConstants.LinearConstraintStrength = ctl.Value);
+            AddSlider("Gravity compensation", -1, -1, 1, ctl => RailConstants.GravityCompensation = ctl.Value);
+            AddCheckBox("Dynamic back gravity forces", () => RailConstants.ApplyOppositeDynamicGravityForces, val => RailConstants.ApplyOppositeDynamicGravityForces = val);
+            AddCheckBox("Dynamic back non-gravity forces", () => RailConstants.ApplyOppositeDynamicNonGravityForces, val => RailConstants.ApplyOppositeDynamicNonGravityForces = val);
         }
 
         private static void Write(out bool target, bool value)

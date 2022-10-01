@@ -100,9 +100,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Content\Data\Scripts\RailSystem\Bendy\BendyComponent.cs" />
+    <Compile Include="Content\Data\Scripts\RailSystem\Bendy\BendyComponentBase.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Bendy\BendyComponentDefinition.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Bendy\BendyController.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Bendy\BendyLayer.cs" />
+    <Compile Include="Content\Data\Scripts\RailSystem\Bendy\DynamicBendyComponent.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Bendy\Edge.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Bendy\Node.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Bendy\Planner\EdgePlacerBehavior.cs" />

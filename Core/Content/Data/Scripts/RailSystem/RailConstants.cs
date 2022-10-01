@@ -26,6 +26,10 @@ namespace Equinox76561198048419394.RailSystem
 
         public static DebugOptions Debug;
 
+        public static float GravityCompensation = -1;
+        public static bool ApplyOppositeDynamicGravityForces;
+        public static bool ApplyOppositeDynamicNonGravityForces;
+
         static RailConstants()
         {
             DebugOff();

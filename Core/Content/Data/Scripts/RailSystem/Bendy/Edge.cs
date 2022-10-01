@@ -1,6 +1,7 @@
 ﻿using System;
 using Equinox76561198048419394.RailSystem.Util.Curve;
 using VRage.Components;
+using VRage.Components.Physics;
 using VRage.Logging;
 using VRage.Utils;
 using VRageMath;
@@ -14,7 +15,17 @@ namespace Equinox76561198048419394.RailSystem.Bendy
         CubicBez
     }
 
-    public class Edge
+    public interface IEdge
+    {
+        ICurve Curve { get; }
+        MatrixD Transform { get; }
+        MatrixD TransformInv { get; }
+        
+        Vector3 FromUp { get; }
+        Vector3 ToUp { get; }
+    }
+
+    public class Edge : IEdge
     {
         public readonly BendyLayer Graph;
         public readonly Node From, To;
@@ -76,43 +87,68 @@ namespace Equinox76561198048419394.RailSystem.Bendy
                     return;
                 _dirty = false;
             }
+            ComputeCurve(From.Position, From.Tangent, From.Up,
+                        To.Position, To.Tangent, To.Up,
+                        Mode,
+                        out var fromMatrix,
+                        out var toMatrix,
+                        out var curve,
+                        _ctl0,
+                        _ctl1);
+            Curve = curve;
+            FromMatrix = fromMatrix;
+            ToMatrix = toMatrix;
+            CurveUpdated?.Invoke(this);
+        }
 
-            FromMatrix = MatrixD.CreateWorld(From.Position, CorrectTangent(From.Tangent), From.Up);
-            ToMatrix = MatrixD.CreateWorld(To.Position, CorrectTangent(To.Tangent), To.Up);
+        public static void ComputeCurve(Vector3D fromPos, Vector3 fromTangent, Vector3 fromUp,
+                                        Vector3D toPos, Vector3 toTangent, Vector3 toUp,
+                                        CurveMode mode,
+                                        out MatrixD fromMatrix,
+                                        out MatrixD toMatrix,
+                                        out ICurve curve,
+                                        Vector3D? ctl0 = null,
+                                        Vector3D? ctl1 = null) {
+            Vector3 CorrectTangent(Vector3 orig)
+            {
+                if (orig.Dot((Vector3) (toPos - fromPos)) < 0)
+                    return -orig;
+                return orig;
+            }
+            fromMatrix = MatrixD.CreateWorld(fromPos, CorrectTangent(fromTangent), fromUp);
+            toMatrix = MatrixD.CreateWorld(toPos, CorrectTangent(toTangent), toUp);
 
 
-            var ext = Math.Max((FromMatrix.Translation - ToMatrix.Translation).Length() / 3, 1f);
+            var ext = Math.Max((fromMatrix.Translation - toMatrix.Translation).Length() / 3, 1f);
             var d1 = default(Vector3D);
             var d2 = default(Vector3D);
-            if (Mode != CurveMode.Linear)
+            if (mode != CurveMode.Linear)
             {
-                if (_ctl0.HasValue)
-                    d1 = Vector3D.Transform(_ctl0.Value, FromMatrix);
+                if (ctl0.HasValue)
+                    d1 = Vector3D.Transform(ctl0.Value, fromMatrix);
                 else
-                    d1 = FromMatrix.Translation + (FromMatrix.Forward * ext);
-                if (_ctl1.HasValue)
-                    d2 = Vector3D.Transform(_ctl1.Value, ToMatrix);
+                    d1 = fromMatrix.Translation + (fromMatrix.Forward * ext);
+                if (ctl1.HasValue)
+                    d2 = Vector3D.Transform(ctl1.Value, toMatrix);
                 else
-                    d2 = ToMatrix.Translation - (ToMatrix.Forward * ext);
+                    d2 = toMatrix.Translation - (toMatrix.Forward * ext);
             }
 
 
-            switch (Mode)
+            switch (mode)
             {
                 case CurveMode.Linear:
-                    Curve = new LinearCurve(From.Position, To.Position);
+                    curve = new LinearCurve(fromPos, toPos);
                     break;
                 case CurveMode.QuadraticBez:
-                    Curve = new QuadraticCurve(FromMatrix.Translation, (d1 + d2) / 2, ToMatrix.Translation);
+                    curve = new QuadraticCurve(fromMatrix.Translation, (d1 + d2) / 2, toMatrix.Translation);
                     break;
                 case CurveMode.CubicBez:
-                    Curve = new CubicCurve(FromMatrix.Translation, d1, d2, ToMatrix.Translation);
+                    curve = new CubicCurve(fromMatrix.Translation, d1, d2, toMatrix.Translation);
                     break;
                 default:
-                    throw new Exception($"Unsupported curve mode {Mode}");
+                    throw new Exception($"Unsupported curve mode {mode}");
             }
-
-            CurveUpdated?.Invoke(this);
         }
 
         public event Action<Edge> CurveUpdated;
@@ -164,18 +200,6 @@ namespace Equinox76561198048419394.RailSystem.Bendy
 
         public Vector3 EdgeTangent => Vector3.Normalize(To.Position - From.Position);
 
-        /// <summary>
-        /// Corrects a tangent vector so that it points in the general direction of positive T factor
-        /// </summary>
-        /// <param name="orig"></param>
-        /// <returns></returns>
-        public Vector3 CorrectTangent(Vector3 orig)
-        {
-            if (orig.Dot((Vector3) (To.Position - From.Position)) < 0)
-                return -orig;
-            return orig;
-        }
-
         private const float EdgeWidth = 0.05f;
         private static readonly MyStringId SquareMaterial = MyStringId.GetOrCompute("Square");
         private const float EdgeMarkerVertOffset = 0.325f;
@@ -187,5 +211,10 @@ namespace Equinox76561198048419394.RailSystem.Bendy
             var upOffset = EdgeMarkerVertOffset + verticalGroup * EdgeWidth * 8;
             Curve.Draw(color, tStart, tEnd, edgeWidth: EdgeWidth, upZero: From.Up * upOffset, upOne: To.Up * upOffset);
         }
+
+        public Vector3 FromUp => From.Up;
+        public Vector3 ToUp => To.Up;
+        public MatrixD Transform => MatrixD.Identity;
+        public MatrixD TransformInv => MatrixD.Identity;
     }
 }
