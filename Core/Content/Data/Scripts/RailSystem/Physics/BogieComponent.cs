@@ -369,6 +369,8 @@ namespace Equinox76561198048419394.RailSystem.Physics
         private bool TryFindEdge(out FindEdgeResult result)
         {
             var prevEdgeReal = _prevEdge?.GetEdge(_graph);
+            if (RailConstants.Debug.DrawBogieEdges && prevEdgeReal != null)
+                prevEdgeReal.Draw(0, 1, new Vector4(0, 1, 1, 1), 3);
             var bogiePos = Entity.PositionComp.WorldMatrix.Translation;
             var bogieTangent = Entity.PositionComp.WorldMatrix.Forward;
 
@@ -413,6 +415,7 @@ namespace Equinox76561198048419394.RailSystem.Physics
             result = default;
             if (partialResult.Score > Definition.DetachDistance)
                 return false;
+            result.Edge = partialResult.Edge;
             result.EdgeFactor = partialResult.EdgeFactor;
             result.Score = partialResult.Score;
             result.SegmentCaps = partialResult.SegmentCaps;
