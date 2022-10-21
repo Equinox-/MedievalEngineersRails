@@ -13,6 +13,7 @@ using Sandbox.Game.Entities.Character;
 using Sandbox.Game.EntityComponents.Character;
 using Sandbox.Game.Inventory;
 using Sandbox.ModAPI;
+using VRage.Collections;
 using VRage.Components.Entity.Camera;
 using VRage.Entities.Gravity;
 using VRage.Game;
@@ -21,6 +22,7 @@ using VRage.Game.Entity;
 using VRage.Game.ModAPI;
 using VRage.GUI.Crosshair;
 using VRage.Input.Devices.Keyboard;
+using VRage.Library.Collections;
 using VRage.Logging;
 using VRage.ObjectBuilders;
 using VRage.ObjectBuilders.Definitions.Equipment;
@@ -40,6 +42,8 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
         }
 
         private readonly List<EdgePlacerSystem.AnnotatedNode> _vertices = new List<EdgePlacerSystem.AnnotatedNode>();
+        private readonly HashSet<long> _remove = new HashSet<long>();
+        private long _lastRemove;
 
 
         private EdgePlacerSystem.AnnotatedNode CreateVertex(Vector3D worldPos)
@@ -58,7 +62,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
                     up = Vector3D.Up;
             }
 
-            return new EdgePlacerSystem.AnnotatedNode {Position = worldPos, Up = (Vector3) up, Existing = node, Tangent = node?.Tangent ?? Vector3.Zero};
+            return new EdgePlacerSystem.AnnotatedNode { Position = worldPos, Up = (Vector3)up, Existing = node, Tangent = node?.Tangent ?? Vector3.Zero };
         }
 
         private const float _edgeWidth = 0.05f;
@@ -79,7 +83,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
         public override void Init(MyEntity holder, MyHandItem item, MyHandItemBehaviorDefinition definition)
         {
             base.Init(holder, item, definition);
-            Definition = (EdgePlacerBehaviorDefinition) definition;
+            Definition = (EdgePlacerBehaviorDefinition)definition;
             PlacedDefinition = EdgePlacerSystem.DefinitionFor(Definition.Placed);
         }
 
@@ -119,8 +123,8 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
             if (vert.Existing != null)
                 return vert.Existing.Matrix;
 
-            var prevPos = (index - 1) >= 0 ? (EdgePlacerSystem.AnnotatedNode?) _vertices[index - 1] : null;
-            var nextPos = (index + 1) < _vertices.Count ? (EdgePlacerSystem.AnnotatedNode?) _vertices[index + 1] : null;
+            var prevPos = (index - 1) >= 0 ? (EdgePlacerSystem.AnnotatedNode?)_vertices[index - 1] : null;
+            var nextPos = (index + 1) < _vertices.Count ? (EdgePlacerSystem.AnnotatedNode?)_vertices[index + 1] : null;
 
             var tan = Vector3D.Zero;
             if (prevPos.HasValue)
@@ -142,13 +146,13 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
                 {
                     var pp = prevPos.Value.Existing;
                     tan = CurveExtensions.ExpandToCubic(pp.Position, pp.Position + pp.Tangent, vert.Position,
-                              RailConstants.LongBezControlLimit) - vert.Position;
+                        RailConstants.LongBezControlLimit) - vert.Position;
                 }
                 else if (nextPos?.Existing != null)
                 {
                     var pp = nextPos.Value.Existing;
                     tan = CurveExtensions.ExpandToCubic(pp.Position, pp.Position + pp.Tangent, vert.Position,
-                              RailConstants.LongBezControlLimit) - vert.Position;
+                        RailConstants.LongBezControlLimit) - vert.Position;
                 }
             }
 
@@ -160,7 +164,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
 
         private void Render()
         {
-            // hackfix because OnTargetEntityChanged is only called when the actual entity changed.
+            // Fix because OnTargetEntityChanged is only called when the actual entity changed.
             SetTarget();
 
             var cam = MyCameraComponent.ActiveCamera;
@@ -189,6 +193,45 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
                         var p2 = k.Position + _nodeMarkerSize * k.Up;
                         MySimpleObjectDraw.DrawLine(p1, p2, _squareMaterial, ref color, _nodeWidth);
                     }
+            }
+
+            foreach (var remove in _remove)
+                if (Scene.TryGetEntity(remove, out var removeEnt) && removeEnt.Components.TryGet(out BendyComponent bendy))
+                    foreach (var edge in bendy.Edges)
+                        edge.Draw(0, 1, Color.Red, 1);
+
+            if (Modified
+                && _remove.Count > 0
+                && TryGetBendyTarget(out _, out var removeTarget)
+                && Scene.TryGetEntity(_lastRemove, out var lastEntity)
+                && lastEntity.Components.TryGet(out BendyComponent lastBendy)
+                && lastBendy.Graph == Graph)
+            {
+                using (PoolManager.Get(out List<Edge> edges))
+                using (PoolManager.Get(out HashSet<BendyComponent> entities))
+                {
+                    if (Graph.TryFindPath(
+                            lastBendy.Nodes, removeTarget.Nodes,
+                            null, edges,
+                            nodeLimit: RailConstants.MaxNodesPlaced))
+                    {
+                        if (_remove.Count + entities.Count < RailConstants.MaxNodesPlaced)
+                            entities.Add(removeTarget);
+                        foreach (var edge in edges)
+                        {
+                            var ent = edge.Owner?.Entity;
+                            if (ent != null && ent.Components.TryGet(out BendyComponent bc) && _remove.Count + entities.Count < RailConstants.MaxNodesPlaced)
+                                entities.Add(bc);
+                        }
+
+                        foreach (var ent in entities)
+                        {
+                            if (!ValidateDeconstruct(ent.Entity, out _, true)) continue;
+                            foreach (var edge in ent.Edges)
+                                edge.Draw(0, 1, Color.Red, 1);
+                        }
+                    }
+                }
             }
 
             if (Holder == null) return;
@@ -285,8 +328,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
                 case MyHandItemActionEnum.Tertiary:
                     return _vertices.Count > 0;
                 case MyHandItemActionEnum.Secondary:
-                    string err;
-                    if (ValidateDeconstruct(out err, true))
+                    if (ValidateDeconstruct(Target.Entity, out var err, true))
                         return true;
                     if (!string.IsNullOrEmpty(err))
                         player.ShowNotification(err, 2000, null,
@@ -405,66 +447,14 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
                 switch (ActiveAction)
                 {
                     case MyHandItemActionEnum.Tertiary:
-                    {
-                        if (_vertices.Count == 0)
-                            return;
-                        if (_hintInfo == null)
-                            _hintInfo = MyAPIGateway.Utilities.CreateNotification("");
-                        var sb = new StringBuilder();
-
-                        if (!TargetIsStatic)
-                            sb.AppendLine("Can't place node on dynamic physics");
-                        else
-                        {
-                            using (new TemporaryVertex(this))
-                            if (_vertices.Count >= 2)
-                            {
-                                var jointData = EdgePlacerSystem.ComputeEdgeParameters(_vertices[_vertices.Count - 2], _vertices[_vertices.Count - 1]);
-                                sb.Append($"Length {jointData.Length:F1} m");
-                                if (PlacedDefinition != null && jointData.Length > PlacedDefinition.Distance.Max)
-                                    sb.AppendLine($" >= {PlacedDefinition.Distance.Max:F1} m");
-                                else if (PlacedDefinition != null && jointData.Length < PlacedDefinition.Distance.Min)
-                                    sb.AppendLine($" <= {PlacedDefinition.Distance.Min:F1} m");
-                                else
-                                    sb.AppendLine();
-                                if (jointData.BendRadians.HasValue)
-                                {
-                                    var b = jointData.BendRadians.Value;
-                                    sb.Append($"Curve {b * 180 / Math.PI:F0}º");
-                                    if (PlacedDefinition != null && b > PlacedDefinition.MaxAngleRadians)
-                                        sb.AppendLine($" >= {PlacedDefinition.MaxAngleDegrees}º");
-                                    else
-                                        sb.AppendLine();
-                                }
-
-                                if (jointData.Grade.HasValue)
-                                {
-                                    var g = jointData.Grade.Value;
-                                    sb.Append($"Grade {g * 100:F0}%");
-                                    if (PlacedDefinition != null && Math.Abs(g) > PlacedDefinition.MaxGradeRatio)
-                                        sb.AppendLine($" {(g < 0 ? "<= -" : ">= ")}{PlacedDefinition.MaxGradeRatio * 100:F0}%");
-                                    else
-                                        sb.AppendLine();
-                                }
-                            }
-                        }
-
-                        _hintInfo.Text = sb.ToString();
-                        _hintInfo.Show(); // resets alive time + adds to queue if it's not in it
+                        HandleInspect();
                         return;
-                    }
                     case MyHandItemActionEnum.Secondary:
-                    {
-                        _vertices.Clear();
-                        var entity = Target.Entity?.Components.Get<BendyShapeProxy>()?.Owner ?? Target.Entity;
-                        var dynCon = entity?.Components.Get<BendyComponent>();
-                        if (dynCon == null || dynCon.Graph != Graph)
-                            return;
-                        EdgePlacerSystem.RaiseRemoveEdge(Holder.EntityId, entity.EntityId);
+                        HandleRemove();
                         return;
-                    }
                     case MyHandItemActionEnum.Primary:
                     {
+                        _remove.Clear();
                         _vertices.Add(CreateVertex(Target.Position));
                         if (_vertices.Count < 2) return;
                         var pts = _vertices.Select(x => x.Position).ToArray();
@@ -488,6 +478,117 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
             }
         }
 
+        private void HandleInspect()
+        {
+            _remove.Clear();
+            if (_vertices.Count == 0)
+                return;
+            if (_hintInfo == null)
+                _hintInfo = MyAPIGateway.Utilities.CreateNotification("");
+            var sb = new StringBuilder();
+
+            if (!TargetIsStatic)
+                sb.AppendLine("Can't place node on dynamic physics");
+            else
+            {
+                using (new TemporaryVertex(this))
+                    if (_vertices.Count >= 2)
+                    {
+                        var jointData = EdgePlacerSystem.ComputeEdgeParameters(_vertices[_vertices.Count - 2], _vertices[_vertices.Count - 1]);
+                        sb.Append($"Length {jointData.Length:F1} m");
+                        if (PlacedDefinition != null && jointData.Length > PlacedDefinition.Distance.Max)
+                            sb.AppendLine($" >= {PlacedDefinition.Distance.Max:F1} m");
+                        else if (PlacedDefinition != null && jointData.Length < PlacedDefinition.Distance.Min)
+                            sb.AppendLine($" <= {PlacedDefinition.Distance.Min:F1} m");
+                        else
+                            sb.AppendLine();
+                        if (jointData.BendRadians.HasValue)
+                        {
+                            var b = jointData.BendRadians.Value;
+                            sb.Append($"Curve {b * 180 / Math.PI:F0}º");
+                            if (PlacedDefinition != null && b > PlacedDefinition.MaxAngleRadians)
+                                sb.AppendLine($" >= {PlacedDefinition.MaxAngleDegrees}º");
+                            else
+                                sb.AppendLine();
+                        }
+
+                        if (jointData.Grade.HasValue)
+                        {
+                            var g = jointData.Grade.Value;
+                            sb.Append($"Grade {g * 100:F0}%");
+                            if (PlacedDefinition != null && Math.Abs(g) > PlacedDefinition.MaxGradeRatio)
+                                sb.AppendLine($" {(g < 0 ? "<= -" : ">= ")}{PlacedDefinition.MaxGradeRatio * 100:F0}%");
+                            else
+                                sb.AppendLine();
+                        }
+                    }
+            }
+
+            _hintInfo.Text = sb.ToString();
+            _hintInfo.Show(); // resets alive time + adds to queue if it's not in it
+        }
+
+        private bool TryGetBendyTarget(out MyEntity entity, out BendyComponent target)
+        {
+            entity = Target.Entity?.Components.Get<BendyShapeProxy>()?.Owner ?? Target.Entity;
+            target = null;
+            return entity != null && entity.Components.TryGet(out target) && target.Graph == Graph;
+        }
+
+        private void HandleRemove()
+        {
+            _vertices.Clear();
+            if (!TryGetBendyTarget(out var entity, out var dynCon))
+                return;
+            if (!Modified)
+            {
+                EdgePlacerSystem.RaiseRemoveEdges(Holder.EntityId, _remove.ToArray());
+                _remove.Clear();
+                return;
+            }
+
+            if (_remove.Remove(entity.EntityId))
+                return;
+            var overflowed = false;
+            if (_remove.Count > 0
+                && Scene.TryGetEntity(_lastRemove, out var lastEntity)
+                && lastEntity.Components.TryGet(out BendyComponent lastBendy)
+                && lastBendy.Graph == Graph)
+            {
+                using (PoolManager.Get(out List<Edge> edges))
+                {
+                    if (Graph.TryFindPath(
+                            lastBendy.Nodes, dynCon.Nodes,
+                            null, edges,
+                            nodeLimit: RailConstants.MaxNodesPlaced))
+                    {
+                        foreach (var edge in edges)
+                        {
+                            var ent = edge.Owner?.Entity;
+                            if (ent == null || !ValidateDeconstruct(ent, out _, true)) continue;
+                            if (_remove.Count >= RailConstants.MaxNodesPlaced)
+                            {
+                                overflowed = true;
+                                break;
+                            }
+
+                            _remove.Add(ent.EntityId);
+                        }
+                    }
+                }
+            }
+
+            if (_remove.Count >= RailConstants.MaxNodesPlaced)
+                overflowed = true;
+            else
+                _remove.Add(entity.EntityId);
+            _lastRemove = entity.EntityId;
+            if (!overflowed)
+                return;
+            var player = MyAPIGateway.Players.GetPlayerControllingEntity(Holder);
+            player?.ShowNotification($"Only {RailConstants.MaxNodesPlaced} segments can be removed at once", 2000, null, new Vector4(1, 0, 0, 1));
+        }
+
         #region Long-Place
 
         private struct LongPlanData
@@ -508,9 +609,9 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
                 var length = Curve.LengthAuto(epa.PlacedDefinition.Distance.Min / 8);
                 Length = length;
 
-                var minCount = (int) Math.Ceiling(length / epa.PlacedDefinition.Distance.Max);
-                var maxCount = (int) Math.Floor(length / epa.PlacedDefinition.Distance.Min);
-                var idealCount = (int) Math.Round(length / epa.PlacedDefinition.PreferredDistance);
+                var minCount = (int)Math.Ceiling(length / epa.PlacedDefinition.Distance.Max);
+                var maxCount = (int)Math.Floor(length / epa.PlacedDefinition.Distance.Min);
+                var idealCount = (int)Math.Round(length / epa.PlacedDefinition.PreferredDistance);
                 Count = MathHelper.Clamp(idealCount, minCount, maxCount);
             }
         }
@@ -587,10 +688,10 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
             }
         }
 
-        private bool ValidateDeconstruct(out string err, bool testPermission)
+        private bool ValidateDeconstruct(MyEntity targetEntity, out string err, bool testPermission)
         {
             err = null;
-            var entity = Target.Entity?.Components.Get<BendyShapeProxy>()?.Owner ?? Target.Entity;
+            var entity = targetEntity?.Components.Get<BendyShapeProxy>()?.Owner ?? targetEntity;
             if (entity == null || entity.Closed)
                 return false;
             var player = MyAPIGateway.Players.GetPlayerControllingEntity(Holder);
@@ -612,7 +713,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
             if (ValidatePlace(null, true))
                 yield return "Press LMB to place";
             string tmp;
-            if (ValidateDeconstruct(out tmp, true))
+            if (ValidateDeconstruct(Target.Entity, out tmp, true))
                 yield return "Press RMB to remove";
         }
 
@@ -647,9 +748,8 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
 
             if (_vertices.Count > 0 && Definition.CrosshairQuestion.HasValue)
                 yield return Definition.CrosshairQuestion.Value;
-            string tmp;
             // ReSharper disable once InvertIf
-            if (ValidateDeconstruct(out tmp, true))
+            if (ValidateDeconstruct(Target.Entity, out _, true))
             {
                 var entity = Target.Entity?.Components.Get<BendyShapeProxy>()?.Owner ?? Target.Entity;
                 if (entity != null &&
@@ -689,7 +789,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
         protected override void Init(MyObjectBuilder_DefinitionBase builder)
         {
             base.Init(builder);
-            var ob = (MyObjectBuilder_EdgePlacerBehaviorDefinition) builder;
+            var ob = (MyObjectBuilder_EdgePlacerBehaviorDefinition)builder;
             Layer = ob.Layer;
             if (string.IsNullOrWhiteSpace(Layer))
                 MyDefinitionErrors.Add(builder.Package, $"{nameof(EdgePlacerBehaviorDefinition)} {builder.GetId()} has {nameof(Layer)} that is null",

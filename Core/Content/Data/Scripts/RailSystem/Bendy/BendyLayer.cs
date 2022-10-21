@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Equinox76561198048419394.RailSystem.Util;
 using Sandbox.ModAPI;
+using VRage.Collections;
 using VRage.Components.Entity.Camera;
 using VRage.Entities.Gravity;
 using VRage.Game;
 using VRage.Game.ModAPI;
+using VRage.Library.Collections;
 using VRage.Utils;
 using VRageMath;
 
@@ -58,7 +61,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy
         {
             using (var e = Nodes.SortedByDistance(v))
                 if (e.MoveNext())
-                    return (Node) e.Current.UserData;
+                    return (Node)e.Current.UserData;
             return null;
         }
 
@@ -109,7 +112,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy
                 n.DeferredUpdate();
             }
 
-            if (!((IMyUtilities) MyAPIUtilities.Static).IsDedicated && (RailConstants.Debug.DrawGraphEdges || RailConstants.Debug.DrawGraphNodes))
+            if (!((IMyUtilities)MyAPIUtilities.Static).IsDedicated && (RailConstants.Debug.DrawGraphEdges || RailConstants.Debug.DrawGraphNodes))
                 DebugDraw();
         }
 
@@ -122,7 +125,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy
 
         private void DebugDraw()
         {
-            if (((IMyUtilities) MyAPIUtilities.Static).IsDedicated)
+            if (((IMyUtilities)MyAPIUtilities.Static).IsDedicated)
                 return;
             var cam = MyCameraComponent.ActiveCamera;
             if (cam == null)
@@ -141,6 +144,92 @@ namespace Equinox76561198048419394.RailSystem.Bendy
 
             if (RailConstants.Debug.DrawGraphEdges)
                 Edges.OverlapAllFrustum(ref frust, (Edge edge, bool intersects) => { edge.Draw(0, 1, _edgeColor); });
+        }
+
+        public bool TryFindPath(
+            IEnumerable<Node> starts,
+            IEnumerable<Node> ends,
+            List<Node> pathNodes,
+            List<Edge> pathEdges,
+            int nodeLimit = int.MaxValue,
+            float distanceLimit = float.PositiveInfinity)
+        {
+            using (PoolManager.Get(out Dictionary<Node, Edge> visitedToReachedUsing))
+            using (PoolManager.Get(out List<Node> endsCopy))
+            {
+                var endHint = Vector3D.Zero;
+                foreach (var end in ends)
+                {
+                    endsCopy.Add(end);
+                    endHint += end.Position;
+                }
+
+                endHint /= endsCopy.Count;
+
+                var heap = new MyBinaryHeap<float, PathNode>();
+
+                void MaybeAdd(PathNode? prev, Node node, Edge from)
+                {
+                    if (visitedToReachedUsing.ContainsKey(node))
+                        return;
+                    var distFromPrev = prev != null ? (float)Vector3D.Distance(prev.Value.Pt.Position, node.Position) : 0;
+                    var remainingDist = (float)Vector3D.Distance(node.Position, endHint);
+                    var nextDist = (prev?.AccumulatedDistance ?? 0) + distFromPrev;
+                    var nextNodes = (prev?.AccumulatedNodes ?? 0) + 1;
+                    var nextScore = nextDist + remainingDist;
+                    if (nextNodes > nodeLimit || nextScore > distanceLimit)
+                        return;
+                    visitedToReachedUsing.Add(node, from);
+                    heap.Insert(new PathNode(node, nextNodes, nextDist), nextScore);
+                }
+
+                foreach (var start in starts)
+                    MaybeAdd(null, start, null);
+                while (true)
+                {
+                    foreach (var end in endsCopy)
+                        if (visitedToReachedUsing.TryGetValue(end, out var via))
+                        {
+                            // Build up the path
+                            pathNodes?.Add(end);
+                            var prevNode = end;
+                            var prevEdge = via;
+                            while (prevEdge != null)
+                            {
+                                prevNode = prevEdge.Opposition(prevNode);
+                                if (prevNode == null)
+                                    break;
+                                pathEdges?.Add(prevEdge);
+                                pathNodes?.Add(prevNode);
+                                prevEdge = visitedToReachedUsing.GetValueOrDefault(prevNode);
+                            }
+
+                            pathNodes?.Reverse();
+                            pathEdges?.Reverse();
+                            return true;
+                        }
+
+                    if (heap.Count == 0)
+                        return false;
+                    var min = heap.RemoveMin();
+                    foreach (var neighbor in min.Pt.Connections)
+                        MaybeAdd(min, neighbor.Key, neighbor.Value);
+                }
+            }
+        }
+
+        private readonly struct PathNode
+        {
+            public readonly Node Pt;
+            public readonly int AccumulatedNodes;
+            public readonly float AccumulatedDistance;
+
+            public PathNode(Node pt, int accumulatedNodes, float accumulatedDistance)
+            {
+                Pt = pt;
+                AccumulatedNodes = accumulatedNodes;
+                AccumulatedDistance = accumulatedDistance;
+            }
         }
     }
 }

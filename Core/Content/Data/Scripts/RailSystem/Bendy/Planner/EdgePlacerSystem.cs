@@ -380,14 +380,14 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
             }
         }
 
-        public static void RaiseRemoveEdge(long removerEntityId, long entityIdToRemove)
+        public static void RaiseRemoveEdges(long removerEntityId, params long[] entityIdsToRemove)
         {
-            MyMultiplayerModApi.Static.RaiseStaticEvent(x => RemoveEdge, removerEntityId, entityIdToRemove);
+            MyMultiplayerModApi.Static.RaiseStaticEvent(x => RemoveEdge, removerEntityId, entityIdsToRemove);
         }
 
         [Event]
         [Server]
-        private static void RemoveEdge(long removerEntityId, long entityIdToRemove)
+        private static void RemoveEdge(long removerEntityId, long[] entityIdToRemove)
         {
             MyEntity holderEntity;
             MyEntities.TryGetEntityById(removerEntityId, out holderEntity);
@@ -395,10 +395,11 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
                 ? MyAPIGateway.Players.GetPlayerControllingEntity(holderEntity)
                 : null;
 
-            MyEntity removeEntity = null;
-            MyEntities.TryGetEntityById(entityIdToRemove, out removeEntity);
-
-            if (removeEntity == null)
+            var removeEntities = new List<MyEntity>(entityIdToRemove.Length);
+            foreach (var id in entityIdToRemove)
+               if (MyEntities.TryGetEntityById(id, out var ent))
+                   removeEntities.Add(ent);
+            if (removeEntities.Count == 0)
             {
                 MyEventContext.ValidationFailed();
                 return;
@@ -415,37 +416,46 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
                     return;
                 }
 
-                if (MyAreaPermissionSystem.Static != null && !MyAreaPermissionSystem.Static.HasPermission(
-                        holderPlayer.IdentityId, removeEntity.GetPosition(), MyPermissionsConstants.QuickDeconstruct))
+                if (removeEntities.Count >= RailConstants.MaxNodesPlaced)
                 {
-                    holderPlayer.ShowNotification("You cannot quick deconstruct here", 2000, null,
+                    holderPlayer.ShowNotification($"Can't remove more than {RailConstants.MaxNodesPlaced} entities at once", 2000, null,
                         new Vector4(1, 0, 0, 1));
+                    MyEventContext.ValidationFailed();
                     return;
                 }
 
-                string err;
-                if (!ValidateQuickRemove(holderPlayer, removeEntity, out err))
+                foreach (var removeEntity in removeEntities)
                 {
-                    MyEventContext.ValidationFailed();
-                    if (!string.IsNullOrEmpty(err))
-                        holderPlayer.ShowNotification(err, 2000, null, new Vector4(1, 0, 0, 1));
-                    return;
+                    if (MyAreaPermissionSystem.Static != null && !MyAreaPermissionSystem.Static.HasPermission(
+                            holderPlayer.IdentityId, removeEntity.GetPosition(), MyPermissionsConstants.QuickDeconstruct))
+                    {
+                        holderPlayer.ShowNotification("You cannot quick deconstruct here", 2000, null,
+                            new Vector4(1, 0, 0, 1));
+                        return;
+                    }
+
+                    if (!ValidateQuickRemove(holderPlayer, removeEntity, out var err))
+                    {
+                        MyEventContext.ValidationFailed();
+                        if (!string.IsNullOrEmpty(err))
+                            holderPlayer.ShowNotification(err, 2000, null, new Vector4(1, 0, 0, 1));
+                        return;
+                    }
                 }
             }
 
             #endregion
 
-            var block = removeEntity?.Get<MyBlockComponent>();
-            if (block != null)
+            foreach (var removeEntity in removeEntities)
             {
-                block.GridData.RemoveBlock(block.Block);
-            }
-            else
-            {
-                removeEntity.Close();
-            }
+                var block = removeEntity.Get<MyBlockComponent>();
+                if (block != null)
+                    block.GridData.RemoveBlock(block.Block);
+                else
+                    removeEntity.Close();
 
-            EntityRemoved?.Invoke(holderEntity, holderPlayer, removeEntity);
+                EntityRemoved?.Invoke(holderEntity, holderPlayer, removeEntity);
+            }
         }
 
         public static bool ValidateQuickRemove(IMyPlayer holderPlayer, MyEntity removeEntity, out string errMessage)
