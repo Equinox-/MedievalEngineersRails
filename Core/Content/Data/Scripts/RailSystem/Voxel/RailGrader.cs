@@ -162,11 +162,18 @@ namespace Equinox76561198048419394.RailSystem.Voxel
             _storage.Resize(voxMin, voxMax);
             voxel.Storage.ReadRange(_storage, MyStorageDataTypeFlags.ContentAndMaterial, 0, voxMin, voxMax);
             CachedSdf.CachedSdfAccessor fillSdf, excavateSdf;
+            using (PoolManager.Get(out List<IGradeShape> fill))
+            using (PoolManager.Get(out List<IGradeShape> excavate))
             {
-                var fill = new IGradeShape[components.Count];
-                var excavate = new IGradeShape[components.Count];
-                for (var i = 0; i < components.Count; i++)
-                    components[i].Unblit(out fill[i], out excavate[i]);
+                foreach (var comp in components)
+                {
+                    comp.Unblit(out var fillTmp, out var excavateTmp);
+                    if (fillTmp != null)
+                        fill.Add(fillTmp);
+                    if (excavateTmp != null)
+                        excavate.Add(excavateTmp);
+                }
+
                 fillSdf = new CachedSdf.CachedSdfAccessor(_sdfCache, voxel, CachedSdf.CachedSdfGroup.Fill, in voxMin, in voxMax, fill);
                 excavateSdf = new CachedSdf.CachedSdfAccessor(_sdfCache, voxel, CachedSdf.CachedSdfGroup.Cut, in voxMin, in voxMax, excavate);
                 _prevFillSdf = fillSdf;

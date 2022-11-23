@@ -1,9 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
 using Equinox76561198048419394.Core.Debug;
 using Equinox76561198048419394.Core.Util;
 using Equinox76561198048419394.RailSystem.Voxel.Shape;
@@ -14,7 +11,6 @@ using VRage.Library.Collections;
 using VRage.Library.Threading;
 using VRage.Logging;
 using VRage.Session;
-using VRage.Utils;
 using VRage.Voxels;
 using VRageMath;
 using VRageRender;
@@ -58,13 +54,15 @@ namespace Equinox76561198048419394.RailSystem.Voxel
                 hashCode = (hashCode * 397) ^ (int)Group;
                 return hashCode;
             }
+
+            public override string ToString() => $"[{Voxel?.EntityId ?? default}/{Group}/{Cell}]";
         }
 
         private readonly HashSet<object> _shapeCacheKeys = new HashSet<object>();
         private readonly List<BoundingBoxD> _shapeCacheBoxes = new List<BoundingBoxD>();
         private readonly MyStorageData _sdf = new MyStorageData(MyStorageDataTypeFlags.Content);
         private readonly CachedSdfKey _key;
-        private IGradeShape[] _shapes;
+        private readonly List<IGradeShape> _shapes = new List<IGradeShape>();
         private int _generation;
 
         private CachedSdf(CachedSdfKey key)
@@ -140,7 +138,7 @@ namespace Equinox76561198048419394.RailSystem.Voxel
             MyRenderProxy.DebugDrawText3D(worldBounds.Center, $"Gen {_generation}", Color.Blue, 0.5f);
         }
 
-        private void SetContents(IGradeShape[] shapes)
+        private void SetContents(List<IGradeShape> shapes)
         {
             var voxelMin = CellSize * _key.Cell;
             var voxelMax = CellSize * (_key.Cell + 1); // exclusive
@@ -173,7 +171,7 @@ namespace Equinox76561198048419394.RailSystem.Voxel
                     if (perfectMatch)
                     {
                         if (DebugFlags.Trace(typeof(CachedSdf)))
-                            Log.Info($"Cached SDF reuse for {_key.Voxel.Id} at {_key.Cell} ({worldBounds.Center})");
+                            Log.Info($"Cached SDF reuse for {_key} ({worldBounds.Center})");
                         return;
                     }
                 }
@@ -183,6 +181,8 @@ namespace Equinox76561198048419394.RailSystem.Voxel
                 foreach (var key in relevantCacheKeys)
                     _shapeCacheKeys.Add(key);
             }
+            _shapes.Clear();
+            _shapes.AddCollection(shapes);
 
             if (_shapeCacheKeys.Count == 0)
             {
@@ -208,10 +208,8 @@ namespace Equinox76561198048419394.RailSystem.Voxel
             {
                 var dt = (GetTimestamp() - start) * 1000.0;
                 var type = recalculating ? "recalculate" : "calculate";
-                Log.Info($"Cached SDF {type} for {_key.Voxel.Id} at {_key.Cell} ({worldBounds.Center}, {_shapeCacheKeys.Count} shapes, {nonZeroPoints} non-zero points, {dt} ms");
+                Log.Info($"Cached SDF {type} for {_key} ({worldBounds.Center}, {_shapeCacheKeys.Count} shapes, {nonZeroPoints} non-zero points, {dt} ms");
             }
-
-            _shapes = shapes;
         }
 
         private static readonly MyParallelTask Parallel = new MyParallelTask();
@@ -236,7 +234,7 @@ namespace Equinox76561198048419394.RailSystem.Voxel
                 CachedSdfGroup group,
                 in Vector3I voxelMin,
                 in Vector3I voxelMax,
-                IGradeShape[] shapes)
+                List<IGradeShape> shapes)
             {
                 _cellMin = voxelMin >> CellSizeBits;
                 var cellMax = voxelMax >> CellSizeBits;
@@ -251,12 +249,22 @@ namespace Equinox76561198048419394.RailSystem.Voxel
                     var waiting = _cellTable.Length;
                     Parallel.ForEach(_cellTable, sdf =>
                     {
-                        lock (sdf)
+                        try
                         {
-                            sdf.SetContents(shapes);
+                            lock (sdf)
+                            {
+                                sdf.SetContents(shapes);
+                            }
                         }
-                        if (Interlocked.Decrement(ref waiting) == 0)
-                            waiter.ReleaseExclusive();
+                        catch (Exception err)
+                        {
+                            Log.Warning($"Failed to generate SDF {sdf._key} for {shapes}: {err}");
+                        }
+                        finally
+                        {
+                            if (Interlocked.Decrement(ref waiting) == 0)
+                                waiter.ReleaseExclusive();
+                        }
                     });
                     waiter.AcquireExclusive();
                 }

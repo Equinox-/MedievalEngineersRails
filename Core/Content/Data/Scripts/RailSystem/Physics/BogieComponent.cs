@@ -154,6 +154,8 @@ namespace Equinox76561198048419394.RailSystem.Physics
                 _gridPositionComponent.OnPositionChanged -= WakePhysics;
             if (!_physicsAwake)
             {
+                // Don't reset physics sleep cooldown (_nextSleepAttempt) but do reset the update scheduler sleep cooldown.
+                _sequentialSleepingTicks = 0;
                 _physicsAwake = true;
                 AddFixedUpdate(Simulate);
             }

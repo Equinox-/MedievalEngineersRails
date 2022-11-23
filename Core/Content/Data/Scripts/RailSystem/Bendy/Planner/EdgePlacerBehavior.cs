@@ -542,6 +542,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
                 return;
             if (!Modified)
             {
+                _remove.Add(entity.EntityId);
                 EdgePlacerSystem.RaiseRemoveEdges(Holder.EntityId, _remove.ToArray());
                 _remove.Clear();
                 return;

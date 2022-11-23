@@ -253,15 +253,13 @@ namespace Equinox76561198048419394.RailSystem.Voxel
             if (def.Support.HasValue)
             {
                 var s = def.Support.Value;
-                fillShape = CompositeGradeShape.Composite(Edges
-                    .Select(e => def.Support.Value.CreateShape(e, false)).ToArray());
+                fillShape = CompositeGradeShape.Composite(Edges.Select(e => s.CreateShape(e, false)));
             }
 
             if (def.Excavate.HasValue)
             {
                 var s = def.Excavate.Value;
-                excavateShape = CompositeGradeShape.Composite(Edges
-                    .Select(e => def.Excavate.Value.CreateShape(e, true)).ToArray());
+                excavateShape = CompositeGradeShape.Composite(Edges.Select(e => s.CreateShape(e, true)));
             }
         }
     }
