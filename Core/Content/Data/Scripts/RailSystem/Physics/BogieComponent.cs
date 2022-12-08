@@ -762,7 +762,7 @@ namespace Equinox76561198048419394.RailSystem.Physics
             if (!simulationResult.Active)
             {
                 SetAnimVar(SpeedZVar, 0);
-                if (_gridPhysicsComponent != null && !_gridPhysicsComponent.IsActive && _gridPhysicsComponent.LinearVelocity.LengthSquared() < 1e-4f)
+                if (GridPhysicsSleeping)
                 {
                     if (_sequentialSleepingTicks < SequentialSleepTicksBeforePause)
                         _sequentialSleepingTicks++;
@@ -822,7 +822,7 @@ namespace Equinox76561198048419394.RailSystem.Physics
                     {
                         if (_sequentialSleepingTicks < SequentialSleepTicksBeforePause)
                             _sequentialSleepingTicks++;
-                        else
+                        else if (GridPhysicsSleeping)
                             SleepPhysics();
                         return;
                     }
@@ -863,6 +863,9 @@ namespace Equinox76561198048419394.RailSystem.Physics
                     filtered, simulationResult.FindEdgeResult.Position, Vector3.Zero);
             }
         }
+
+        private bool GridPhysicsSleeping => _gridPhysicsComponent != null && !_gridPhysicsComponent.IsActive &&
+                                            _gridPhysicsComponent.LinearVelocity.LengthSquared() < 1e-4f;
 
 
         private const float PowerSmooth = .005f;
