@@ -762,7 +762,14 @@ namespace Equinox76561198048419394.RailSystem.Physics
             if (!simulationResult.Active)
             {
                 SetAnimVar(SpeedZVar, 0);
-                SleepPhysics();
+                if (_gridPhysicsComponent != null && !_gridPhysicsComponent.IsActive && _gridPhysicsComponent.LinearVelocity.LengthSquared() < 1e-4f)
+                {
+                    if (_sequentialSleepingTicks < SequentialSleepTicksBeforePause)
+                        _sequentialSleepingTicks++;
+                    else
+                        SleepPhysics();
+                }
+                else _sequentialSleepingTicks = 0;
                 return;
             }
 
