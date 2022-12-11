@@ -46,5 +46,10 @@ namespace Equinox76561198048419394.RailSystem.Util.Curve
             var mt = 1 - t;
             return 2 * mt * (P1 - P0) + 2 * t * (P2 - P1);
         }
+
+        public Vector3D SampleSecondDerivative(float t)
+        {
+            return 2 * P0 - 4 * P1 + 2 * P2;
+        }
     }
 }

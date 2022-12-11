@@ -21,6 +21,8 @@ namespace Equinox76561198048419394.RailSystem.Util.Curve
         {
             return (P1 - P0);
         }
+
+        public Vector3D SampleSecondDerivative(float t) => Vector3D.Zero;
     }
     public readonly struct LinearCurve2 : ICurve2
     {

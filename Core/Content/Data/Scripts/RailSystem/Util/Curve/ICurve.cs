@@ -6,6 +6,7 @@ namespace Equinox76561198048419394.RailSystem.Util.Curve
     {
         Vector3D Sample(float t);
         Vector3D SampleDerivative(float t);
+        Vector3D SampleSecondDerivative(float t);
     }
 
     public interface ICurve2

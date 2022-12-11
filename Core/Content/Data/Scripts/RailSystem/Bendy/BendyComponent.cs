@@ -325,6 +325,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy
 
             public SerializableVector3 Position;
             public SerializableVector3 Up;
+            public SerializableVector3? Tangent;
         }
 
         [XmlElement("Node")]

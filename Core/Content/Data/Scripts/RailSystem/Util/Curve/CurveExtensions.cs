@@ -3,6 +3,8 @@ using VRage.Components.Entity.Camera;
 using VRage.Game;
 using VRage.Utils;
 using VRageMath;
+using VRageRender;
+using VRageRender.Messages;
 
 namespace Equinox76561198048419394.RailSystem.Util.Curve
 {
@@ -31,7 +33,7 @@ namespace Equinox76561198048419394.RailSystem.Util.Curve
             } while (++i < iterations);
         }
 
-        private static readonly MyStringId SquareMaterial = MyStringId.GetOrCompute("Square");
+        private static readonly MyStringId SquareMaterial = MyStringId.GetOrCompute("SquareIgnoreDepth");
 
         public static void Draw<T>(this T curve, Vector4 color, float tMin = 0f, float tMax = 1f, int segments = -1, float edgeWidth = 0.05f,
             Vector3? upZero = null, Vector3? upOne = null, MyStringId? material = null) where T : ICurve
@@ -139,6 +141,11 @@ namespace Equinox76561198048419394.RailSystem.Util.Curve
 
             var qPoint = p0 + aBias * Math.Min(lenQp0, controlLimit);
             return p1 + (qPoint - p1) * (lenCtl / lenQp0);
+        }
+
+        public static float Curvature(Vector3 firstDerivative, Vector3 secondDerivative)
+        {
+            return Vector3.Cross(firstDerivative, secondDerivative).Length() / (float)Math.Pow(firstDerivative.LengthSquared(), 1.5);
         }
     }
 }

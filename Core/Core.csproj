@@ -107,8 +107,16 @@
     <Compile Include="Content\Data\Scripts\RailSystem\Bendy\DynamicBendyComponent.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Bendy\Edge.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Bendy\Node.cs" />
+    <Compile Include="Content\Data\Scripts\RailSystem\Bendy\Planner\DirectionAndGrade.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Bendy\Planner\EdgePlacerBehavior.cs" />
+    <Compile Include="Content\Data\Scripts\RailSystem\Bendy\Planner\EdgePlacerBehavior.LegacyPlacement.cs" />
+    <Compile Include="Content\Data\Scripts\RailSystem\Bendy\Planner\EdgePlacerBehavior.V2.cs" />
+    <Compile Include="Content\Data\Scripts\RailSystem\Bendy\Planner\EdgePlacerBehavior.Removal.cs" />
+    <Compile Include="Content\Data\Scripts\RailSystem\Bendy\Planner\EdgePlacerBehavior.Render.cs" />
+    <Compile Include="Content\Data\Scripts\RailSystem\Bendy\Planner\EdgePlacerBehavior.Menu.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Bendy\Planner\EdgePlacerSystem.cs" />
+    <Compile Include="Content\Data\Scripts\RailSystem\Bendy\Planner\TempCurveUtils.cs" />
+    <Compile Include="Content\Data\Scripts\RailSystem\Bendy\Planner\TempEdgePlan.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Bendy\Shape\BendyPhysicsComponent.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Bendy\Shape\BendyPhysicsComponentDefinition.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Bendy\Shape\BendyShapeComponent.cs" />
@@ -154,6 +162,7 @@
     <Compile Include="Content\Data\Scripts\RailSystem\Util\Curve\WhichSide.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Util\DbvtExtensions.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Util\FastRiggedCopyHack.cs" />
+    <Compile Include="Content\Data\Scripts\RailSystem\Util\FreeListEnumerator.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Util\FresnelIntegral.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Util\IEquatableAndHash.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Util\MemStream.cs" />
@@ -164,6 +173,7 @@
     <Compile Include="Content\Data\Scripts\RailSystem\Util\RootEntityRef.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Util\ShellEnumerator.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Util\SphericalExtensions.cs" />
+    <Compile Include="Content\Data\Scripts\RailSystem\Util\ToolHint.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Util\TriangleUtil.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Util\UserDataTable.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Util\Vec2Shape.cs" />
@@ -183,6 +193,7 @@
     <Compile Include="Content\Data\Scripts\RailSystem\Voxel\Shape\RailGradeShape.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Content\Data\EdgePlacerMenu.sbc" />
     <Content Include="Content\metadata.mod" />
     <Content Include="schema.xsd" />
     <Content Include="schema_include.xsd" />

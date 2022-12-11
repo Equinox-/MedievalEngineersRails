@@ -7,9 +7,11 @@ namespace Equinox76561198048419394.RailSystem.Util.Curve
         private readonly MatrixD _matrix;
         private CubicCurve _curve;
 
-        public CubicSphericalCurve(Vector3D center, MatrixD from, MatrixD to)
+        public CubicSphericalCurve(Vector3D center, MatrixD from, MatrixD to, 
+            float smoothnessFrom = CubicCurve.DefaultSmoothness, 
+            float smoothnessTo = CubicCurve.DefaultSmoothness)
         {
-            var tmp = new CubicCurve(from, to);
+            var tmp = new CubicCurve(from, to, smoothnessFrom, smoothnessTo);
             var avgSpherical = Vector3D.Normalize((from.Translation + to.Translation) / 2 - center);
             var quat = QuaternionD.CreateFromTwoVectors(avgSpherical, new Vector3D(1, 0, 0));
             var m = MatrixD.CreateFromQuaternion(quat);
@@ -30,6 +32,15 @@ namespace Equinox76561198048419394.RailSystem.Util.Curve
         {
             return Vector3D.TransformNormal(
                 SphericalExtensions.DifferentialFromSpherical(_curve.Sample(t), _curve.SampleDerivative(t)), _matrix);
+        }
+
+        public Vector3D SampleSecondDerivative(float t)
+        {
+            // Not going to bother to write this out.
+            const float dt = 1e-3f;
+            var prev = SampleDerivative(t - dt);
+            var next = SampleDerivative(t + dt);
+            return (next - prev) / (2 * dt);
         }
     }
 }

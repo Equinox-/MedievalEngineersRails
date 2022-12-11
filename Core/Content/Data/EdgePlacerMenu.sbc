@@ -1,0 +1,119 @@
+<?xml version="1.0"?>
+<Definitions xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <Definition xsi:type="MyObjectBuilder_ContextMenuDefinition">
+        <Id Type="MyObjectBuilder_ContextMenu" Subtype="EdgePlacerMenu" />
+        <StyleName>ContextMenuDefault</StyleName>
+        <Position x="0.35" y="0.32" />
+        <MainController>
+            <TypeId>MyObjectBuilder_ButtonListController</TypeId>
+            <SubtypeId>EdgePlacerMenuMain</SubtypeId>
+        </MainController>
+        <ContextType>MyObjectBuilder_EdgePlacerConfigContext</ContextType>
+    </Definition>
+
+    <Definition xsi:type="MyObjectBuilder_ButtonListControllerDefinition">
+        <Id Type="MyObjectBuilder_ButtonListController" Subtype="EdgePlacerMenuMain" />
+        <Title>System Planner (WIP)</Title>
+        <Columns>2</Columns>
+        <Rows>1</Rows>
+        <ButtonStyleId>ButtonListDefault</ButtonStyleId>
+        <Buttons>
+            <Button StyleName="ContextButtonSliced">
+                <Text></Text>
+                <ButtonGroup>1</ButtonGroup>
+                <Tooltip>Options</Tooltip>
+                <Icon>ContextMenuCogs</Icon>
+                <Action xsi:type="MyObjectBuilder_CMA_AddController">
+                    <Controller Type="MyObjectBuilder_SliderController" Subtype="EdgePlacerMenuOptions" />
+                </Action>
+            </Button>
+            <Button StyleName="ContextButtonSliced">
+                <Text></Text>
+                <ButtonGroup>1</ButtonGroup>
+                <Tooltip>Mode</Tooltip>
+                <Icon>ContextMenuArrowLeft</Icon>
+                <Action xsi:type="MyObjectBuilder_CMA_AddController">
+                    <Controller Type="MyObjectBuilder_CheckableButtonListController" Subtype="EdgePlacerMode" />
+                </Action>
+            </Button>
+        </Buttons>
+    </Definition>
+
+    <Definition xsi:type="MyObjectBuilder_SliderControllerDefinition">
+        <Id Type="MyObjectBuilder_SliderController" Subtype="EdgePlacerMenuOptions" />
+        <Title>Options</Title>
+        <DataId>SliderParams</DataId>
+        <AutoCommit>true</AutoCommit>
+        <SliderSize x="330" y="75" />
+        <Slider StyleName="ContextMenuSlider" MinValue="0" MaxValue="1" DefaultValue="0.6666" IsInteger="false">
+            <Text>Straightness</Text>
+            <LabelDecimalPlaces>2</LabelDecimalPlaces>
+            <TextFormat>{0}</TextFormat>
+            <Tooltip>Controls how straight the rails at the node are</Tooltip>
+        </Slider>
+        <Slider StyleName="ContextMenuSlider" MinValue="-1" MaxValue="360" DefaultValue="-1" IsInteger="false">
+            <Text>Direction</Text>
+            <TextFormat>{0}°</TextFormat>
+            <Tooltip>Controls the direction of the placed node.  -1 for free rotating.</Tooltip>
+        </Slider>
+        <Slider StyleName="ContextMenuSlider" MinValue="-1" MaxValue="100" DefaultValue="-1" IsInteger="true">
+            <Text>Grade</Text>
+            <TextFormat>{0} %</TextFormat>
+            <Tooltip>Controls the grade of the placed node.  -1 for free rotating.</Tooltip>
+        </Slider>
+        <Slider StyleName="ContextMenuSlider" MinValue="-5" MaxValue="5" DefaultValue="0" IsInteger="false">
+            <Text>Vertical Shift</Text>
+            <TextFormat>{0} m</TextFormat>
+            <Tooltip>Controls the vertical position of the placed node relative to the click location.</Tooltip>
+        </Slider>
+        <ButtonSize x="45" y="45" />
+        <Buttons>
+            <Button StyleName="ContextButtonSliced" DataId="ShowMaxCurvature">
+                <Text>R</Text>
+                <Tooltip>Show maximum curvature</Tooltip>
+                <ButtonGroup>ShowMaxCurvature</ButtonGroup>
+            </Button>
+            <Button StyleName="ContextButtonSliced" DataId="ShowMaxGrade">
+                <Text>G</Text>
+                <Tooltip>Show maximum grade</Tooltip>
+                <ButtonGroup>ShowMaxGrade</ButtonGroup>
+            </Button>
+            <Button StyleName="ContextButtonSliced">
+                <Text>P</Text>
+                <Tooltip>Pin node</Tooltip>
+                <Action xsi:type="MyObjectBuilder_CMA_ContextMethod" Name="PinNode" />
+            </Button>
+        </Buttons>
+    </Definition>
+
+    <Definition xsi:type="MyObjectBuilder_CheckableButtonListControllerDefinition">
+        <Id Type="MyObjectBuilder_CheckableButtonListController" Subtype="EdgePlacerMode" />
+        <Title>Mode</Title>
+        <DataId>Mode</DataId>
+        <Columns>1</Columns>
+        <Rows>4</Rows>
+        <ButtonStyleId>ButtonListRespawn</ButtonStyleId>
+        <Buttons>
+            <Button StyleName="ContextButtonSliced">
+                <Text>Legacy</Text>
+                <Tooltip>Use legacy code</Tooltip>
+                <Icon></Icon>
+            </Button>
+            <Button StyleName="ContextButtonSliced">
+                <Text>Add / Remove</Text>
+                <Tooltip>Add new edges and nodes, removing existing ones</Tooltip>
+                <Icon></Icon>
+            </Button>
+            <Button StyleName="ContextButtonSliced">
+                <Text>Move</Text>
+                <Tooltip>Move existing nodes</Tooltip>
+                <Icon></Icon>
+            </Button>
+            <Button StyleName="ContextButtonSliced">
+                <Text>Split</Text>
+                <Tooltip>Split existing edges</Tooltip>
+                <Icon></Icon>
+            </Button>
+        </Buttons>
+    </Definition>
+</Definitions>

@@ -76,8 +76,8 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
             var dirNext = to.Position - from.Position;
             result.Length = dirNext.Normalize();
 
-            var dotFrom = Math.Abs(Vector3.Normalize(from.Tangent).Dot((Vector3) dirNext));
-            var dotTo = Math.Abs(Vector3.Normalize(to.Tangent).Dot((Vector3) dirNext));
+            var dotFrom = Math.Abs(Vector3.Normalize(from.Tangent).Dot((Vector3)dirNext));
+            var dotTo = Math.Abs(Vector3.Normalize(to.Tangent).Dot((Vector3)dirNext));
 
             result.BendRadians = Math.Acos(Math.Min(dotFrom, dotTo));
 
@@ -104,10 +104,14 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
         /// <param name="to">Point two of the edge</param>
         /// <param name="errors">destination for all errors that occurred, or null</param>
         /// <returns>true if the joint is valid</returns>
-        public static bool VerifyEdge(BendyComponentDefinition def, AnnotatedNode from, AnnotatedNode to, IList<string> errors)
+        public static bool VerifyEdge(BendyComponentDefinition def, AnnotatedNode from, AnnotatedNode to, IList<string> errors = null)
         {
             var jointData = ComputeEdgeParameters(from, to);
+            return VerifyEdge(def, jointData, errors);
+        }
 
+        public static bool VerifyEdge(BendyComponentDefinition def, JointParameters jointData, IList<string> errors = null)
+        {
             if (jointData.Length > def.Distance.Max)
             {
                 if (errors == null)
@@ -192,7 +196,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
         {
             var res = new AnnotatedNode[nodes.Length];
             for (var i = 0; i < nodes.Length; i++)
-                res[i] = new AnnotatedNode {Position = nodes[i]};
+                res[i] = new AnnotatedNode { Position = nodes[i] };
             AnnotateNodes(layer, res);
             return res;
         }
@@ -247,8 +251,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
         [Server]
         private static void PlaceEdge(EdgePlacerConfig cfg, Vector3D[] segments)
         {
-            MyEntity holderEntity;
-            MyEntities.TryGetEntityById(cfg.EntityPlacing, out holderEntity);
+            MyEntities.TryGetEntityById(cfg.EntityPlacing, out var holderEntity);
             var holderPlayer = holderEntity != null ? MyAPIGateway.Players.GetPlayerControllingEntity(holderEntity) : null;
 
             var def = DefinitionFor(cfg.Placed);
@@ -273,7 +276,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
                     foreach (var pos in segments)
                     {
                         if (MyAreaPermissionSystem.Static.HasPermission(holderPlayer.IdentityId, pos,
-                            MyPermissionsConstants.Build)) continue;
+                                MyPermissionsConstants.Build)) continue;
                         holderPlayer.ShowNotification("You cannot build here", 2000, null, new Vector4(1, 0, 0, 1));
                         MyEventContext.ValidationFailed();
                         return;
@@ -321,7 +324,6 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
 
             #endregion
 
-
             var graph = MySession.Static.Components.Get<BendyController>().GetOrCreateLayer(def.Layer);
 
             for (var i = 1; i < segments.Length; i++)
@@ -337,7 +339,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
                     Vector3D.Normalize(nextNode.Position - prevNode.Position),
                     Vector3D.Normalize(nextNode.Up + prevNode.Up));
                 var worldMatrixInv = MatrixD.Invert(worldMatrix);
-                ((ICollection<MyObjectBuilder_EntityComponent>) obContainer.Components).Add(
+                ((ICollection<MyObjectBuilder_EntityComponent>)obContainer.Components).Add(
                     new MyObjectBuilder_BendyComponent()
                     {
                         Overrides = new[]
@@ -345,20 +347,20 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
                             new MyObjectBuilder_BendyComponent.NodePose
                             {
                                 Index = 0,
-                                Position = (Vector3) Vector3D.Transform(prevNode.Position, worldMatrixInv),
-                                Up = (Vector3) Vector3D.Transform(prevNode.Up, worldMatrixInv)
+                                Position = (Vector3)Vector3D.Transform(prevNode.Position, worldMatrixInv),
+                                Up = (Vector3)Vector3D.Transform(prevNode.Up, worldMatrixInv)
                             },
                             new MyObjectBuilder_BendyComponent.NodePose
                             {
                                 Index = 1,
-                                Position = (Vector3) Vector3D.Transform(nextNode.Position, worldMatrixInv),
-                                Up = (Vector3) Vector3D.Transform(nextNode.Up, worldMatrixInv)
+                                Position = (Vector3)Vector3D.Transform(nextNode.Position, worldMatrixInv),
+                                Up = (Vector3)Vector3D.Transform(nextNode.Up, worldMatrixInv)
                             }
                         }
                     });
                 var entOb = new MyObjectBuilder_EntityBase()
                 {
-                    EntityDefinitionId = (MyDefinitionId) cfg.Placed,
+                    EntityDefinitionId = (MyDefinitionId)cfg.Placed,
                     PersistentFlags = MyPersistentEntityFlags2.InScene,
                     PositionAndOrientation = new MyPositionAndOrientation(worldMatrix),
                     SubtypeName = cfg.Placed.SubtypeId,
@@ -368,10 +370,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
                 if (holderPlayer != null && holderPlayer.IsCreative())
                 {
                     entity.Components.Get<ConstructableComponent>()?.InstallFromCreative();
-                    ConstructableComponentDefinition.CcComponent test;
-                    int test2;
-                    entity.Components.Get<ConstructableComponent>()
-                        ?.IncreaseIntegrity(1e9f, out test, out test2);
+                    entity.Components.Get<ConstructableComponent>()?.IncreaseIntegrity(1e9f, out _, out _);
                 }
 
                 entity.Components.Get<BendyPhysicsComponent>()?.DestroyEnvItems();
@@ -397,8 +396,8 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
 
             var removeEntities = new List<MyEntity>(entityIdToRemove.Length);
             foreach (var id in entityIdToRemove)
-               if (MyEntities.TryGetEntityById(id, out var ent))
-                   removeEntities.Add(ent);
+                if (MyEntities.TryGetEntityById(id, out var ent))
+                    removeEntities.Add(ent);
             if (removeEntities.Count == 0)
             {
                 MyEventContext.ValidationFailed();
