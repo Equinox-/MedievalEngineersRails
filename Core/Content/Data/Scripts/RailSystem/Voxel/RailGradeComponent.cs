@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Serialization;
@@ -225,7 +226,7 @@ namespace Equinox76561198048419394.RailSystem.Voxel
         {
             return new RailGradeComponentBlit()
             {
-                Edges = _bendy.Edges.Select(x => new EdgeBlit(x)).ToArray(),
+                Edges = _bendy?.Edges?.Select(x => new EdgeBlit(x)).ToArray() ?? Array.Empty<EdgeBlit>(),
                 Definition = Definition.Id
             };
         }
@@ -247,7 +248,7 @@ namespace Equinox76561198048419394.RailSystem.Voxel
             fillShape = excavateShape = null;
 
             var def = MyDefinitionManager.Get<RailGradeComponentDefinition>(Definition);
-            if (def == null)
+            if (def == null || Edges.Length == 0)
                 return;
 
             if (def.Support.HasValue)
