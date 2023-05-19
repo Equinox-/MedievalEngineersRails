@@ -425,7 +425,9 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
 
                 foreach (var removeEntity in removeEntities)
                 {
-                    if (MyAreaPermissionSystem.Static != null && !MyAreaPermissionSystem.Static.HasPermission(
+                    if (MyAreaPermissionSystem.Static != null
+                        && !MyAPIGateway.Session.IsAdminModeEnabled(holderPlayer.SteamUserId)
+                        && !MyAreaPermissionSystem.Static.HasPermission(
                             holderPlayer.IdentityId, removeEntity.GetPosition(), MyPermissionsConstants.QuickDeconstruct))
                     {
                         holderPlayer.ShowNotification("You cannot quick deconstruct here", 2000, null,

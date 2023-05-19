@@ -499,6 +499,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
             if (player == null)
                 return false;
             if (!testPermission ||
+                MyAPIGateway.Session.IsAdminModeEnabled(player.SteamUserId) ||
                 player.HasPermission(entity.GetPosition(), MyPermissionsConstants.QuickDeconstruct))
                 return EdgePlacerSystem.ValidateQuickRemove(player, entity, out err);
             err = "You cannot quick deconstruct here";
