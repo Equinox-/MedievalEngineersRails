@@ -31,7 +31,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy
         {
             if (TangentPins == 0)
             {
-                Tangent = (Vector3) matrix.Forward;
+                Tangent = Vector3.Normalize((Vector3) matrix.Forward);
                 Position = matrix.Translation;
                 UpBias = Up = (Vector3) matrix.Up;
                 MarkDirty();
@@ -115,8 +115,10 @@ namespace Equinox76561198048419394.RailSystem.Bendy
 
         public void MarkDirty()
         {
+            if (!UpBias.IsValid() || !Tangent.IsValid() || !Position.IsValid())
+                GetLogger().Warning("Invalid node created");
             if (!InScene)
-                GetLogger().Warning($"Node not in scene marked dirty");
+                GetLogger().Warning("Node not in scene marked dirty");
             lock (this)
             {
                 if (_dirty)
@@ -151,12 +153,10 @@ namespace Equinox76561198048419394.RailSystem.Bendy
             }
 
             if (TangentPins == 0)
-            {
                 Tangent = CalculateTangent();
-                var norm = Vector3.Cross(UpBias, Tangent);
-                Up = Vector3.Normalize(Vector3.Cross(Tangent, norm));
-            }
 
+            var norm = Vector3.Cross(UpBias, Tangent);
+            Up = Vector3.Normalize(Vector3.Cross(Tangent, norm));
             Graph.RaiseNodeMoved(this);
 
             // Two levels b/c tracks use data from 3 nodes.

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Serialization;
@@ -26,7 +27,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy
         {
             base.Init(def);
             Definition = (BendyComponentDefinition) def;
-            Nodes = new Node[Definition.Nodes.Count];
+            _nodeRefs = new NodeRef[Definition.Nodes.Count];
             Edges = new Edge[Definition.Edges.Count];
         }
 
@@ -58,20 +59,24 @@ namespace Equinox76561198048419394.RailSystem.Bendy
 
         private void CacheMovableData(Dictionary<uint, MyObjectBuilder_BendyComponent.NodePose> movableNodes)
         {
-            if (Nodes == null || Definition == null || Nodes.All(x => x == null))
+            if (_nodeRefs == null || Definition == null || _nodeRefs.All(x => x.Node == null))
                 return;
             movableNodes.Clear();
-            for (var i = 0; i < Math.Min(Definition.Nodes.Count, Nodes.Length); i++)
-                if (Definition.Nodes[i].Movable && Nodes[i] != null)
+            for (var i = 0; i < Math.Min(Definition.Nodes.Count, _nodeRefs.Length); i++)
+            {
+                var node = _nodeRefs[i];
+                if (Definition.Nodes[i].Movable && node.Node != null)
                 {
                     var inv = Entity.PositionComp.WorldMatrixInvScaled;
-                    movableNodes[(uint) i] = new MyObjectBuilder_BendyComponent.NodePose
+                    movableNodes[(uint)i] = new MyObjectBuilder_BendyComponent.NodePose
                     {
-                        Index = (uint) i,
-                        Position = (Vector3) Vector3D.Transform(Nodes[i].Position, inv),
-                        Up = (Vector3) Vector3D.TransformNormal(Nodes[i].Up, inv)
+                        Index = (uint)i,
+                        Position = (Vector3)Vector3D.Transform(node.Node.Position, inv),
+                        Up = (Vector3)Vector3D.TransformNormal(node.Node.Up, inv),
+                        Tangent = node.Pinned ? (SerializableVector3?) (Vector3)Vector3D.TransformNormal(node.Node.Tangent, inv) : null,
                     };
                 }
+            }
         }
 
         private readonly Dictionary<uint, MyObjectBuilder_BendyComponent.NodePose> _movableNodeData =
@@ -95,7 +100,9 @@ namespace Equinox76561198048419394.RailSystem.Bendy
 
         #endregion
 
-        public Node[] Nodes { get; private set; }
+        private NodeRef[] _nodeRefs;
+
+        public NodeList Nodes => new NodeList(this);
         public Edge[] Edges { get; private set; }
 
         public event Action<BendyComponent> EdgeSetupChanged;
@@ -128,13 +135,21 @@ namespace Equinox76561198048419394.RailSystem.Bendy
                 return;
             var entityMatrix = Entity.PositionComp.WorldMatrix;
 
-            for (var i = 0; i < Nodes.Length; i++)
+            for (var i = 0; i < _nodeRefs.Length; i++)
             {
-                MyObjectBuilder_BendyComponent.NodePose data;
-                if (movableNodeData.TryGetValue((uint) i, out data))
+                if (movableNodeData.TryGetValue((uint) i, out var data))
                 {
-                    Nodes[i] = Graph.GetOrCreateNode(Vector3D.Transform((Vector3) data.Position, ref entityMatrix),
-                        Vector3D.Transform((Vector3) data.Up, ref entityMatrix));
+                    var pos = Vector3D.Transform((Vector3)data.Position, ref entityMatrix);
+                    var up = Vector3D.TransformNormal((Vector3)data.Up, ref entityMatrix);
+                    var pin = data.Tangent.HasValue;
+                    var node = Graph.GetOrCreateNode(pos, up, pin);
+                    if (pin)
+                    {
+                        var tangent = Vector3D.TransformNormal((Vector3)data.Tangent, ref entityMatrix);
+                        node.Pin(MatrixD.CreateWorld(pos, tangent, up));
+                    }
+
+                    _nodeRefs[i] = new NodeRef(node, pin);
                 }
                 else
                 {
@@ -142,20 +157,23 @@ namespace Equinox76561198048419394.RailSystem.Bendy
                         $"Creating movable bendy node {i} for entity {Entity}, component def {Definition.Id} without movable data");
 
                     var nodeMatrix = Definition.Nodes[i].Position * entityMatrix;
-                    Nodes[i] = Graph.GetOrCreateNode(nodeMatrix.Translation, nodeMatrix.Up, !Definition.Nodes[i].Movable);
-                    if (!Definition.Nodes[i].Movable)
-                        Nodes[i].Pin(nodeMatrix);
+                    var pin = !Definition.Nodes[i].Movable;
+                    var node = Graph.GetOrCreateNode(nodeMatrix.Translation, nodeMatrix.Up, pin);
+                    if (pin)
+                        node.Pin(nodeMatrix);
+
+                    _nodeRefs[i] = new NodeRef(node, pin);
                 }
 
-                if (Nodes[i] != null)
-                    NodeAdded?.Invoke(this, Nodes[i]);
+                if (_nodeRefs[i].Node != null)
+                    NodeAdded?.Invoke(this, _nodeRefs[i].Node);
             }
 
             for (var i = 0; i < Edges.Length; i++)
             {
                 var def = Definition.Edges[i];
-                var from = Nodes[def.From];
-                var to = Nodes[def.To];
+                var from = _nodeRefs[def.From].Node;
+                var to = _nodeRefs[def.To].Node;
                 Edges[i] = Graph.GetEdge(from, to) ?? Graph.CreateEdge(this, from, to, def.Mode, def.Control0, def.Control1);
                 if (Edges[i] != null)
                 {
@@ -277,17 +295,18 @@ namespace Equinox76561198048419394.RailSystem.Bendy
                 }
 
             // ReSharper disable once InvertIf
-            if (Nodes != null)
-                for (var i = 0; i < Nodes.Length; i++)
+            if (_nodeRefs != null)
+                for (var i = 0; i < _nodeRefs.Length; i++)
                 {
-                    if (Nodes[i] != null)
+                    ref var node = ref _nodeRefs[i];
+                    if (node.Node != null)
                     {
-                        NodeRemoved?.Invoke(this, Nodes[i]);
-                        if (!Definition.Nodes[i].Movable)
-                            Nodes[i].UnpinTangent();
+                        NodeRemoved?.Invoke(this, node.Node);
+                        if (node.Pinned)
+                            node.Node.UnpinTangent();
                     }
 
-                    Nodes[i] = null;
+                    _nodeRefs[i] = default;
                 }
 
             EdgeSetupChanged?.Invoke(this);
@@ -295,10 +314,10 @@ namespace Equinox76561198048419394.RailSystem.Bendy
 
         public int IndexOfNode(Node n)
         {
-            if (Nodes == null)
+            if (_nodeRefs == null)
                 return -1;
-            for (var i = 0; i < Nodes.Length; i++)
-                if (Nodes[i] == n)
+            for (var i = 0; i < _nodeRefs.Length; i++)
+                if (_nodeRefs[i].Node == n)
                     return i;
             return -1;
         }
@@ -311,6 +330,64 @@ namespace Equinox76561198048419394.RailSystem.Bendy
                 if (Edges[i] == n)
                     return i;
             return -1;
+        }
+
+        private readonly struct NodeRef
+        {
+            public readonly Node Node;
+            public readonly bool Pinned;
+            public NodeRef(Node node, bool pinned)
+            {
+                Node = node;
+                Pinned = pinned;
+            }
+        }
+        
+
+        public readonly struct NodeList : IReadOnlyList<Node>
+        {
+            private readonly BendyComponent _cmp;
+            internal NodeList(BendyComponent cmp) => _cmp = cmp;
+            
+            public NodeEnumerator GetEnumerator() => new NodeEnumerator(_cmp);
+
+            IEnumerator<Node> IEnumerable<Node>.GetEnumerator() => GetEnumerator();
+            IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+            public int Count => _cmp._nodeRefs.Length;
+            public int Length => Count;
+
+            public Node this[int index] => _cmp._nodeRefs[index].Node;
+
+            public Node AccessSafe(int index) => index >= 0 && index < _cmp._nodeRefs.Length ? _cmp._nodeRefs[index].Node : default;
+        }
+
+        public struct NodeEnumerator : IEnumerator<Node>
+        {
+            private readonly BendyComponent _cmp;
+            private int _index;
+            internal NodeEnumerator(BendyComponent cmp)
+            {
+                _cmp = cmp;
+                _index = -1;
+            }
+
+            public void Dispose()
+            {
+            }
+
+            public bool MoveNext()
+            {
+                if (_index + 1 >= _cmp._nodeRefs.Length) return false;
+                _index++;
+                return true;
+            }
+
+            public void Reset() => _index = -1;
+
+            public Node Current => _cmp._nodeRefs[_index].Node;
+
+            object IEnumerator.Current => Current;
         }
     }
 

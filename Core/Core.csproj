@@ -110,13 +110,11 @@
     <Compile Include="Content\Data\Scripts\RailSystem\Bendy\Planner\DirectionAndGrade.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Bendy\Planner\EdgePlacerBehavior.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Bendy\Planner\EdgePlacerBehavior.LegacyPlacement.cs" />
-    <Compile Include="Content\Data\Scripts\RailSystem\Bendy\Planner\EdgePlacerBehavior.V2.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Bendy\Planner\EdgePlacerBehavior.Removal.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Bendy\Planner\EdgePlacerBehavior.Render.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Bendy\Planner\EdgePlacerBehavior.Menu.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Bendy\Planner\EdgePlacerSystem.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Bendy\Planner\TempCurveUtils.cs" />
-    <Compile Include="Content\Data\Scripts\RailSystem\Bendy\Planner\TempEdgePlan.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Bendy\Shape\BendyPhysicsComponent.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Bendy\Shape\BendyPhysicsComponentDefinition.cs" />
     <Compile Include="Content\Data\Scripts\RailSystem\Bendy\Shape\BendyShapeComponent.cs" />

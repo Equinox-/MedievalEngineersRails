@@ -52,6 +52,14 @@ ProjectSection(SolutionItems) = preProject
 	ModPack\Content\Data\QuestUnify.sbc = ModPack\Content\Data\QuestUnify.sbc
 EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "RailSupports", "RailSupports", "{1A1CEEB2-59E3-44F6-94D0-23D347D65D45}"
+ProjectSection(SolutionItems) = preProject
+	RailSupports\Content\Data\Equinox\RailSupport\Arch_V2.sbc = RailSupports\Content\Data\Equinox\RailSupport\Arch_V2.sbc
+	RailSupports\Content\Data\Equinox\RailSupport\Common.sbc = RailSupports\Content\Data\Equinox\RailSupport\Common.sbc
+	RailSupports\Content\Data\Equinox\RailSupport\Slope_H4.sbc = RailSupports\Content\Data\Equinox\RailSupport\Slope_H4.sbc
+	RailSupports\Content\Data\Equinox\RailSupport\Straight_H1.sbc = RailSupports\Content\Data\Equinox\RailSupport\Straight_H1.sbc
+EndProjectSection
+EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ModPackFun", "ModPackFun", "{AD639D43-C304-4D17-A86B-47918259FFF0}"
 ProjectSection(SolutionItems) = preProject
 	ModPackFun\Content\Data\SteelAdjustments.sbc = ModPackFun\Content\Data\SteelAdjustments.sbc

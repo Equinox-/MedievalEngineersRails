@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://storage.googleapis.com/unofficial-keen-schemas/latest/medieval-modded.xsd">
+    <Definition xsi:type="MyObjectBuilder_BendyComponentDefinition">
+        <Id Type="MyObjectBuilder_BendyComponent" Subtype="RailStandardSupportBase" />
+        <Layer>TrainRailGaugeStandardSupport</Layer>
+        <Nodes>
+            <Node Movable="true">
+                <Position x="-5" y="0" z="0" />
+                <Forward x="1" y="0" z="0" />
+                <Up x="0" y="1" z="0" />
+            </Node>
+            <Node Movable="true">
+                <Position x="5" y="0" z="0" />
+                <Forward x="1" y="0" z="0" />
+                <Up x="0" y="1" z="0" />
+            </Node>
+        </Nodes>
+        <Edges>
+            <Edge From="0" To="1" Mode="CubicBez">
+                <Bones>RailBone_000 RailBone_001 RailBone_002 RailBone_003 RailBone_004 RailBone_005 RailBone_006 RailBone_007 RailBone_008</Bones>
+            </Edge>
+        </Edges>
+
+        <Distance Min="7" Max="15" />
+        <PreferredDistance>10</PreferredDistance>
+        <MaxGradeRatio>0.2</MaxGradeRatio>
+        <MaxAngleDegrees>25</MaxAngleDegrees>
+    </Definition>
+</Definitions>

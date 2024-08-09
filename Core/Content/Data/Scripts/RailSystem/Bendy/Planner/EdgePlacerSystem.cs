@@ -17,6 +17,7 @@ using VRage.Game;
 using VRage.Game.Entity;
 using VRage.Game.ModAPI;
 using VRage.Game.ObjectBuilders.ComponentSystem;
+using VRage.Import;
 using VRage.Network;
 using VRage.ObjectBuilders;
 using VRage.ObjectBuilders.Components;
@@ -190,32 +191,57 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
             public Vector3 Up;
             public Vector3 Tangent;
             public Node Existing;
+
+            public bool Pinned => TangentPin.HasValue || Existing?.TangentPins > 0;
+            public MatrixD Matrix => Existing != null && Existing.TangentPins != 0 ? Existing.Matrix : MatrixD.CreateWorld(Position, Tangent, Up);
+
+            public Vector3? TangentPin;
         }
 
-        public static AnnotatedNode[] AnnotateNodes(BendyLayer layer, Vector3D[] nodes)
+        public static AnnotatedNode[] AnnotateNodes(BendyLayer layer, Vector3D[] nodes, Vector3?[] tangents = null)
         {
             var res = new AnnotatedNode[nodes.Length];
             for (var i = 0; i < nodes.Length; i++)
-                res[i] = new AnnotatedNode { Position = nodes[i] };
+                res[i] = new AnnotatedNode
+                {
+                    Position = nodes[i],
+                    TangentPin = tangents?[i]
+                };
             AnnotateNodes(layer, res);
             return res;
         }
 
-        public static void AnnotateNodes(BendyLayer layer, IList<AnnotatedNode> nodes)
+        public static void AnnotateNodes(BendyLayer layer, IList<AnnotatedNode> nodes, bool create = false)
         {
             for (var i = 0; i < nodes.Count; i++)
             {
-                var here = layer?.GetNode(nodes[i].Position);
                 var tmp = nodes[i];
+                var here = create ? layer.GetOrCreateNode(tmp.Position, exactMatch: tmp.TangentPin.HasValue) : layer?.GetNode(tmp.Position, exactMatch: tmp.TangentPin.HasValue);
                 tmp.Position = here?.Position ?? nodes[i].Position;
                 tmp.Existing = here;
                 tmp.Up = here?.Up ?? nodes[i].Up;
                 nodes[i] = tmp;
             }
 
+            // First pass: compute the tangents using neighbors.
             for (var i = 0; i < nodes.Count; i++)
             {
                 var a = nodes[i];
+                if (a.Existing?.TangentPins > 0)
+                {
+                    a.TangentPin = null;
+                    a.Tangent = a.Existing.Tangent;
+                    nodes[i] = a;
+                    continue;
+                }
+
+                if (a.TangentPin != null)
+                {
+                    a.Tangent = a.TangentPin.Value;
+                    nodes[i] = a;
+                    continue;
+                }
+
                 var tanHere = Vector3.Zero;
                 if (a.Existing != null)
                     tanHere = a.Existing.Tangent * a.Existing.Neighbors.Count();
@@ -240,16 +266,40 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
                 a.Tangent = Vector3.Normalize(tanHere.LengthSquared() > 0 ? tanHere : Vector3.CalculatePerpendicularVector(nodes[i].Up));
                 nodes[i] = a;
             }
+
+            // Second pass: compute tangents using circular arcs.
+            if (nodes.Count >= 2)
+            {
+                TangentFromArc(0, 1);
+                TangentFromArc(nodes.Count - 1, nodes.Count - 2);
+            }
+
+            return;
+
+            void TangentFromArc(int atI, int otherI)
+            {
+                var at = nodes[atI];
+                var other = nodes[otherI];
+                if (at.Pinned || !other.Pinned || at.Existing?.Connections.Count > 0)
+                    return;
+                var normal = Vector3.Cross((Vector3) (other.Position - at.Position), at.Up);
+                normal.Normalize();
+
+                Vector3.Reflect(ref other.Tangent, ref normal, out var tangent);
+                if (tangent.Normalize() >= 1e-6f)
+                    at.Tangent = tangent;
+                nodes[atI] = at;
+            }
         }
 
-        public static void RaisePlaceEdge(EdgePlacerConfig cfg, Vector3D[] segments)
+        public static void RaisePlaceEdge(EdgePlacerConfig cfg, Vector3D[] segments, uint[] tangents = null)
         {
-            MyMultiplayerModApi.Static.RaiseStaticEvent(x => PlaceEdge, cfg, segments);
+            MyMultiplayerModApi.Static.RaiseStaticEvent(x => PlaceEdge, cfg, segments, tangents ?? Array.Empty<uint>());
         }
 
         [Event]
         [Server]
-        private static void PlaceEdge(EdgePlacerConfig cfg, Vector3D[] segments)
+        private static void PlaceEdge(EdgePlacerConfig cfg, Vector3D[] segments, uint[] tangents)
         {
             MyEntities.TryGetEntityById(cfg.EntityPlacing, out var holderEntity);
             var holderPlayer = holderEntity != null ? MyAPIGateway.Players.GetPlayerControllingEntity(holderEntity) : null;
@@ -262,6 +312,13 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
             }
 
             #region Validation
+
+            var unpackedTangents = new Vector3?[segments.Length];
+            for (var i = 0; i < Math.Min(segments.Length, tangents.Length); i++)
+                unpackedTangents[i] = tangents[i] == 0 ? default(Vector3?) : VF_Packer.UnpackNormal(tangents[i]);
+
+            var layer = MySession.Static.Components.Get<BendyController>().GetOrCreateLayer(def.Layer);
+            var annotated = AnnotateNodes(layer, segments, unpackedTangents);
 
             if (!MyEventContext.Current.IsLocallyInvoked)
             {
@@ -311,8 +368,6 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
                     return;
                 }
 
-                var layer = MySession.Static.Components.Get<BendyController>().GetOrCreateLayer(def.Layer);
-                var annotated = AnnotateNodes(layer, segments);
                 var tmp = new List<string>();
                 if (!ValidatePath(def, layer, annotated, tmp))
                 {
@@ -325,37 +380,28 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
             #endregion
 
             var graph = MySession.Static.Components.Get<BendyController>().GetOrCreateLayer(def.Layer);
-
-            for (var i = 1; i < segments.Length; i++)
+            // Re-annotate nodes, this time creating the backing nodes.
+            AnnotateNodes(graph, annotated, true);
+            for (var i = 1; i < annotated.Length; i++)
             {
-                var nextNode = graph.GetOrCreateNode(segments[i - 1]);
-                var prevNode = graph.GetOrCreateNode(segments[i]);
+                var nextAnn = annotated[i - 1];
+                var prevAnn = annotated[i];
 
-                if (graph.GetEdge(prevNode, nextNode) != null)
+                if (graph.GetEdge(prevAnn.Existing, nextAnn.Existing) != null)
                     continue;
 
                 var obContainer = new MyObjectBuilder_ComponentContainer();
-                var worldMatrix = MatrixD.CreateWorld((prevNode.Position + nextNode.Position) / 2,
-                    Vector3D.Normalize(nextNode.Position - prevNode.Position),
-                    Vector3D.Normalize(nextNode.Up + prevNode.Up));
+                var worldMatrix = MatrixD.CreateWorld((prevAnn.Position + nextAnn.Position) / 2,
+                    Vector3D.Normalize(nextAnn.Position - prevAnn.Position),
+                    Vector3D.Normalize(nextAnn.Up + prevAnn.Up));
                 var worldMatrixInv = MatrixD.Invert(worldMatrix);
                 ((ICollection<MyObjectBuilder_EntityComponent>)obContainer.Components).Add(
                     new MyObjectBuilder_BendyComponent()
                     {
                         Overrides = new[]
                         {
-                            new MyObjectBuilder_BendyComponent.NodePose
-                            {
-                                Index = 0,
-                                Position = (Vector3)Vector3D.Transform(prevNode.Position, worldMatrixInv),
-                                Up = (Vector3)Vector3D.Transform(prevNode.Up, worldMatrixInv)
-                            },
-                            new MyObjectBuilder_BendyComponent.NodePose
-                            {
-                                Index = 1,
-                                Position = (Vector3)Vector3D.Transform(nextNode.Position, worldMatrixInv),
-                                Up = (Vector3)Vector3D.Transform(nextNode.Up, worldMatrixInv)
-                            }
+                            CreatePose(0, in prevAnn, ref worldMatrixInv),
+                            CreatePose(1, in nextAnn, ref worldMatrixInv)
                         }
                     });
                 var entOb = new MyObjectBuilder_EntityBase()
@@ -376,6 +422,16 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
                 entity.Components.Get<BendyPhysicsComponent>()?.DestroyEnvItems();
 
                 EntityAdded?.Invoke(holderEntity, holderPlayer, entity);
+                continue;
+
+                MyObjectBuilder_BendyComponent.NodePose CreatePose(uint index, in AnnotatedNode node, ref MatrixD worldMatrixInvCaptured) =>
+                    new MyObjectBuilder_BendyComponent.NodePose
+                    {
+                        Index = index,
+                        Position = (Vector3)Vector3D.Transform(node.Position, ref worldMatrixInvCaptured),
+                        Up = (Vector3)Vector3D.TransformNormal(node.Up, ref worldMatrixInvCaptured),
+                        Tangent = node.TangentPin.HasValue ? (Vector3?) (Vector3) Vector3D.TransformNormal(node.TangentPin.Value, ref worldMatrixInvCaptured) : null,
+                    };
             }
         }
 

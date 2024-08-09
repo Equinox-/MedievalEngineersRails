@@ -73,13 +73,19 @@ namespace Equinox76561198048419394.RailSystem
         public const float DefaultMaxAngleDegrees = 20f;
 
         /// <summary>
-        /// Minimum spacing between nodes
+        /// Default spacing between nodes
         /// </summary>
         public const float NodeMergeDistance = 1f;
+
+        /// <summary>
+        /// Minimum spacing between nodes
+        /// </summary>
+        public const float NodeExactDistance = .01f;
 
         public static float AngularConstraintStrength = 1f;
         public static float LinearConstraintStrength = 1f;
 
         public const float NodeMergeDistanceSq = NodeMergeDistance * NodeMergeDistance;
+        public const float NodeExactDistanceSq = NodeExactDistance * NodeExactDistance;
     }
 }

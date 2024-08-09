@@ -29,22 +29,8 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
             }
 
             public void DrawNode(Node node) => DrawNode(node.Position, node.Up);
+
             public void DrawNode(in EdgePlacerSystem.AnnotatedNode node) => DrawNode(node.Position, node.Up);
-            public void DrawNode(in TempEdgePlan.NodeData node, Vector4? color = null)
-            {
-                var top = node.DerivedPosition + NodeMarkerSize * node.Up;
-                var bottomHint = node.Existing?.Position ?? node.RawPosition;
-                var bottomFactor = (bottomHint - top).Dot(node.Up);
-                if (Math.Abs(bottomFactor) < NodeMarkerSize)
-                    bottomFactor = Math.Sign(bottomFactor) * NodeMarkerSize;
-                var bottom = top + bottomFactor * (Vector3D) node.Up;
-                if (!DetailFrustum.Intersects(new BoundingBoxD(bottom, top)))
-                    return;
-                var rawColor = color ?? NodeColor;
-                MySimpleObjectDraw.DrawLine(bottom, top, SquareMaterial, ref rawColor, NodeWidth);
-                
-                DrawNode(node.DerivedPosition, node.Up, color);
-            }
 
             public void DrawNode(Vector3D pos, Vector3 up, Vector4? color = null)
             {

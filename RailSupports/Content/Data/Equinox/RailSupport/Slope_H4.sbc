@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://storage.googleapis.com/unofficial-keen-schemas/latest/medieval-modded.xsd">
+    <Definition xsi:type="MyObjectBuilder_ContainerDefinition" Copy="Append">
+        <Id Type="EntityBase" Subtype="RailStandardSupportSlope" />
+
+        <Component Type="ModelComponent" Subtype="RailStandardSupportSlope" />
+        <Component Type="SkeletonComponent" />
+        <Component Type="RenderComponentRigged" />
+        <Component Type="BendyComponent" Subtype="RailStandardSupportSlope" />
+        <Component Type="ConstructableComponent" Subtype="RailStandardSupportSlope" />
+        <Component Type="MultiplayerComponent" />
+        <Component Type="BendyPhysicsComponent" Subtype="RailStandardSupportSlope" />
+    </Definition>
+
+    <Definition xsi:type="MyObjectBuilder_ModelComponentDefinition">
+        <Id Type="MyObjectBuilder_ModelComponent" Subtype="RailStandardSupportSlope" />
+        <Model>Models\Equinox\RailSupports\Slope_H4.mwm</Model>
+    </Definition>
+
+    <Definition xsi:type="MyObjectBuilder_BendyComponentDefinition" Copy="Append">
+        <Id Type="MyObjectBuilder_BendyComponent" Subtype="RailStandardSupportSlope" />
+        <CopyFrom Type="MyObjectBuilder_BendyComponent" Subtype="RailStandardSupportBase" />
+
+        <SnapPoints>
+            <SnapPoint Edge="0">
+                <Range Min="0" Max="1" />
+                <Steps>4</Steps>
+                <Repetitions Min="-2" Max="2" />
+                <Config>
+                    <Origin x="0" y="10" z="0" />
+                    <Tag>2.5mSupportTop</Tag>
+                </Config>
+            </SnapPoint>
+
+            <SnapPoint Edge="0">
+                <Range Min="1" Max="1" />
+                <Config>
+                    <Origin x="0" y="0" z="0" />
+                    <Tag>2.5mSupportBottom</Tag>
+                </Config>
+            </SnapPoint>
+        </SnapPoints>
+    </Definition>
+
+    <Definition xsi:type="MyObjectBuilder_BendyPhysicsComponentDefinition">
+        <Id Type="MyObjectBuilder_BendyPhysicsComponent" Subtype="RailStandardSupportSlope" />
+
+        <Width>2.5</Width>
+        <Height>10</Height>
+        <Segments>12</Segments>
+        <DestroyEnvItems>true</DestroyEnvItems>
+        <Material>Wood</Material>
+    </Definition>
+
+    <Definition xsi:type="MyObjectBuilder_ConstructableComponentDefinition">
+        <Id Type="MyObjectBuilder_ConstructableComponent" Subtype="RailStandardSupportSlope" />
+
+        <Components>
+            <Component Tag="ScrapWood" Count="6" />
+            <Component Tag="Timber" Count="24" />
+        </Components>
+
+        <BuildProgressModels>
+            <Model UpperBound="1.1" File="Models\Equinox\RailSupports\Slope_H4.mwm" />
+        </BuildProgressModels>
+
+        <BuildTime Seconds="20" />
+        <MaxIntegrity>5000</MaxIntegrity>
+    </Definition>
+
+
+    <Definition xsi:type="MyObjectBuilder_HandItemDefinition">
+        <Id Type="HandItem" Subtype="RailStandardSupportSlopePlanner"/>
+
+        <DisplayName>Support Planner (Slope)</DisplayName>
+        <Description>Rail Planner for standard gauge, steel rails</Description>
+        <Icon>Textures\GUI\Icons\Equinox\RailSteelCurve.dds</Icon>
+        <Size>
+            <X>1.2</X>
+            <Y>0.6</Y>
+            <Z>0.3</Z>
+        </Size>
+        <Mass>0.5</Mass>
+        <Model>Models\Weapons\Rope.mwm</Model>
+
+        <PhysicalMaterial>Rope</PhysicalMaterial>
+
+        <MaxStackAmount>15</MaxStackAmount>
+
+        <MaxDurability>1</MaxDurability>
+
+        <Position>
+            <Slot>MainHand</Slot>
+        </Position>
+        <Position>
+            <Slot>OffHand</Slot>
+        </Position>
+
+        <Animation>Rope</Animation>
+
+        <!-- extra transform on IK dummy in 1st person -->
+        <EquippedTransform>
+            <!-- tool rotation offset from hand -->
+            <Orientation>
+                <X>0</X>
+                <Y>0</Y>
+                <Z>0</Z>
+                <W>1</W>
+            </Orientation>
+        </EquippedTransform>
+        <EquippedTransformFps>
+            <!-- hand IK target offset -->
+            <Position>
+                <X>0.817</X>
+                <Y>-1.0</Y>
+                <Z>-0.646</Z>
+            </Position>
+            <Orientation>
+                <X>0.5215536</X>
+                <Y>0.4426106</Y>
+                <Z>-0.4053448</Z>
+                <W>0.6064432</W>
+            </Orientation>
+        </EquippedTransformFps>
+
+        <StanceToBehavior>
+            <StanceName>NormalMode</StanceName>
+            <BehaviorId Type="MyObjectBuilder_EdgePlacerBehaviorDefinition" Subtype="RailStandardSupportSlopePlanner"/>
+        </StanceToBehavior>
+    </Definition>
+
+    <Definition xsi:type="MyObjectBuilder_EdgePlacerBehaviorDefinition">
+        <Id Type="MyObjectBuilder_EdgePlacerBehaviorDefinition" Subtype="RailStandardSupportSlopePlanner"/>
+        <Layer>TrainRailGaugeStandardSupport</Layer>
+        <CrosshairPrefix>Rail</CrosshairPrefix>
+        <Placed Type="MyObjectBuilder_EntityBase" Subtype="RailStandardSupportSlope"/>
+        
+        <SnapPoint Tag="TrainRailGaugeStandardCenters" Orient="true">
+            <NodeOffset x="0" y="-10" z="0" />
+        </SnapPoint>
+        <SnapPoint Tag="2.5mSupportTop" Orient="true">
+            <NodeOffset x="0" y="0" z="0" />
+        </SnapPoint>
+        <SnapPoint Tag="2.5mSupportBottom" Orient="true">
+            <NodeOffset x="0" y="-10" z="0" />
+        </SnapPoint>
+    </Definition>
+</Definitions>

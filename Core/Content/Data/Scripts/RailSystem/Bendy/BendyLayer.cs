@@ -61,26 +61,29 @@ namespace Equinox76561198048419394.RailSystem.Bendy
         {
             using (var e = Nodes.SortedByDistance(v))
                 if (e.MoveNext())
+                {
+                    if (e.Current.DistanceSquared >= maxDistanceSq)
+                        return null;
                     return (Node)e.Current.UserData;
+                }
+
             return null;
         }
 
-        public Node GetNode(Vector3D pos)
+        public Node GetNode(Vector3D pos, bool exactMatch = false)
         {
-            var nearest = NearestNode(pos, RailConstants.NodeMergeDistanceSq);
-            if (nearest != null && Vector3D.DistanceSquared(nearest.Position, pos) < RailConstants.NodeMergeDistanceSq)
+            var distSq = exactMatch ? RailConstants.NodeExactDistanceSq : RailConstants.NodeMergeDistanceSq;
+            var nearest = NearestNode(pos, distSq);
+            if (nearest != null && Vector3D.DistanceSquared(nearest.Position, pos) < distSq)
                 return nearest;
             return null;
         }
 
-        public Node GetOrCreateNode(Vector3D pos, Vector3D? up = null, bool desirePin = false)
+        public Node GetOrCreateNode(Vector3D pos, Vector3D? up = null, bool exactMatch = false)
         {
-            var nearest = NearestNode(pos, RailConstants.NodeMergeDistanceSq);
-            if (nearest != null && Vector3D.DistanceSquared(nearest.Position, pos) < RailConstants.NodeMergeDistanceSq)
-            {
-                if (!desirePin || Vector3D.DistanceSquared(nearest.Position, pos) < .05f * .05f)
-                    return nearest;
-            }
+            var nearest = GetNode(pos, exactMatch);
+            if (nearest != null)
+                return nearest;
 
             // ReSharper disable once InvertIf
             if (!up.HasValue)

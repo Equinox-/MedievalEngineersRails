@@ -2,10 +2,10 @@
 
 namespace Equinox76561198048419394.RailSystem.Util.Curve
 {
-    public struct CubicSphericalCurve : ICurve
+    public readonly struct CubicSphericalCurve : ICurve
     {
         private readonly MatrixD _matrix;
-        private CubicCurve _curve;
+        private readonly CubicCurve _curve;
 
         public CubicSphericalCurve(Vector3D center, MatrixD from, MatrixD to, 
             float smoothnessFrom = CubicCurve.DefaultSmoothness, 
