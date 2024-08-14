@@ -70,18 +70,18 @@ namespace Equinox76561198048419394.RailSystem.Bendy
             return null;
         }
 
-        public Node GetNode(Vector3D pos, bool exactMatch = false)
+        public Node GetNode(Vector3D pos, bool roughMatch = false)
         {
-            var distSq = exactMatch ? RailConstants.NodeExactDistanceSq : RailConstants.NodeMergeDistanceSq;
+            var distSq = roughMatch ? RailConstants.NodeRoughDistanceSq : RailConstants.NodeMergeDistanceSq;
             var nearest = NearestNode(pos, distSq);
             if (nearest != null && Vector3D.DistanceSquared(nearest.Position, pos) < distSq)
                 return nearest;
             return null;
         }
 
-        public Node GetOrCreateNode(Vector3D pos, Vector3D? up = null, bool exactMatch = false)
+        public Node GetOrCreateNode(Vector3D pos, Vector3D? up = null)
         {
-            var nearest = GetNode(pos, exactMatch);
+            var nearest = GetNode(pos);
             if (nearest != null)
                 return nearest;
 

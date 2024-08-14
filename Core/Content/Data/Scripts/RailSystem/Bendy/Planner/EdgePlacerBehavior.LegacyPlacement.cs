@@ -68,10 +68,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
                 if (_directionHint != null)
                 {
                     // If the direction is flipping then also flip the suggested grade.
-                    var directionDiff = Math.Abs(_directionHint.Value - dir);
-                    if (directionDiff > MathHelper.Pi)
-                        grade *= -1;
-                    dir += _directionHint.Value;
+                    dir += _directionHint.Value - MathHelper.PiOver2;
                 }
 
                 if (_gradeHint.HasValue)

@@ -143,10 +143,17 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
             {
                 var target = Target;
                 var myPosition = Holder.GetPosition();
-                if (Target.Entity != null && Vector3D.DistanceSquared(myPosition, target.Position) < ClickDistSq)
-                    return target.Position - _verticalShift * Vector3.Normalize(MyGravityProviderSystem.CalculateTotalGravityInPoint(target.Position));
                 var caster = Holder.Get<MyCharacterDetectorComponent>();
-                return caster == null ? myPosition : caster.StartPosition + caster.Direction * (2 + Math.Abs(_verticalShift));
+                Vector3D pos;
+                if (Target.Entity != null && Vector3D.DistanceSquared(myPosition, target.Position) < ClickDistSq)
+                    pos = target.Position;
+                else
+                    pos = caster == null ? myPosition : caster.StartPosition + caster.Direction * 2;
+                pos -= _verticalShift * Vector3.Normalize(MyGravityProviderSystem.CalculateTotalGravityInPoint(pos));
+                var snap = Graph.GetNode(pos, roughMatch: true);
+                if (snap != null)
+                    pos = snap.Position;
+                return pos;
             }
         }
 

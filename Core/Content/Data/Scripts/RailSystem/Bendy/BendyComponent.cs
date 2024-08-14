@@ -142,7 +142,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy
                     var pos = Vector3D.Transform((Vector3)data.Position, ref entityMatrix);
                     var up = Vector3D.TransformNormal((Vector3)data.Up, ref entityMatrix);
                     var pin = data.Tangent.HasValue;
-                    var node = Graph.GetOrCreateNode(pos, up, pin);
+                    var node = Graph.GetOrCreateNode(pos, up);
                     if (pin)
                     {
                         var tangent = Vector3D.TransformNormal((Vector3)data.Tangent, ref entityMatrix);
@@ -158,7 +158,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy
 
                     var nodeMatrix = Definition.Nodes[i].Position * entityMatrix;
                     var pin = !Definition.Nodes[i].Movable;
-                    var node = Graph.GetOrCreateNode(nodeMatrix.Translation, nodeMatrix.Up, pin);
+                    var node = Graph.GetOrCreateNode(nodeMatrix.Translation, nodeMatrix.Up);
                     if (pin)
                         node.Pin(nodeMatrix);
 

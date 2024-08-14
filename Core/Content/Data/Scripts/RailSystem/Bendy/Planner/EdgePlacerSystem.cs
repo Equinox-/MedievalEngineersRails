@@ -216,7 +216,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
             for (var i = 0; i < nodes.Count; i++)
             {
                 var tmp = nodes[i];
-                var here = create ? layer.GetOrCreateNode(tmp.Position, exactMatch: tmp.TangentPin.HasValue) : layer?.GetNode(tmp.Position, exactMatch: tmp.TangentPin.HasValue);
+                var here = create ? layer.GetOrCreateNode(tmp.Position) : layer?.GetNode(tmp.Position);
                 tmp.Position = here?.Position ?? nodes[i].Position;
                 tmp.Existing = here;
                 tmp.Up = here?.Up ?? nodes[i].Up;

@@ -17,12 +17,12 @@
         <DataId>SliderParams</DataId>
         <AutoCommit>true</AutoCommit>
         <SliderSize x="330" y="75" />
-        <Slider StyleName="ContextMenuSlider" MinValue="-1" MaxValue="360" DefaultValue="-1" IsInteger="false">
+        <Slider StyleName="ContextMenuSlider" MinValue="-1" MaxValue="180" DefaultValue="-1" IsInteger="false">
             <Text>Direction</Text>
             <TextFormat>{0}°</TextFormat>
             <Tooltip>Controls the direction of the placed node.  -1 for free rotating.</Tooltip>
         </Slider>
-        <Slider StyleName="ContextMenuSlider" MinValue="-1" MaxValue="100" DefaultValue="-1" IsInteger="true">
+        <Slider StyleName="ContextMenuSlider" MinValue="-1" MaxValue="100" DefaultValue="-1">
             <Text>Grade</Text>
             <TextFormat>{0} %</TextFormat>
             <Tooltip>Controls the grade of the placed node.  -1 for free rotating.</Tooltip>
