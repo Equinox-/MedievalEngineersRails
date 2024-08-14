@@ -192,6 +192,9 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Content\Data\EdgePlacerMenu.sbc" />
+    <Content Include="Content\Data\Game.sbc" />
+    <Content Include="Content\Data\PhysicsProxy.sbc" />
+    <Content Include="Content\Data\TransparentMaterials.sbc" />
     <Content Include="Content\metadata.mod" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
