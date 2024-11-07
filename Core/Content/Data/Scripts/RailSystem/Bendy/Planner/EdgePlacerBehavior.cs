@@ -149,7 +149,31 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
                     pos = target.Position;
                 else
                     pos = caster == null ? myPosition : caster.StartPosition + caster.Direction * 2;
+
+                // Snap to targeted bendy edge.
+                if (TryGetBendyTarget(out _, out var bendy) && bendy.Edges != null)
+                {
+                    var originalPos = pos;
+                    double bestDistSq = RailConstants.NodeRoughDistanceSq;
+                    foreach (var edge in bendy.Edges)
+                        if (edge.Curve != null)
+                        {
+                            var curve = edge.Curve;
+                            var localPos = Vector3D.Transform(in originalPos, edge.Transform);
+                            float t0 = 0, t1 = 1;
+                            CurveExtensions.NearestPoint(curve, localPos, 16, ref t0, ref t1);
+                            var snapPos = curve.Sample((t0 + t1) / 2);
+                            Vector3D.DistanceSquared(ref localPos, ref snapPos, out var distSq);
+                            if (distSq >= bestDistSq) continue;
+                            bestDistSq = distSq;
+                            pos = snapPos;
+                        }
+                }
+
+                // Apply vertical shift.
                 pos -= _verticalShift * Vector3.Normalize(MyGravityProviderSystem.CalculateTotalGravityInPoint(pos));
+
+                // Snap to nearest bendy node.
                 var snap = Graph.GetNode(pos, roughMatch: true);
                 if (snap != null)
                     pos = snap.Position;
@@ -187,6 +211,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
                 player.ShowNotification($"Too far away from the chosen point.  Click closer to yourself.", 2000, null, new Vector4(1, 0, 0, 1));
                 return false;
             }
+
             switch (action)
             {
                 case MyHandItemActionEnum.Tertiary:
@@ -387,7 +412,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
                     prevTangent = currTangent;
                 }
 
-                _vertices.Add(CreateVertex(prev, (Vector3) prevTangent));
+                _vertices.Add(CreateVertex(prev, (Vector3)prevTangent));
             }
 
             _vertices.Add(last.TangentPin.HasValue ? last : CreateVertex(last.Position, (Vector3)data.Curve.SampleDerivative(1)));

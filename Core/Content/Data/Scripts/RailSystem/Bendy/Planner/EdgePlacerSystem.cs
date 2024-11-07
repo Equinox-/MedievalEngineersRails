@@ -274,6 +274,18 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
                 TangentFromArc(nodes.Count - 1, nodes.Count - 2);
             }
 
+            // Finally: If creating nodes, pin all the tangents.
+            // ReSharper disable once InvertIf
+            if (create)
+                for (var i = 0; i < nodes.Count; i++)
+                {
+                    var an = nodes[i];
+                    if (an.Existing != null && an.Existing.TangentPins > 0) continue;
+                    if (an.TangentPin.HasValue) continue;
+                    an.TangentPin = an.Tangent;
+                    nodes[i] = an;
+                }
+
             return;
 
             void TangentFromArc(int atI, int otherI)
@@ -282,12 +294,37 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
                 var other = nodes[otherI];
                 if (at.Pinned || !other.Pinned || at.Existing?.Connections.Count > 0)
                     return;
-                var normal = Vector3.Cross((Vector3) (other.Position - at.Position), at.Up);
+                var hereToLast = (Vector3)(other.Position - at.Position);
+                if (hereToLast.Normalize() < 1e-6f)
+                    return;
+
+                var normal = Vector3.Cross(hereToLast, at.Up);
                 normal.Normalize();
 
-                Vector3.Reflect(ref other.Tangent, ref normal, out var tangent);
-                if (tangent.Normalize() >= 1e-6f)
-                    at.Tangent = tangent;
+                Vector3.Reflect(ref other.Tangent, ref normal, out var tangentForHorizontal);
+                if (tangentForHorizontal.Normalize() < 1e-6f)
+                    tangentForHorizontal = hereToLast;
+
+                Vector3.Reflect(ref other.Tangent, ref hereToLast, out var tangentForVertical);
+                if (tangentForVertical.Normalize() < 1e-6f)
+                    tangentForVertical = hereToLast;
+
+                var surf = DirectionAndGrade.ComputeSurfaceMatrix(at.Position);
+                var surfInv = surf;
+                surfInv.TransposeRotationInPlace();
+
+                var localTangentHorizontal = Vector3.TransformNormal(tangentForHorizontal, ref surfInv);
+                var localTangentVertical = Vector3.TransformNormal(tangentForVertical, ref surfInv);
+
+                var verticalIsFlippedHorizontally = localTangentHorizontal.X * localTangentVertical.X + localTangentHorizontal.Z * localTangentVertical.Z < 0;
+                var localTangent = new Vector3(
+                    localTangentHorizontal.X,
+                    localTangentVertical.Y * (verticalIsFlippedHorizontally ? -1 : 1),
+                    localTangentHorizontal.Z);
+                if (localTangent.Normalize() < 1e-6f)
+                    return;
+
+                at.Tangent = Vector3.TransformNormal(localTangent, ref surf);
                 nodes[atI] = at;
             }
         }
@@ -430,7 +467,9 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
                         Index = index,
                         Position = (Vector3)Vector3D.Transform(node.Position, ref worldMatrixInvCaptured),
                         Up = (Vector3)Vector3D.TransformNormal(node.Up, ref worldMatrixInvCaptured),
-                        Tangent = node.TangentPin.HasValue ? (Vector3?) (Vector3) Vector3D.TransformNormal(node.TangentPin.Value, ref worldMatrixInvCaptured) : null,
+                        Tangent = node.TangentPin.HasValue
+                            ? (Vector3?)(Vector3)Vector3D.TransformNormal(node.TangentPin.Value, ref worldMatrixInvCaptured)
+                            : null,
                     };
             }
         }

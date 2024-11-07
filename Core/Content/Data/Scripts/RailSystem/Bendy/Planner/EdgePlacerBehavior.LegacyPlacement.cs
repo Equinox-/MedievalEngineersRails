@@ -21,8 +21,6 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
 
         private EdgePlacerSystem.AnnotatedNode CreateVertex(Vector3D worldPos, Vector3? pinTangent = null)
         {
-            if (MyAPIGateway.Input.IsKeyDown(MyKeys.P))
-                pinTangent = null;
             var node = Graph.GetNode(worldPos);
             Vector3D up;
             if (node != null)
