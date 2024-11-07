@@ -18,9 +18,9 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
         private static bool _showMaxCurvature = true;
         private static bool _showMaxGrade = true;
 
-        private float? _gradeHint;
-        private float? _directionHint;
-        private float _verticalShift;
+        private static float? _gradeHint;
+        private static float? _directionHint;
+        private static float _verticalShift;
 
         public EdgePlacerBehavior()
         {
@@ -70,11 +70,11 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
                     switch (index)
                     {
                         case 0:
-                            return _owner._directionHint.HasValue ? MathHelper.ToDegrees(_owner._directionHint.Value) : -1;
+                            return _directionHint.HasValue ? MathHelper.ToDegrees(_directionHint.Value) : -1;
                         case 1:
-                            return _owner._gradeHint.HasValue ? _owner._gradeHint.Value * 100 : -1;
+                            return _gradeHint.HasValue ? _gradeHint.Value * 100 : -1;
                         case 2:
-                            return _owner._verticalShift;
+                            return _verticalShift;
                         default:
                             throw new IndexOutOfRangeException();
                     }
@@ -83,13 +83,13 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
                     switch (index)
                     {
                         case 0:
-                            _owner._directionHint = value >= 0 ? (float?)MathHelper.ToRadians(value) : null;
+                            _directionHint = value >= 0 ? (float?)MathHelper.ToRadians(value) : null;
                             break;
                         case 1:
-                            _owner._gradeHint = value >= 0 ? (float?)(value / 100) : null;
+                            _gradeHint = value >= 0 ? (float?)(value / 100) : null;
                             break;
                         case 2:
-                            _owner._verticalShift = value;
+                            _verticalShift = value;
                             break;
                         default:
                             throw new IndexOutOfRangeException();
