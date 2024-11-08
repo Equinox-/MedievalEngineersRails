@@ -52,7 +52,8 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
 
         private bool TryAddVertex()
         {
-            var vertex = CreateVertex(LookingAtPosition);
+            var location = LookingAt(out var tangent);
+            var vertex = CreateVertex(location, tangent);
             if (_vertices.Count > 0 && Vector3D.DistanceSquared(_vertices[_vertices.Count - 1].Position, vertex.Position) < RailConstants.NodeMergeDistanceSq)
                 return false;
             _vertices.Add(vertex);

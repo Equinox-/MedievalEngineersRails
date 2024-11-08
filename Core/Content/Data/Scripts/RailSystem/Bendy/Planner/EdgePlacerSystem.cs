@@ -268,23 +268,12 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
             }
 
             // Second pass: compute tangents using circular arcs.
+            // ReSharper disable once InvertIf
             if (nodes.Count >= 2)
             {
                 TangentFromArc(0, 1);
                 TangentFromArc(nodes.Count - 1, nodes.Count - 2);
             }
-
-            // Finally: If creating nodes, pin all the tangents.
-            // ReSharper disable once InvertIf
-            if (create)
-                for (var i = 0; i < nodes.Count; i++)
-                {
-                    var an = nodes[i];
-                    if (an.Existing != null && an.Existing.TangentPins > 0) continue;
-                    if (an.TangentPin.HasValue) continue;
-                    an.TangentPin = an.Tangent;
-                    nodes[i] = an;
-                }
 
             return;
 
@@ -467,9 +456,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
                         Index = index,
                         Position = (Vector3)Vector3D.Transform(node.Position, ref worldMatrixInvCaptured),
                         Up = (Vector3)Vector3D.TransformNormal(node.Up, ref worldMatrixInvCaptured),
-                        Tangent = node.TangentPin.HasValue
-                            ? (Vector3?)(Vector3)Vector3D.TransformNormal(node.TangentPin.Value, ref worldMatrixInvCaptured)
-                            : null,
+                        Tangent = (Vector3)Vector3D.TransformNormal(node.Tangent, ref worldMatrixInvCaptured),
                     };
             }
         }

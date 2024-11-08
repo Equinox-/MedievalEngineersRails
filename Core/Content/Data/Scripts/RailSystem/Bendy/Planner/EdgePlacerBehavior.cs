@@ -19,6 +19,7 @@ using VRage.Game.Definitions;
 using VRage.Game.Entity;
 using VRage.Game.ModAPI;
 using VRage.GUI.Crosshair;
+using VRage.Library.Collections;
 using VRage.Logging;
 using VRage.ObjectBuilders;
 using VRage.ObjectBuilders.Definitions.Equipment;
@@ -137,48 +138,73 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
 
         private const float ClickDistSq = 25 * 25;
 
-        private Vector3D LookingAtPosition
+
+        private Vector3D LookingAt(out Vector3? tangentPin)
         {
-            get
+            tangentPin = default;
+            var target = Target;
+            var myPosition = Holder.GetPosition();
+            var caster = Holder.Get<MyCharacterDetectorComponent>();
+            Vector3D pos;
+            if (Target.Entity != null && Vector3D.DistanceSquared(myPosition, target.Position) < ClickDistSq)
+                pos = target.Position;
+            else
+                pos = caster == null ? myPosition : caster.StartPosition + caster.Direction * 2;
+
+            // Snap to targeted bendy edge.
+            if (_snapToEdges || _snapToEdgePlanes)
             {
-                var target = Target;
-                var myPosition = Holder.GetPosition();
-                var caster = Holder.Get<MyCharacterDetectorComponent>();
-                Vector3D pos;
-                if (Target.Entity != null && Vector3D.DistanceSquared(myPosition, target.Position) < ClickDistSq)
-                    pos = target.Position;
-                else
-                    pos = caster == null ? myPosition : caster.StartPosition + caster.Direction * 2;
+                var originalPos = pos;
+                var bestDistSq = double.PositiveInfinity;
+                using (var e = Graph.Edges.SortedByDistance(originalPos,
+                           maxDistanceSq: Math.Max(RailConstants.EdgePlaneDistanceSq, RailConstants.EdgeLineDistanceSq)))
+                    while (e.MoveNext())
+                    {
+                        if (e.Current.DistanceSquared >= bestDistSq) continue;
+                        var edge = (Edge)e.Current.UserData;
+                        if (edge.Curve == null) continue;
+                        var localPos = Vector3D.Transform(in originalPos, edge.Transform);
+                        float t0 = 0, t1 = 1;
+                        CurveExtensions.NearestPoint(edge.Curve, localPos, 16, ref t0, ref t1);
+                        var t = (t0 + t1) / 2;
+                        var nearestCurvePos = edge.Curve.Sample(t);
+                        Vector3D.DistanceSquared(ref localPos, ref nearestCurvePos, out var distSq);
+                        if (distSq > bestDistSq) continue;
 
-                // Snap to targeted bendy edge.
-                if (TryGetBendyTarget(out _, out var bendy) && bendy.Edges != null)
-                {
-                    var originalPos = pos;
-                    double bestDistSq = RailConstants.NodeRoughDistanceSq;
-                    foreach (var edge in bendy.Edges)
-                        if (edge.Curve != null)
+                        if (_snapToEdges && distSq < RailConstants.EdgeLineDistanceSq)
                         {
-                            var curve = edge.Curve;
-                            var localPos = Vector3D.Transform(in originalPos, edge.Transform);
-                            float t0 = 0, t1 = 1;
-                            CurveExtensions.NearestPoint(curve, localPos, 16, ref t0, ref t1);
-                            var snapPos = curve.Sample((t0 + t1) / 2);
-                            Vector3D.DistanceSquared(ref localPos, ref snapPos, out var distSq);
-                            if (distSq >= bestDistSq) continue;
+                            pos = nearestCurvePos;
                             bestDistSq = distSq;
-                            pos = snapPos;
+                            continue;
                         }
-                }
 
-                // Apply vertical shift.
-                pos -= _verticalShift * Vector3.Normalize(MyGravityProviderSystem.CalculateTotalGravityInPoint(pos));
-
-                // Snap to nearest bendy node.
-                var snap = Graph.GetNode(pos, roughMatch: true);
-                if (snap != null)
-                    pos = snap.Position;
-                return pos;
+                        if (_snapToEdgePlanes && distSq < RailConstants.EdgePlaneDistanceSq)
+                        {
+                            var tangent = (Vector3)edge.Curve.SampleDerivative(t);
+                            var estimatedUp = Vector3.Lerp(edge.FromUp, edge.ToUp, t);
+                            var biTangent = Vector3.Cross(estimatedUp, tangent);
+                            var trueUp = Vector3.Cross(tangent, biTangent);
+                            if (trueUp.Normalize() > 1e-6)
+                            {
+                                var plane = new PlaneD(nearestCurvePos, trueUp);
+                                var tmp = originalPos;
+                                pos = plane.ProjectPoint(ref tmp);
+                                bestDistSq = distSq;
+                                tangentPin = tangent;
+                                continue;
+                            }
+                        }
+                    }
             }
+
+            // Apply vertical shift.
+            pos -= _verticalShift * Vector3.Normalize(MyGravityProviderSystem.CalculateTotalGravityInPoint(pos));
+
+            // Snap to nearest bendy node.
+            var snap = Graph.GetNode(pos, roughMatch: true);
+            if (snap != null)
+                pos = snap.Position;
+            return pos;
         }
 
         private readonly struct TemporaryVertex : IDisposable

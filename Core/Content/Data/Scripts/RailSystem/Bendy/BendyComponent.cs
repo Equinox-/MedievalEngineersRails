@@ -50,7 +50,8 @@ namespace Equinox76561198048419394.RailSystem.Bendy
                     {
                         Index = x.Key,
                         Position = x.Value.Position,
-                        Up = x.Value.Up
+                        Up = x.Value.Up,
+                        Tangent = x.Value.Tangent,
                     };
                 }
             }

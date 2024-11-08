@@ -17,6 +17,8 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
 
         private static bool _showMaxCurvature = true;
         private static bool _showMaxGrade = true;
+        private static bool _snapToEdges = true;
+        private static bool _snapToEdgePlanes = true;
 
         private static float? _gradeHint;
         private static float? _directionHint;
@@ -59,6 +61,8 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
             private static readonly MyStringId SliderParams = MyStringId.GetOrCompute("SliderParams");
             private static readonly MyStringId ShowMaxCurvatureDataSource = MyStringId.GetOrCompute("ShowMaxCurvature");
             private static readonly MyStringId ShowMaxGradeDataSource = MyStringId.GetOrCompute("ShowMaxGrade");
+            private static readonly MyStringId SnapToEdgesDataSource = MyStringId.GetOrCompute("SnapToEdges");
+            private static readonly MyStringId SnapToEdgePlanesDataSource = MyStringId.GetOrCompute("SnapToEdgePlanes");
 
             private EdgePlacerBehavior _owner;
 
@@ -97,6 +101,8 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
                 }));
                 m_dataSources.Add(ShowMaxCurvatureDataSource, new SimpleRefDataSource<bool>(() => ref _showMaxCurvature));
                 m_dataSources.Add(ShowMaxGradeDataSource, new SimpleRefDataSource<bool>(() => ref _showMaxGrade));
+                m_dataSources.Add(SnapToEdgesDataSource, new SimpleRefDataSource<bool>(() => ref _snapToEdges));
+                m_dataSources.Add(SnapToEdgePlanesDataSource, new SimpleRefDataSource<bool>(() => ref _snapToEdgePlanes));
             }
         }
     }

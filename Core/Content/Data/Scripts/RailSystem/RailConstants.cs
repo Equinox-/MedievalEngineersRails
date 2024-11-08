@@ -81,5 +81,11 @@ namespace Equinox76561198048419394.RailSystem
 
         public const float NodeRoughDistance = 0.5f;
         public const float NodeRoughDistanceSq = NodeRoughDistance * NodeRoughDistance;
+
+        public const float EdgeLineDistance = NodeRoughDistance;
+        public const float EdgeLineDistanceSq = EdgeLineDistance * EdgeLineDistance;
+
+        public const float EdgePlaneDistance = 10f;
+        public const float EdgePlaneDistanceSq = EdgePlaneDistance * EdgePlaneDistance;
     }
 }

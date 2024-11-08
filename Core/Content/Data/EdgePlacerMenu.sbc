@@ -44,6 +44,16 @@
                 <Tooltip>Show maximum grade</Tooltip>
                 <ButtonGroup>ShowMaxGrade</ButtonGroup>
             </Button>
+            <Button StyleName="ContextButtonSliced" DataId="SnapToEdges">
+                <Text>S</Text>
+                <Tooltip>Snap to existing edges</Tooltip>
+                <ButtonGroup>SnapToEdges</ButtonGroup>
+            </Button>
+            <Button StyleName="ContextButtonSliced" DataId="SnapToEdgePlanes">
+                <Text>P</Text>
+                <Tooltip>Snap to the plane of existing edges</Tooltip>
+                <ButtonGroup>SnapToEdgePlanes</ButtonGroup>
+            </Button>
         </Buttons>
     </Definition>
 </Definitions>
