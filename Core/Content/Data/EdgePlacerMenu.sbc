@@ -5,55 +5,46 @@
         <StyleName>ContextMenuDefault</StyleName>
         <Position x="0.35" y="0.32" />
         <MainController>
-            <TypeId>MyObjectBuilder_SliderController</TypeId>
+            <TypeId>MyObjectBuilder_EquiAdvancedController</TypeId>
             <SubtypeId>EdgePlacerMenuMain</SubtypeId>
         </MainController>
         <ContextType>MyObjectBuilder_EdgePlacerConfigContext</ContextType>
     </Definition>
 
-    <Definition xsi:type="MyObjectBuilder_SliderControllerDefinition">
-        <Id Type="MyObjectBuilder_SliderController" Subtype="EdgePlacerMenuMain" />
+    <Definition xsi:type="MyObjectBuilder_EquiAdvancedControllerDefinition">
+        <Id Type="MyObjectBuilder_EquiAdvancedController" Subtype="EdgePlacerMenuMain" />
         <Title>Edge Planner</Title>
-        <DataId>SliderParams</DataId>
         <AutoCommit>true</AutoCommit>
-        <SliderSize x="330" y="75" />
-        <Slider StyleName="ContextMenuSlider" MinValue="-1" MaxValue="180" DefaultValue="-1" IsInteger="false">
+        <Slider DataId="DirectionHint" StyleName="ContextMenuSlider" Min="-1" Max="180" Default="-1" IsInteger="false">
             <Text>Direction</Text>
             <TextFormat>{0}°</TextFormat>
             <Tooltip>Controls the direction of the placed node.  -1 for free rotating.</Tooltip>
         </Slider>
-        <Slider StyleName="ContextMenuSlider" MinValue="-1" MaxValue="100" DefaultValue="-1">
+        <Slider DataId="GradeHint" StyleName="ContextMenuSlider" Min="-1" Max="100" Default="-1">
             <Text>Grade</Text>
             <TextFormat>{0} %</TextFormat>
             <Tooltip>Controls the grade of the placed node.  -1 for free rotating.</Tooltip>
         </Slider>
-        <Slider StyleName="ContextMenuSlider" MinValue="-5" MaxValue="5" DefaultValue="0" IsInteger="false">
+        <Slider DataId="VerticalShift" StyleName="ContextMenuSlider" Min="-5" Max="5" Default="0" IsInteger="false">
             <Text>Vertical Shift</Text>
             <TextFormat>{0} m</TextFormat>
             <Tooltip>Controls the vertical position of the placed node relative to the click location.</Tooltip>
         </Slider>
-        <ButtonSize x="45" y="45" />
-        <Buttons>
-            <Button StyleName="ContextButtonSliced" DataId="ShowMaxCurvature">
-                <Text>R</Text>
-                <Tooltip>Show maximum curvature</Tooltip>
-                <ButtonGroup>ShowMaxCurvature</ButtonGroup>
-            </Button>
-            <Button StyleName="ContextButtonSliced" DataId="ShowMaxGrade">
-                <Text>G</Text>
-                <Tooltip>Show maximum grade</Tooltip>
-                <ButtonGroup>ShowMaxGrade</ButtonGroup>
-            </Button>
-            <Button StyleName="ContextButtonSliced" DataId="SnapToEdges">
-                <Text>S</Text>
-                <Tooltip>Snap to existing edges</Tooltip>
-                <ButtonGroup>SnapToEdges</ButtonGroup>
-            </Button>
-            <Button StyleName="ContextButtonSliced" DataId="SnapToEdgePlanes">
-                <Text>P</Text>
-                <Tooltip>Snap to the plane of existing edges</Tooltip>
-                <ButtonGroup>SnapToEdgePlanes</ButtonGroup>
-            </Button>
-        </Buttons>
+        <Checkbox DataId="ShowMaxCurvature">
+            <Text>Show Curvature</Text>
+            <Tooltip>Show maximum curvature</Tooltip>
+        </Checkbox>
+        <Checkbox DataId="ShowMaxGrade">
+            <Text>Show Grade</Text>
+            <Tooltip>Show maximum grade</Tooltip>
+        </Checkbox>
+        <Checkbox DataId="SnapToEdges">
+            <Text>Snap to Edges</Text>
+            <Tooltip>Snap to existing edges</Tooltip>
+        </Checkbox>
+        <Checkbox DataId="SnapToEdgePlanes">
+            <Text>Snap to Planes</Text>
+            <Tooltip>Snap to the plane of existing edges</Tooltip>
+        </Checkbox>
     </Definition>
 </Definitions>

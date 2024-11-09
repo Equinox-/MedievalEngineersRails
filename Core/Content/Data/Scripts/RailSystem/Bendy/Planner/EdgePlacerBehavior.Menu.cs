@@ -58,7 +58,9 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
         [MyContextMenuContextType(typeof(MyObjectBuilder_EdgePlacerConfigContext))]
         public sealed class MenuContext : MyContextMenuContext
         {
-            private static readonly MyStringId SliderParams = MyStringId.GetOrCompute("SliderParams");
+            private static readonly MyStringId DirectionHint = MyStringId.GetOrCompute("DirectionHint");
+            private static readonly MyStringId GradeHint = MyStringId.GetOrCompute("GradeHint");
+            private static readonly MyStringId VerticalShift = MyStringId.GetOrCompute("VerticalShift");
             private static readonly MyStringId ShowMaxCurvatureDataSource = MyStringId.GetOrCompute("ShowMaxCurvature");
             private static readonly MyStringId ShowMaxGradeDataSource = MyStringId.GetOrCompute("ShowMaxGrade");
             private static readonly MyStringId SnapToEdgesDataSource = MyStringId.GetOrCompute("SnapToEdges");
@@ -69,36 +71,13 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
             public override void Init(object[] contextParams)
             {
                 _owner = (EdgePlacerBehavior)contextParams[0];
-                m_dataSources.Add(SliderParams, new SimpleArrayDataSource<float>(3, index =>
-                {
-                    switch (index)
-                    {
-                        case 0:
-                            return _directionHint.HasValue ? MathHelper.ToDegrees(_directionHint.Value) : -1;
-                        case 1:
-                            return _gradeHint.HasValue ? _gradeHint.Value * 100 : -1;
-                        case 2:
-                            return _verticalShift;
-                        default:
-                            throw new IndexOutOfRangeException();
-                    }
-                }, (index, value) =>
-                {
-                    switch (index)
-                    {
-                        case 0:
-                            _directionHint = value >= 0 ? (float?)MathHelper.ToRadians(value) : null;
-                            break;
-                        case 1:
-                            _gradeHint = value >= 0 ? (float?)(value / 100) : null;
-                            break;
-                        case 2:
-                            _verticalShift = value;
-                            break;
-                        default:
-                            throw new IndexOutOfRangeException();
-                    }
-                }));
+                m_dataSources.Add(DirectionHint, new SimpleDataSource<float>(
+                    () => _directionHint.HasValue ? MathHelper.ToDegrees(_directionHint.Value) : -1,
+                    value => _directionHint = value >= 0 ? (float?)MathHelper.ToRadians(value) : null));
+                m_dataSources.Add(GradeHint,
+                    new SimpleDataSource<float>(() => _gradeHint.HasValue ? _gradeHint.Value * 100 : -1,
+                        value => _gradeHint = value >= 0 ? (float?)(value / 100) : null));
+                m_dataSources.Add(VerticalShift, new SimpleRefDataSource<float>(() => ref _verticalShift));
                 m_dataSources.Add(ShowMaxCurvatureDataSource, new SimpleRefDataSource<bool>(() => ref _showMaxCurvature));
                 m_dataSources.Add(ShowMaxGradeDataSource, new SimpleRefDataSource<bool>(() => ref _showMaxGrade));
                 m_dataSources.Add(SnapToEdgesDataSource, new SimpleRefDataSource<bool>(() => ref _snapToEdges));
