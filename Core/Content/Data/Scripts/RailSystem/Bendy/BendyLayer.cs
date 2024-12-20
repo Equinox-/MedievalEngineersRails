@@ -25,8 +25,8 @@ namespace Equinox76561198048419394.RailSystem.Bendy
             Layer = id;
         }
 
-        internal readonly MyDynamicAABBTreeD Nodes = new MyDynamicAABBTreeD(Vector3D.Zero);
-        internal readonly MyDynamicAABBTreeD Edges = new MyDynamicAABBTreeD(Vector3D.Zero);
+        public readonly MyDynamicAABBTreeD Nodes = new MyDynamicAABBTreeD(Vector3D.Zero);
+        public readonly MyDynamicAABBTreeD Edges = new MyDynamicAABBTreeD(Vector3D.Zero);
         internal readonly MyDynamicAABBTreeD DynamicEdges = new MyDynamicAABBTreeD(new Vector3D(5));
         internal readonly Queue<Node> NodesForUpdate = new Queue<Node>();
         internal readonly Queue<Edge> EdgesForUpdate = new Queue<Edge>();

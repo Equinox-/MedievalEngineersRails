@@ -9,7 +9,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
 {
     public partial class EdgePlacerBehavior
     {
-        private struct Renderer
+        public struct Renderer
         {
             public readonly MyCameraComponent Camera;
 

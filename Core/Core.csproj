@@ -1,6 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <Import Project="$(SolutionDir)\Config\MedievalEngineers.props" />
   <PropertyGroup>
     <ProjectGuid>{C071F54D-FA03-463F-AB16-79FD984A7FF4}</ProjectGuid>
     <OutputType>Library</OutputType>
@@ -29,74 +30,6 @@
     <Reference Include="System.Core" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
-    <Reference Include="MedievalEngineersDedicated">
-      <HintPath>$(SolutionDir)\GameBinaries\MedievalEngineersDedicated.exe</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="MedievalEngineers.Game">
-      <HintPath>$(SolutionDir)\GameBinaries\MedievalEngineers.Game.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="MedievalEngineers.ObjectBuilders">
-      <HintPath>$(SolutionDir)\GameBinaries\MedievalEngineers.ObjectBuilders.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="Sandbox.Game">
-      <HintPath>$(SolutionDir)\GameBinaries\Sandbox.Game.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="Sandbox.Graphics">
-      <HintPath>$(SolutionDir)\GameBinaries\Sandbox.Graphics.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="HavokWrapper">
-      <HintPath>$(SolutionDir)\GameBinaries\HavokWrapper.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="VRage">
-      <HintPath>$(SolutionDir)\GameBinaries\VRage.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="VRage.Library">
-      <HintPath>$(SolutionDir)\GameBinaries\VRage.Library.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="VRage.Game">
-      <HintPath>$(SolutionDir)\GameBinaries\VRage.Game.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="VRage.Game">
-      <HintPath>$(SolutionDir)\GameBinaries\VRage.Input.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="VRage.Dedicated">
-      <HintPath>$(SolutionDir)\GameBinaries\VRage.Dedicated.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="VRage.Math">
-      <HintPath>$(SolutionDir)\GameBinaries\VRage.Math.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="VRage.Render">
-      <HintPath>$(SolutionDir)\GameBinaries\VRage.Render.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="VRage.Steam">
-      <HintPath>$(SolutionDir)\GameBinaries\VRage.Steam.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="Steamworks.NET">
-      <HintPath>$(SolutionDir)\GameBinaries\Steamworks.NET.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="System.Memory">
-      <HintPath>$(SolutionDir)\GameBinaries\System.Memory.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="System.Buffers">
-      <HintPath>$(SolutionDir)\GameBinaries\System.Buffers.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Content\Data\Scripts\RailSystem\Bendy\BendyComponent.cs" />

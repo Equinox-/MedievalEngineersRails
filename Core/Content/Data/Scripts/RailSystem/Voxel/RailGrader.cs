@@ -94,6 +94,7 @@ namespace Equinox76561198048419394.RailSystem.Voxel
                     }
                 }
             }
+
             IReadOnlyList<CachedSdf> forDrawing;
             if (RailConstants.Debug.DrawSdfCacheCut)
                 forDrawing = _prevCutSdf.CellTable;
@@ -110,8 +111,8 @@ namespace Equinox76561198048419394.RailSystem.Voxel
         private static readonly MyStringId ExcavateColor = MyStringId.GetOrCompute("RailGradeExcavate");
 
         public bool DoGrading(
-            IReadOnlyList<IRailGradeComponent> components, Vector3D target, float radius, uint availableForDeposit,
-            uint availableForExcavate,
+            IReadOnlyList<IRailGradeComponent> components, Vector3D target, float radius,
+            uint availableForDeposit, uint availableForExcavate,
             VoxelMiningBuffer excavatedByMaterial, byte materialToDeposit, out uint totalDeposited, out uint totalExcavated,
             out bool triedToChange, out bool intersectedDynamic, out List<OrientedBoundingBoxD> dynamicEntities,
             out MyVoxelBase voxel, out int voxelRadius)
@@ -277,9 +278,9 @@ namespace Equinox76561198048419394.RailSystem.Voxel
                      itrContent.MoveNext())
                 {
                     var tpos = dataCoord + itrContent.Current;
-//                    var state = _storage.Get(MyStorageDataTypeEnum.Content, ref tpos);
-//                    if (itrContent.Current == Vector3I.Zero || state == 0)
-                    _storage.Set(MyStorageDataTypeEnum.Material, ref tpos, materialToDeposit);
+                    var state = _storage.Get(MyStorageDataTypeEnum.Content, ref tpos);
+                    if (itrContent.Current == Vector3I.Zero || state == 0)
+                        _storage.Set(MyStorageDataTypeEnum.Material, ref tpos, materialToDeposit);
                 }
             }
 
@@ -338,6 +339,7 @@ namespace Equinox76561198048419394.RailSystem.Voxel
                     var dyn = dynamicEntities[i + j];
                     slice[j] = new OrientedBoundingBoxBlit(dyn);
                 }
+
                 MyMultiplayerModApi.Static.RaiseEvent(this, x => x.DoGradeStageEntities, taskId, slice);
                 chunks++;
             }
@@ -356,7 +358,7 @@ namespace Equinox76561198048419394.RailSystem.Voxel
                 },
                 voxelId,
                 chunks,
-                dynamicEntities.Count > 0 ? (OrientedBoundingBoxBlit?) new OrientedBoundingBoxBlit(dynamicEntities[0]) : null);
+                dynamicEntities.Count > 0 ? (OrientedBoundingBoxBlit?)new OrientedBoundingBoxBlit(dynamicEntities[0]) : null);
         }
 
         private sealed class StagedGradingTask
@@ -404,7 +406,7 @@ namespace Equinox76561198048419394.RailSystem.Voxel
         [Event]
         [Broadcast]
         [Reliable]
-        private void DoGradeFinish(long taskId, 
+        private void DoGradeFinish(long taskId,
             Vector3D target, GradingConfig config, EntityId voxelId, int totalChunks,
             OrientedBoundingBoxBlit? dynamicEntity)
         {
