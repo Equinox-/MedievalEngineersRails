@@ -3,12 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using Equinox76561198048419394.RailSystem.Util;
 using Equinox76561198048419394.RailSystem.Util.Curve;
+using Sandbox.Game.Entities;
 using Sandbox.ModAPI;
 using VRage.Entities.Gravity;
 using VRage.Game.ModAPI;
 using VRage.Import;
 using VRage.Input.Devices.Keyboard;
 using VRage.Library.Collections;
+using VRage.ModAPI;
+using VRage.Physics;
 using VRage.Utils;
 using VRageMath;
 using VRageRender;
@@ -39,6 +42,16 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
 
             if (pinTangent.HasValue)
                 pinTangent = Vector3.Normalize(pinTangent.Value);
+
+            if (_snapToVoxels && node == null)
+            {
+                const float snapToVoxelsDistance = 10;
+                var line = new LineD(worldPos + up, worldPos - up * snapToVoxelsDistance);
+                MyGamePruningStructureSandbox.GetClosestPlanet(worldPos)?.PrefetchShapeOnRay(ref line);
+                IHitInfo hit = null;
+                MyAPIGateway.Physics?.CastRay(line.From, line.To, out hit, CollisionLayers.VoxelCollisionLayer);
+                if (hit != null) worldPos = hit.Position + up * _verticalShift;
+            }
 
             return new EdgePlacerSystem.AnnotatedNode
             {
@@ -169,75 +182,95 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
 
         private void DrawPlacementLegacy(ref Renderer renderer)
         {
-            foreach (var k in _vertices)
-                renderer.DrawNode(in k);
-
-            using (new TemporaryVertex(this))
+            var priorVertexCount = _vertices.Count;
             using (PoolManager.Get(out List<IntermediateCurve> curves))
-            {
-                for (var i = 1; i < _vertices.Count; i++)
+            using (PoolManager.GetArray<EdgePlacerSystem.AnnotatedNode>(priorVertexCount, out var verticesCopy))
+                try
                 {
-                    var nextVert = _vertices[i];
-                    var currentVert = _vertices[i - 1];
+                    // Backup the vertex list.
+                    _vertices.CopyTo(verticesCopy);
 
-                    var nextMatrix = nextVert.Matrix;
-                    var currentMatrix = currentVert.Matrix;
-
-                    var color = PlacedDefinition == null || EdgePlacerSystem.VerifyEdge(PlacedDefinition, currentVert, nextVert, null)
-                        ? EdgeColor
-                        : EdgeColorBad;
-                    ICurve curve;
-                    if (Vector3D.DistanceSquared(currentMatrix.Translation, nextMatrix.Translation) > 30 * 30)
+                    TryAddVertex();
+                    if (_vertices.Count == 2 && Modified)
                     {
-                        curve = PrepareSphericalBez(currentMatrix, nextMatrix);
-                        renderer.DrawCurve(curve, color);
+                        var curveData = new LongPlanData(this, _vertices[0], _vertices[1]);
+                        ComputeLong(_vertices[0], _vertices[1], curveData);
                     }
-                    else
-                    {
-                        curve = PrepareNormalBez(currentMatrix, nextMatrix);
-                        renderer.DrawCurve(curve, color);
-                    }
-                    if (_showMaxCurvature || _showMaxGrade)
-                        curves.Add(new IntermediateCurve(curve));
-                }
 
-                for (var i = 0; i < curves.Count; i++)
-                {
-                    var intermediate = curves[i];
-                    var prevCurve = i > 0 ? (IntermediateCurve?)curves[i - 1] : null;
-                    var nextCurve = i + 1 < curves.Count ? (IntermediateCurve?)curves[i + 1] : null;
-                    if (_showMaxCurvature)
+                    foreach (var k in _vertices)
+                        renderer.DrawNode(in k);
+
+                    for (var i = 1; i < _vertices.Count; i++)
                     {
-                        // Determine if this curve has a local maximum in curvature.
-                        var curvature = intermediate.Curvature.Max;
-                        if (curvature > 1 / 1000f &&
-                            (prevCurve?.Curvature.Max ?? float.NegativeInfinity) < curvature &&
-                            (nextCurve?.Curvature.Max ?? float.NegativeInfinity) < curvature)
+                        var nextVert = _vertices[i];
+                        var currentVert = _vertices[i - 1];
+
+                        var nextMatrix = nextVert.Matrix;
+                        var currentMatrix = currentVert.Matrix;
+
+                        var color = PlacedDefinition == null || EdgePlacerSystem.VerifyEdge(PlacedDefinition, currentVert, nextVert, null)
+                            ? EdgeColor
+                            : EdgeColorBad;
+                        ICurve curve;
+                        if (Vector3D.DistanceSquared(currentMatrix.Translation, nextMatrix.Translation) > 30 * 30)
                         {
-                            MyRenderProxy.DebugDrawText3D(
-                                intermediate.Curve.Sample(intermediate.Curvature.MaxAtTime),
-                                $" R_min={1 / curvature:F2}m",
-                                Color.Purple, 0.7f, false,
-                                align: MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_TOP);
+                            curve = PrepareSphericalBez(currentMatrix, nextMatrix);
+                            renderer.DrawCurve(curve, color);
+                        }
+                        else
+                        {
+                            curve = PrepareNormalBez(currentMatrix, nextMatrix);
+                            renderer.DrawCurve(curve, color);
+                        }
+
+                        if (_showMaxCurvature || _showMaxGrade)
+                            curves.Add(new IntermediateCurve(curve));
+                    }
+
+                    for (var i = 0; i < curves.Count; i++)
+                    {
+                        var intermediate = curves[i];
+                        var prevCurve = i > 0 ? (IntermediateCurve?)curves[i - 1] : null;
+                        var nextCurve = i + 1 < curves.Count ? (IntermediateCurve?)curves[i + 1] : null;
+                        if (_showMaxCurvature)
+                        {
+                            // Determine if this curve has a local maximum in curvature.
+                            var curvature = intermediate.Curvature.Max;
+                            if (curvature > 1 / 1000f &&
+                                (prevCurve?.Curvature.Max ?? float.NegativeInfinity) < curvature &&
+                                (nextCurve?.Curvature.Max ?? float.NegativeInfinity) < curvature)
+                            {
+                                MyRenderProxy.DebugDrawText3D(
+                                    intermediate.Curve.Sample(intermediate.Curvature.MaxAtTime),
+                                    $" R_min={1 / curvature:F2}m",
+                                    Color.Purple, 0.7f, false,
+                                    align: MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_TOP);
+                            }
+                        }
+
+                        if (_showMaxGrade)
+                        {
+                            // Determine if this curve has a local maximum in grade
+                            var grade = intermediate.UnsignedGradeMax;
+                            if ((prevCurve?.UnsignedGradeMax ?? float.NegativeInfinity) < grade &&
+                                (nextCurve?.UnsignedGradeMax ?? float.NegativeInfinity) < grade)
+                            {
+                                MyRenderProxy.DebugDrawText3D(
+                                    intermediate.Curve.Sample(intermediate.Grade.MaxAtTime),
+                                    $"G_max={100 * intermediate.SignedGradeMax:F0}% ",
+                                    Color.Purple, 0.7f, false,
+                                    align: MyGuiDrawAlignEnum.HORISONTAL_RIGHT_AND_VERTICAL_TOP);
+                            }
                         }
                     }
-
-                    if (_showMaxGrade)
-                    {
-                        // Determine if this curve has a local maximum in grade
-                        var grade = intermediate.UnsignedGradeMax;
-                        if ((prevCurve?.UnsignedGradeMax ?? float.NegativeInfinity) < grade &&
-                            (nextCurve?.UnsignedGradeMax ?? float.NegativeInfinity) < grade)
-                        {
-                            MyRenderProxy.DebugDrawText3D(
-                                intermediate.Curve.Sample(intermediate.Grade.MaxAtTime),
-                                $"G_max={100 * intermediate.SignedGradeMax:F0}% ",
-                                Color.Purple, 0.7f, false,
-                                align: MyGuiDrawAlignEnum.HORISONTAL_RIGHT_AND_VERTICAL_TOP);
-                        }
-                    }
                 }
-            }
+                finally
+                {
+                    // Restore the vertex list.
+                    _vertices.Clear();
+                    for (var i = 0; i < priorVertexCount; i++)
+                        _vertices.Add(verticesCopy[i]);
+                }
         }
     }
 }

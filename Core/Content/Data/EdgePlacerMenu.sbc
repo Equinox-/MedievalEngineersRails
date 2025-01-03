@@ -46,5 +46,9 @@
             <Text>Snap to Planes</Text>
             <Tooltip>Snap to the plane of existing edges</Tooltip>
         </Checkbox>
+        <Checkbox DataId="SnapToVoxels">
+            <Text>Snap to Voxels</Text>
+            <Tooltip>Snap created nodes to voxels. The final node position is then offset from the voxel position by the vertical shift.</Tooltip>
+        </Checkbox>
     </Definition>
 </Definitions>

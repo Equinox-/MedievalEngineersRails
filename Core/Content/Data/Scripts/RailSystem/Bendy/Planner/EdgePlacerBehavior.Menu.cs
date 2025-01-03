@@ -1,7 +1,5 @@
-using System;
 using System.Xml.Serialization;
 using Equinox76561198048419394.Core.UI;
-using Equinox76561198048419394.RailSystem.Util.Curve;
 using Medieval.GUI.ContextMenu;
 using Medieval.GUI.ContextMenu.Attributes;
 using VRage.Game.Input;
@@ -19,6 +17,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
         private static bool _showMaxGrade = true;
         private static bool _snapToEdges = true;
         private static bool _snapToEdgePlanes = true;
+        private static bool _snapToVoxels = false;
 
         private static float? _gradeHint;
         private static float? _directionHint;
@@ -65,6 +64,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
             private static readonly MyStringId ShowMaxGradeDataSource = MyStringId.GetOrCompute("ShowMaxGrade");
             private static readonly MyStringId SnapToEdgesDataSource = MyStringId.GetOrCompute("SnapToEdges");
             private static readonly MyStringId SnapToEdgePlanesDataSource = MyStringId.GetOrCompute("SnapToEdgePlanes");
+            private static readonly MyStringId SnapToVoxelsDataSource = MyStringId.GetOrCompute("SnapToVoxels");
 
             private EdgePlacerBehavior _owner;
 
@@ -82,6 +82,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
                 m_dataSources.Add(ShowMaxGradeDataSource, new SimpleRefDataSource<bool>(() => ref _showMaxGrade));
                 m_dataSources.Add(SnapToEdgesDataSource, new SimpleRefDataSource<bool>(() => ref _snapToEdges));
                 m_dataSources.Add(SnapToEdgePlanesDataSource, new SimpleRefDataSource<bool>(() => ref _snapToEdgePlanes));
+                m_dataSources.Add(SnapToVoxelsDataSource, new SimpleRefDataSource<bool>(() => ref _snapToVoxels));
             }
         }
     }
