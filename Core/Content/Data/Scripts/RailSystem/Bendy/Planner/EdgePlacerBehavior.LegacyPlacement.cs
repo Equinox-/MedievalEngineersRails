@@ -50,7 +50,17 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
                 MyGamePruningStructureSandbox.GetClosestPlanet(worldPos)?.PrefetchShapeOnRay(ref line);
                 IHitInfo hit = null;
                 MyAPIGateway.Physics?.CastRay(line.From, line.To, out hit, CollisionLayers.VoxelCollisionLayer);
-                if (hit != null) worldPos = hit.Position + up * _verticalShift;
+                if (hit != null)
+                {
+                    worldPos = hit.Position + up * _verticalShift;
+                    if (pinTangent.HasValue)
+                    {
+                        // Reject tangent components along the raycast normal.
+                        var newTangent = Vector3.Reject(pinTangent.Value, hit.Normal);
+                        if (newTangent.Normalize() >= 0.25f)
+                            pinTangent = newTangent;
+                    }
+                }
             }
 
             return new EdgePlacerSystem.AnnotatedNode
@@ -95,7 +105,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
         
         private bool StartPlacementLegacy(IMyPlayer player)
         {
-            if (MyAPIGateway.Input.IsKeyDown(MyKeys.Shift))
+            if (MyAPIGateway.Input.IsKeyDown(MyKeys.Shift) && _vertices.Count > 0)
             {
                 var originalStart = _vertices[0];
                 TryAddVertex();
