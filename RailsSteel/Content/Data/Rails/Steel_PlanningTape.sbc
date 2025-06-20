@@ -16,7 +16,7 @@
 
         <PhysicalMaterial>Rope</PhysicalMaterial>
 
-        <MaxStackAmount>15</MaxStackAmount>
+        <MaxStackAmount>1</MaxStackAmount>
 
         <MaxDurability>1</MaxDurability>
 
