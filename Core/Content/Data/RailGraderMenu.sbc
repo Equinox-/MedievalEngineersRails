@@ -1,0 +1,101 @@
+<?xml version="1.0"?>
+<Definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://storage.googleapis.com/unofficial-keen-schemas/latest/medieval-modded.xsd">
+    <Definition xsi:type="MyObjectBuilder_ContextMenuDefinition">
+        <Id Type="MyObjectBuilder_ContextMenu" Subtype="RailGraderMenu" />
+        <StyleName>ContextMenuDefault</StyleName>
+        <Position x="0.35" y="0.32" />
+        <MainController Type="MyObjectBuilder_ButtonListController" Subtype="RailGraderSettings" />
+        <ContextType>MyObjectBuilder_RailGraderBehaviorContext</ContextType>
+    </Definition>
+
+    <Definition xsi:type="MyObjectBuilder_ButtonListControllerDefinition">
+        <Id Type="MyObjectBuilder_ButtonListController" Subtype="RailGraderSettings" />
+        <Title>Grading Tool</Title>
+        <Columns>2</Columns>
+        <Rows>1</Rows>
+        <ButtonStyleId>ButtonListDefault</ButtonStyleId>
+        <Buttons>
+            <Button StyleName="ContextButtonSliced">
+                <Tooltip>Change support settings</Tooltip>
+                <Icon>RailGraderSupport</Icon>
+                <Action xsi:type="MyObjectBuilder_CMA_AddController">
+                    <Controller Type="MyObjectBuilder_EquiAdvancedController" Subtype="RailGraderSettings_Fill" />
+                </Action>
+            </Button>
+            <Button StyleName="ContextButtonSliced">
+                <Tooltip>Change excavation settings</Tooltip>
+                <Icon>RailGraderExcavate</Icon>
+                <Action xsi:type="MyObjectBuilder_CMA_AddController">
+                    <Controller Type="MyObjectBuilder_EquiAdvancedController" Subtype="RailGraderSettings_Excavate" />
+                </Action>
+            </Button>
+        </Buttons>
+    </Definition>
+
+    <Definition xsi:type="MyObjectBuilder_EquiAdvancedControllerDefinition">
+        <Id Type="MyObjectBuilder_EquiAdvancedController" Subtype="RailGraderSettings_Fill" />
+        <Title>Grading Tool: Support</Title>
+        <AutoCommit>true</AutoCommit>
+
+        <Dropdown DataId="FillPreset">
+            <Text>Preset</Text>
+            <Tooltip>Changes the preset shape of the filled area.</Tooltip>
+        </Dropdown>
+
+        <Slider DataId="FillWidthIncrease" Min="0" Max="10" Default="0">
+            <Text>Width Increase</Text>
+            <Tooltip>Increases the width of the top of the filled area.</Tooltip>
+        </Slider>
+
+        <Slider DataId="FillHeightIncrease" Min="0" Max="10" Default="0">
+            <Text>Height Increase</Text>
+            <Tooltip>Increases the height of the filled area.</Tooltip>
+        </Slider>
+
+        <Slider DataId="FillAngleOfRepose" Min="0" Max="90" Default="0">
+            <Text>Angle of Repose</Text>
+            <TextFormat>{0}°</TextFormat>
+            <Tooltip>Controls the angle that the support material settles at. Zero = default.</Tooltip>
+        </Slider>
+        <Checkbox DataId="FillReplaceSurface">
+            <Text>Replace Existing</Text>
+            <Tooltip>Replace the existing material below the track.</Tooltip>
+        </Checkbox>
+        <Checkbox DataId="FillDraw">
+            <Text>Draw</Text>
+            <Tooltip>Visualize the filled area in the world.</Tooltip>
+        </Checkbox>
+    </Definition>
+
+    <Definition xsi:type="MyObjectBuilder_EquiAdvancedControllerDefinition">
+        <Id Type="MyObjectBuilder_EquiAdvancedController" Subtype="RailGraderSettings_Excavate" />
+        <Title>Grading Tool: Excavation</Title>
+        <AutoCommit>true</AutoCommit>
+
+        <Dropdown DataId="ExcavatePreset">
+            <Text>Preset</Text>
+            <Tooltip>Changes the preset shape of the excavated area.</Tooltip>
+        </Dropdown>
+
+        <Slider DataId="ExcavateWidthIncrease" Min="0" Max="10" Default="0">
+            <Text>Width Increase</Text>
+            <Tooltip>Increases the width of the bottom of the excavated area.</Tooltip>
+        </Slider>
+
+        <Slider DataId="ExcavateHeightIncrease" Min="0" Max="10" Default="0">
+            <Text>Height Increase</Text>
+            <Tooltip>Increases the height of the excavated area.</Tooltip>
+        </Slider>
+
+        <Slider DataId="ExcavateAngleOfRepose" Min="0" Max="90" Default="0">
+            <Text>Angle of Repose</Text>
+            <TextFormat>{0}°</TextFormat>
+            <Tooltip>Controls the angle that the excavated material settles at. Zero = default.</Tooltip>
+        </Slider>
+
+        <Checkbox DataId="ExcavateDraw">
+            <Text>Draw</Text>
+            <Tooltip>Visualize the excavated area in the world.</Tooltip>
+        </Checkbox>
+    </Definition>
+</Definitions>

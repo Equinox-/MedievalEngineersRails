@@ -154,27 +154,28 @@ namespace Equinox76561198048419394.RailSystem.Voxel.Shape
         private sealed class MeshBuffer
         {
             public readonly List<Vector3> Vertices = new List<Vector3>();
-            private readonly List<ushort> PosContributors = new List<ushort>();
+            private readonly List<ushort> _posContributors = new List<ushort>();
             public readonly List<ushort> Indices = new List<ushort>();
+            public bool FlipAll;
 
             public void Clear()
             {
                 Vertices.Clear();
-                PosContributors.Clear();
+                _posContributors.Clear();
                 Indices.Clear();
             }
 
             public ushort AddVertex(Vector3 pt)
             {
                 Vertices.Add(pt);
-                PosContributors.Add(1);
+                _posContributors.Add(1);
                 return (ushort)(Vertices.Count - 1);
             }
 
             public void AddTriangle(ushort v0, ushort v1, ushort v2, bool flip = false)
             {
                 if (v0 == v1 || v1 == v2 || v2 == v0) return;
-                if (flip) MyUtils.Swap(ref v1, ref v2);
+                if (flip ^ FlipAll) MyUtils.Swap(ref v1, ref v2);
                 Indices.Add(v0);
                 Indices.Add(v1);
                 Indices.Add(v2);
@@ -193,10 +194,10 @@ namespace Equinox76561198048419394.RailSystem.Voxel.Shape
                 var prevDist = prevPos.Dot(tangent);
                 var currDist = pos.Dot(tangent);
                 if (currDist > prevDist + 0.025) return false;
-                var currContrib = PosContributors[prev];
+                var currContrib = _posContributors[prev];
                 var newContrib = (ushort)(currContrib + 1);
                 Vertices[prev] = (prevPos * currContrib + pos) / newContrib;
-                PosContributors[prev] = newContrib;
+                _posContributors[prev] = newContrib;
                 return true;
             }
         }
@@ -227,6 +228,7 @@ namespace Equinox76561198048419394.RailSystem.Voxel.Shape
         private static MeshGradeShape CreateTunnelShapeInternal(EdgeBlit edge, GradingParams args, MeshBuffer meshBuffer)
         {
             meshBuffer.Clear();
+            meshBuffer.FlipAll = false;
             var curve = edge.Curve.Convert();
             var pivot = curve.Sample(0.5f);
             // {-Level, -OuterEdge, -Ceiling, +Level, +OuterEdge, +Ceiling}
@@ -347,6 +349,7 @@ namespace Equinox76561198048419394.RailSystem.Voxel.Shape
         private static MeshGradeShape CreateGradeShapeInternal(EdgeBlit edge, GradingParams args, MeshBuffer meshBuffer)
         {
             meshBuffer.Clear();
+            meshBuffer.FlipAll = args.Height < 0;
             var curve = edge.Curve.Convert();
             var pivot = curve.Sample(0.5f);
             var lastCross = new StackArray<ushort>();

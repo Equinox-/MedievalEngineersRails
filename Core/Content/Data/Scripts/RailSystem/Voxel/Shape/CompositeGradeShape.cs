@@ -18,6 +18,7 @@ namespace Equinox76561198048419394.RailSystem.Voxel.Shape
 
         public static IGradeShape Composite(IEnumerable<IGradeShape> shapes)
         {
+            if (shapes == null) return null;
             using (PoolManager.Get(out List<IGradeShape> flat))
             {
                 foreach (var shape in shapes)
@@ -31,7 +32,12 @@ namespace Equinox76561198048419394.RailSystem.Voxel.Shape
                             break;
                     }
 
-                return flat.Count == 1 ? flat[0] : new CompositeGradeShape(flat.ToArray());
+                switch (flat.Count)
+                {
+                    case 0: return null;
+                    case 1: return flat[0];
+                    default: return new CompositeGradeShape(flat.ToArray());
+                }
             }
         }
 

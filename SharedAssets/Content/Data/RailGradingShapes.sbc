@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://storage.googleapis.com/unofficial-keen-schemas/latest/medieval-modded.xsd">
+    <Definition xsi:type="MyObjectBuilder_RailGradeComponentDefinition">
+        <Id Type="MyObjectBuilder_RailGradeComponent" Subtype="RailStandardGauge" />
+
+        <SupportPreset Name="Embankment" Tooltip="Ballasted embankment with a 60° angle of repose">
+            <Shape Width="4" VerticalOffset="0" Height="10" RelaxAngleDegrees="60" EndPadding="0.5" />
+        </SupportPreset>
+
+        <SupportPreset Name="Embankment (Shallow)" Tooltip="Ballasted embankment with a 40° angle of repose">
+            <Shape Width="4" VerticalOffset="0" Height="10" RelaxAngleDegrees="40" EndPadding="0.5" />
+        </SupportPreset>
+
+        <ExcavatePreset Name="Tunnel" Tooltip="5m high tunnel">
+            <Shape Width="4.75" VerticalOffset="0" Height="5" RelaxAngleDegrees="90" Type="Tunnel" EndPadding="1.5" />
+        </ExcavatePreset>
+
+        <ExcavatePreset Name="Valley" Tooltip="Valley with a 60° angle of repose">
+            <Shape Width="4.75" VerticalOffset="0" Height="10" RelaxAngleDegrees="60" Type="Grade" EndPadding="0" />
+        </ExcavatePreset>
+
+        <ExcavatePreset Name="Valley (Shallow)" Tooltip="Valley with a 40° angle of repose">
+            <Shape Width="4.75" VerticalOffset="0" Height="10" RelaxAngleDegrees="40" Type="Grade" EndPadding="0" />
+        </ExcavatePreset>
+
+        <ExcavatePreset Name="Valley (Steep)" Tooltip="Valley with a 80° angle of repose">
+            <Shape Width="4.75" VerticalOffset="0" Height="10" RelaxAngleDegrees="80" Type="Grade" EndPadding="0" />
+        </ExcavatePreset>
+
+        <RequiredSupport Width="0.25" VerticalOffset="0" />
+    </Definition>
+</Definitions>

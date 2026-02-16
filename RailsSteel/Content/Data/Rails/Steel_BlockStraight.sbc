@@ -36,7 +36,6 @@
             <Model UpperBound="1.1" File="Models\Equinox\RailsGaugeStandard\Steel\Bendy_10m.mwm" /> <!-- spikes -->
         </BuildProgressModels>
 
-        <BuildTimeSeconds>20</BuildTimeSeconds>
         <MaxIntegrity>5000</MaxIntegrity>
 
         <VoxelPlacement>

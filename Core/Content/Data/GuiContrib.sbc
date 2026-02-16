@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<Definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://storage.googleapis.com/unofficial-keen-schemas/latest/medieval-modded.xsd">
+    <Definition xsi:type="MyObjectBuilder_GuiSkinDefinition" Merge="Append">
+        <Id Type="MyObjectBuilder_GuiSkinDefinition" Subtype="ModContributions" />
+
+        <GuiIcon StyleName="RailGraderExcavate">
+            <Normal>Textures\Equinox\GUI\RailGraderExcavate.png</Normal>
+            <Active>Textures\Equinox\GUI\RailGraderExcavate.png</Active>
+            <Highlight>Textures\Equinox\GUI\RailGraderExcavate.png</Highlight>
+            <ActiveHighlight>Textures\Equinox\GUI\RailGraderExcavate.png</ActiveHighlight>
+            <Disabled>Textures\Equinox\GUI\RailGraderExcavate.png</Disabled>
+        </GuiIcon>
+
+        <GuiIcon StyleName="RailGraderSupport">
+            <Normal>Textures\Equinox\GUI\RailGraderSupport.png</Normal>
+            <Active>Textures\Equinox\GUI\RailGraderSupport.png</Active>
+            <Highlight>Textures\Equinox\GUI\RailGraderSupport.png</Highlight>
+            <ActiveHighlight>Textures\Equinox\GUI\RailGraderSupport.png</ActiveHighlight>
+            <Disabled>Textures\Equinox\GUI\RailGraderSupport.png</Disabled>
+        </GuiIcon>
+
+        <ButtonList StyleName="ButtonListWide">
+            <ButtonSize x="150" y="75" />
+            <ButtonMargin x="10" y="10" />
+        </ButtonList>
+    </Definition>
+</Definitions>

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Xml.Serialization;
+using Equinox76561198048419394.Core.Util;
 using Equinox76561198048419394.RailSystem.Bendy.Shape;
 using Equinox76561198048419394.RailSystem.Util;
 using Equinox76561198048419394.RailSystem.Util.Curve;
@@ -26,11 +27,12 @@ using VRage.ObjectBuilders.Definitions.Equipment;
 using VRage.Session;
 using VRage.Utils;
 using VRageMath;
+using MessageUtil = Equinox76561198048419394.RailSystem.Util.MessageUtil;
 
 namespace Equinox76561198048419394.RailSystem.Bendy.Planner
 {
     [MyHandItemBehavior(typeof(MyObjectBuilder_EdgePlacerBehaviorDefinition))]
-    public partial class EdgePlacerBehavior : MyToolBehaviorBase
+    public partial class EdgePlacerBehavior : MyToolBehaviorBase, IToolWithMenu
     {
         protected override bool ValidateTarget()
         {
@@ -62,15 +64,12 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
         public override void Activate()
         {
             base.Activate();
+            this.OnActivateWithMenu();
             Graph = MySession.Static.Components.Get<BendyController>().GetOrCreateLayer(Layer);
             Graph.NodeCreated += NodesChanged;
             Graph.NodeMoved += NodesChanged;
             _vertices.Clear();
-            if (IsLocallyControlled)
-            {
-                Scene.Scheduler.AddFixedUpdate(Render);
-                _edgePlacerControls.Push();
-            }
+            if (this.IsLocallyControlled()) Scene.Scheduler.AddFixedUpdate(Render);
         }
 
         private void NodesChanged(Node obj)
@@ -80,8 +79,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
 
         public override void Deactivate()
         {
-            if (IsLocallyControlled)
-                _edgePlacerControls.Pop();
+            this.OnDeactivateWithMenu();
             base.Deactivate();
             _vertices.Clear();
             Graph.NodeCreated -= NodesChanged;
@@ -90,9 +88,6 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
             Scene.Scheduler.RemoveFixedUpdate(Render);
             _hintInfo?.Hide();
             _hintInfo = null;
-
-            _menu?.Close();
-            _menu = null;
         }
 
 
@@ -102,7 +97,6 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
         {
             // Fix because OnTargetEntityChanged is only called when the actual entity changed.
             SetTarget();
-            UpdateMenuContext();
 
             var cam = MyCameraComponent.ActiveCamera;
             if (Graph == null || cam == null) return;
@@ -234,7 +228,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
                 return false;
             if (Target.Entity == null || Vector3D.DistanceSquared(Target.Position, Holder.GetPosition()) > ClickDistSq)
             {
-                player.ShowNotification($"Too far away from the chosen point.  Click closer to yourself.", 2000, null, new Vector4(1, 0, 0, 1));
+                MessageUtil.ShowNotification(player, $"Too far away from the chosen point.  Click closer to yourself.", 2000, null, new Vector4(1, 0, 0, 1));
                 return false;
             }
 
@@ -469,14 +463,14 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
             var vert = CreateVertex(Target.Position);
             if (testPermissions)
             {
-                if (!player.HasPermission(vert.Position, MyPermissionsConstants.Build))
+                if (!WhitelistExtensions.HasPermission(player, vert.Position, MyPermissionsConstants.Build))
                 {
                     errors?.Add("You cannot build here");
                     return false;
                 }
 
                 foreach (var t in _vertices)
-                    if (!player.HasPermission(t.Position, MyPermissionsConstants.Build))
+                    if (!WhitelistExtensions.HasPermission(player, t.Position, MyPermissionsConstants.Build))
                     {
                         errors?.Add("You cannot build here");
                         return false;
@@ -502,7 +496,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
                 return false;
             if (!testPermission ||
                 MyAPIGateway.Session.IsAdminModeEnabled(player.SteamUserId) ||
-                player.HasPermission(entity.GetPosition(), MyPermissionsConstants.QuickDeconstruct))
+                WhitelistExtensions.HasPermission(player, entity.GetPosition(), MyPermissionsConstants.QuickDeconstruct))
                 return EdgePlacerSystem.ValidateQuickRemove(player, entity, out err);
             err = "You cannot quick deconstruct here";
             return false;
@@ -530,11 +524,11 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
             {
                 var hasPerms = true;
                 var vert = CreateVertex(Target.Position);
-                if (!player.HasPermission(vert.Position, MyPermissionsConstants.Build))
+                if (!WhitelistExtensions.HasPermission(player, vert.Position, MyPermissionsConstants.Build))
                     hasPerms = false;
 
                 foreach (var t in _vertices)
-                    if (!player.HasPermission(t.Position, MyPermissionsConstants.Build))
+                    if (!WhitelistExtensions.HasPermission(player, t.Position, MyPermissionsConstants.Build))
                     {
                         hasPerms = false;
                         break;
@@ -556,7 +550,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
             {
                 var entity = Target.Entity?.Components.Get<BendyShapeProxy>()?.Owner ?? Target.Entity;
                 if (entity != null &&
-                    player.HasPermission(entity.GetPosition(), MyPermissionsConstants.QuickDeconstruct))
+                    WhitelistExtensions.HasPermission(player, entity.GetPosition(), MyPermissionsConstants.QuickDeconstruct))
                 {
                     if (Definition.CrosshairRemove.HasValue)
                         yield return Definition.CrosshairRemove.Value;

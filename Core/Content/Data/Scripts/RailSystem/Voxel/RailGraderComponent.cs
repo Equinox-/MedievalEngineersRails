@@ -150,24 +150,31 @@ namespace Equinox76561198048419394.RailSystem.Voxel
                 RailGraderSystem.GatherGradeComponents(position, gradeComponents, Definition.Radius);
                 if (gradeComponents.Count == 0) return;
 
-                var availableForDeposit = Math.Min((uint) ComputeDepositAvailability(), Definition.FillVolume);
+                var availableForDeposit = Math.Min((uint)ComputeDepositAvailability(), Definition.FillVolume);
                 if (availableForDeposit == 0)
                     return;
                 var availableForExcavate = Definition.ExcavateVolume;
 
                 var system = MySession.Static.Components.Get<RailGraderSystem>();
-                var modified = system.DoGrading(gradeComponents, position, Definition.Radius,
-                    availableForDeposit,
-                    availableForExcavate, _miningBuffer, Definition.FillMaterial.Material.Index,
-                    out var deposited, out var excavated, out _, out _,
+                var options = new RailGraderSystem.GradingOptions
+                {
+                    AvailableForDeposit = availableForDeposit,
+                    AvailableForExcavate = availableForExcavate,
+                    MaterialToDeposit = Definition.FillMaterial.Material.Index,
+                    Excavate = default,
+                    Support = default,
+                    ReplaceSurfaceMaterial = true,
+                };
+                options.BoxFromRadius(gradeComponents, in position, Definition.Radius);
+                var modified = system.DoGrading(gradeComponents, in options,
+                    _miningBuffer, out var deposited, out var excavated, out _, out _,
                     out var dynamicEntities, out var voxelEntity, out var voxelRadius);
 
                 if (!modified) return;
                 _eventBus?.Invoke(EventDidWork, true);
-                UseDepositMaterials((int) deposited);
+                UseDepositMaterials((int)deposited);
                 GiftMiningMaterials();
-                system.RaiseDoGrade(gradeComponents, position, voxelRadius, availableForDeposit, availableForExcavate,
-                    Definition.FillMaterial.Material.Index, excavated, deposited, voxelEntity.Id, dynamicEntities);
+                system.RaiseDoGrade(gradeComponents, in options, voxelRadius, excavated, deposited, voxelEntity.Id, dynamicEntities);
             }
         }
 
@@ -240,7 +247,7 @@ namespace Equinox76561198048419394.RailSystem.Voxel
         public override void Init(MyEntityComponentDefinition def)
         {
             base.Init(def);
-            Definition = (RailGraderComponentDefinition) def;
+            Definition = (RailGraderComponentDefinition)def;
             _powerObserver.RequiredPower = Definition.RequiredPower;
         }
 
@@ -275,7 +282,7 @@ namespace Equinox76561198048419394.RailSystem.Voxel
         protected override void Init(MyObjectBuilder_DefinitionBase def)
         {
             base.Init(def);
-            var ob = (MyObjectBuilder_RailGraderComponentDefinition) def;
+            var ob = (MyObjectBuilder_RailGraderComponentDefinition)def;
 
             var spec = new MyDummySpec(ob.Dummy);
             DummyAttachment = MyStringHash.GetOrCompute(spec.SubpartName);

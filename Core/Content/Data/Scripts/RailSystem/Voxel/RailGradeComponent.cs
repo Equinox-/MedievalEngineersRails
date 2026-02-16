@@ -5,8 +5,10 @@ using System.Xml.Serialization;
 using Equinox76561198048419394.RailSystem.Bendy;
 using Equinox76561198048419394.RailSystem.Construction;
 using Equinox76561198048419394.RailSystem.Util;
+using Equinox76561198048419394.RailSystem.Util.Curve;
 using Equinox76561198048419394.RailSystem.Voxel.Shape;
 using Sandbox.Game.Entities;
+using VRage;
 using VRage.Components;
 using VRage.Components.Entity.CubeGrid;
 using VRage.Entities.Gravity;
@@ -52,42 +54,80 @@ namespace Equinox76561198048419394.RailSystem.Voxel
 
         private void EdgeSetupChanged(BendyComponent comp)
         {
-            _excavationCache = null;
+            _excavationCache = default;
+            _supportCache = default;
             _shapeDirty = true;
         }
 
-        private IGradeShape _excavationCache;
+        private MyTuple<RailGradeComponentDefinition.ShapeOptions, IGradeShape> _excavationCache;
 
-        public IGradeShape Excavation
+        public IGradeShape GetExcavate(in RailGradeComponentDefinition.ShapeOptions options)
         {
-            get
+            if (_bendy == null || _bendy.Edges.Length == 0) return null;
+            if (_excavationCache.Item1.Equals(options) && _excavationCache.Item2 != null) return _excavationCache.Item2;
+
+            var shape = Definition.GetExcavate(in options);
+            IGradeShape composite;
+            if (shape.HasValue)
             {
-                if (_excavationCache != null) return _excavationCache;
-                if (_bendy == null || _bendy.Edges.Length == 0 || !Definition.Excavate.HasValue) return _excavationCache;
-                var shapes = _bendy.Edges
+                var s = shape.Value;
+                composite = CompositeGradeShape.Composite(_bendy.Edges
                     .Where(e => e?.Curve != null)
-                    .Select(e => Definition.Excavate.Value.CreateShape(new EdgeBlit(e), true)).ToArray();
-                if (shapes.Length == 0) return _excavationCache;
-                return _excavationCache = CompositeGradeShape.Composite(shapes);
+                    .Select(e => s.CreateShape(new EdgeBlit(e), true)));
             }
+            else
+                composite = null;
+
+            _excavationCache = MyTuple.Create(options, composite);
+            return composite;
         }
 
-        private IGradeShape _supportCache;
+        private MyTuple<RailGradeComponentDefinition.ShapeOptions, IGradeShape> _supportCache;
 
-        public IGradeShape Support
+        public IGradeShape GetSupport(in RailGradeComponentDefinition.ShapeOptions options)
         {
-            get
+            if (_bendy?.Edges == null || _bendy.Edges.Length == 0) return null;
+            if (_supportCache.Item1.Equals(options) && _supportCache.Item2 != null) return _supportCache.Item2;
+            var shape = Definition.GetSupport(in options);
+            IGradeShape composite;
+            if (shape.HasValue)
             {
-                if (_supportCache != null) return _supportCache;
-                if (_bendy == null || _bendy.Edges.Length == 0 || !Definition.Support.HasValue) return _supportCache;
-                var shapes = _bendy.Edges
+                var s = shape.Value;
+                composite = CompositeGradeShape.Composite(_bendy.Edges
                     .Where(e => e?.Curve != null)
-                    .Select(e => Definition.Support.Value.CreateShape(new EdgeBlit(e), false)).ToArray();
-                if (shapes.Length == 0) return _supportCache;
-                return _supportCache = CompositeGradeShape.Composite(shapes);
+                    .Select(e => s.CreateShape(new EdgeBlit(e), false)));
             }
+            else
+                composite = null;
+            _supportCache = MyTuple.Create(options, composite);
+            return composite;
         }
 
+        public bool TryGetNearestCurveOrientation(in Vector3D query, out double nearestDistSq, out Vector3D nearestPos, out Quaternion nearestOrientation)
+        {
+            nearestDistSq = double.PositiveInfinity;
+            nearestPos = default;
+            nearestOrientation = default;
+            if (_bendy?.Edges == null || _bendy.Edges.Length == 0) return false;
+            foreach (var edge in _bendy.Edges)
+            {
+                float t0 = 0;
+                float t1 = 0;
+                CurveExtensions.NearestPoint(edge.Curve, query, 16, ref t0, ref t1);
+                var t = (t0 + t1) / 2;
+                var pos = edge.Curve.Sample(t);
+                var distSq = Vector3D.DistanceSquared(in pos, in pos);
+                if (distSq >= nearestDistSq) continue;
+                nearestDistSq = distSq;
+                nearestPos = pos;
+                var forward = (Vector3) edge.Curve.SampleDerivative(t);
+                forward.Normalize();
+                var up = Vector3.Lerp(edge.FromUp, edge.ToUp, t);
+                nearestOrientation = Quaternion.CreateFromForwardUp(forward, up);
+            }
+
+            return !double.IsPositiveInfinity(nearestDistSq);
+        }
 
         public override bool IsSerialized => false;
 
@@ -230,12 +270,6 @@ namespace Equinox76561198048419394.RailSystem.Voxel
                 Definition = Definition.Id
             };
         }
-
-        public void Unblit(out IGradeShape fillShape, out IGradeShape excavateShape)
-        {
-            fillShape = Support;
-            excavateShape = Excavation;
-        }
     }
 
     public struct RailGradeComponentBlit : IRailGradeComponent
@@ -243,31 +277,29 @@ namespace Equinox76561198048419394.RailSystem.Voxel
         public EdgeBlit[] Edges;
         public SerializableDefinitionId Definition;
 
-        public void Unblit(out IGradeShape fillShape, out IGradeShape excavateShape)
+        private RailGradeComponentDefinition Def => Edges?.Length > 0 ? MyDefinitionManager.Get<RailGradeComponentDefinition>(Definition) : null; 
+
+        public IGradeShape GetSupport(in RailGradeComponentDefinition.ShapeOptions options)
         {
-            fillShape = excavateShape = null;
+            var shape = Def?.GetSupport(in options);
+            if (!shape.HasValue) return null;
+            var s = shape.Value;
+            return CompositeGradeShape.Composite(Edges.Select(e => s.CreateShape(e, false)));
+        }
 
-            var def = MyDefinitionManager.Get<RailGradeComponentDefinition>(Definition);
-            if (def == null || Edges.Length == 0)
-                return;
-
-            if (def.Support.HasValue)
-            {
-                var s = def.Support.Value;
-                fillShape = CompositeGradeShape.Composite(Edges.Select(e => s.CreateShape(e, false)));
-            }
-
-            if (def.Excavate.HasValue)
-            {
-                var s = def.Excavate.Value;
-                excavateShape = CompositeGradeShape.Composite(Edges.Select(e => s.CreateShape(e, true)));
-            }
+        public IGradeShape GetExcavate(in RailGradeComponentDefinition.ShapeOptions options)
+        {
+            var shape = Def?.GetExcavate(in options);
+            if (!shape.HasValue) return null;
+            var s = shape.Value;
+            return CompositeGradeShape.Composite(Edges.Select(e => s.CreateShape(e, true)));
         }
     }
 
     public interface IRailGradeComponent
     {
-        void Unblit(out IGradeShape fillShape, out IGradeShape excavateShape);
+        IGradeShape GetSupport(in RailGradeComponentDefinition.ShapeOptions options);
+        IGradeShape GetExcavate(in RailGradeComponentDefinition.ShapeOptions options);
     }
 
     [MyObjectBuilderDefinition]

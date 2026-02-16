@@ -33,7 +33,7 @@ namespace Equinox76561198048419394.RailSystem.Voxel
 {
     [MyHandItemBehavior(typeof(MyObjectBuilder_RailGraderBehaviorDefinition))]
     [StaticEventOwner]
-    public class RailGraderBehavior : MyToolBehaviorBase
+    public partial class RailGraderBehavior : MyToolBehaviorBase, IToolWithMenu, IToolWithUpdate
     {
         public MyEntity Owner => Holder;
 
@@ -46,10 +46,24 @@ namespace Equinox76561198048419394.RailSystem.Voxel
         public override void Init(MyEntity holder, MyHandItem handItem, MyHandItemBehaviorDefinition def)
         {
             base.Init(holder, handItem, def);
-            Definition = (RailGraderBehaviorDefinition) def;
+            Definition = (RailGraderBehaviorDefinition)def;
         }
 
         private Vector3D _cachedTargetDirection;
+
+        public override void Activate()
+        {
+            base.Activate();
+            this.OnActivateWithMenu();
+            this.OnActivateWithUpdate();
+        }
+
+        public override void Deactivate()
+        {
+            this.OnDeactivateWithMenu();
+            this.OnDeactivateWithUpdate();
+            base.Deactivate();
+        }
 
         protected override bool ValidateTarget()
         {
@@ -101,7 +115,7 @@ namespace Equinox76561198048419394.RailSystem.Voxel
                 if (!WhitelistExtensions.IsCreative(player))
                 {
                     var inv = Holder.GetInventory(MyCharacterConstants.MainInventory);
-                    availableForDeposit = Math.Min(availableForDeposit, (uint) _placementBuffer.AvailableVolume(inv, Definition.FillMaterial));
+                    availableForDeposit = Math.Min(availableForDeposit, (uint)_placementBuffer.AvailableVolume(inv, Definition.FillMaterial));
                     if (availableForDeposit == 0)
                     {
                         foreach (var item in Definition.FillMaterial.Items)
@@ -128,15 +142,20 @@ namespace Equinox76561198048419394.RailSystem.Voxel
 
             var availableForExcavate = isExcavating ? Definition.ExcavateVolume : 0;
 
-            uint totalDeposited;
-            uint totalExcavated;
-            bool triedToChange;
-            bool intersectedDynamic;
             var system = MySession.Static.Components.Get<RailGraderSystem>();
-            var result = system.DoGrading(_gradeComponents, Target.Position, radius, availableForDeposit,
-                availableForExcavate, _miningBuffer, Definition.FillMaterial.Material.Index,
-                out totalDeposited, out totalExcavated, 
-                triedToChange: out triedToChange, intersectedDynamic: out intersectedDynamic,
+            var options = new RailGraderSystem.GradingOptions
+            {
+                AvailableForDeposit = availableForDeposit,
+                AvailableForExcavate = availableForExcavate,
+                MaterialToDeposit = Definition.FillMaterial.Material.Index,
+                Support = Settings.Fill,
+                Excavate = Settings.Excavate,
+                ReplaceSurfaceMaterial = Settings.ReplaceSurfaceMaterial,
+            };
+            options.BoxFromRadius(_gradeComponents, in Target.Position, radius);
+            var result = system.DoGrading(_gradeComponents, in options, _miningBuffer,
+                out var totalDeposited, out var totalExcavated,
+                triedToChange: out var triedToChange, intersectedDynamic: out var intersectedDynamic,
                 out var dynamicBoxes, out var voxel, out var voxelRadius);
 
             #region Give Items
@@ -161,19 +180,18 @@ namespace Equinox76561198048419394.RailSystem.Voxel
             {
                 _placementBuffer.ConsumeVolume(
                     Holder.GetInventory(MyCharacterConstants.MainInventory),
-                    Definition.FillMaterial, (int) totalDeposited);
+                    Definition.FillMaterial, (int)totalDeposited);
             }
 
             #endregion
 
             if (totalDeposited > 0 || totalExcavated > 0)
             {
-                var duraCost = (int) Math.Round(totalDeposited * Definition.FillDurabilityPerVol + totalExcavated * Definition.ExcavateDurabilityPerVol);
+                var duraCost = (int)Math.Round(totalDeposited * Definition.FillDurabilityPerVol + totalExcavated * Definition.ExcavateDurabilityPerVol);
                 if (duraCost > 0)
                     UpdateDurability(-duraCost);
                 GraderUsed?.Invoke(this, _gradeComponents, totalDeposited, totalExcavated);
-                system.RaiseDoGrade(_gradeComponents, Target.Position, voxelRadius, availableForDeposit, availableForExcavate,
-                    Definition.FillMaterial.Material.Index, totalExcavated, totalDeposited, voxel.Id, dynamicBoxes);
+                system.RaiseDoGrade(_gradeComponents, in options, voxelRadius, totalExcavated, totalDeposited, voxel.Id, dynamicBoxes);
                 return;
             }
 
@@ -183,9 +201,6 @@ namespace Equinox76561198048419394.RailSystem.Voxel
                 MessageUtil.ShowNotification(player, requiredMaterials?.ToString(), color: new Vector4(1, 0, 0, 1));
         }
 
-
-        private bool IsLocallyControlled => MySession.Static.PlayerEntity == Holder;
-
         private bool HasPermission(MyStringId id)
         {
             var player = MyAPIGateway.Players.GetPlayerControllingEntity(Holder);
@@ -194,10 +209,10 @@ namespace Equinox76561198048419394.RailSystem.Voxel
             return MyAreaPermissionSystem.Static == null || MyAreaPermissionSystem.Static.HasPermission(player.IdentityId, Target.Position, id);
         }
 
-        private void GatherGradeComponents(Vector3D pos)
+        private void GatherGradeComponents(in Vector3D pos)
         {
             _gradeComponents.Clear();
-            RailGraderSystem.GatherGradeComponents(pos, _gradeComponents, Math.Max(Definition.ExcavateRadius, Definition.FillRadius));
+            RailGraderSystem.GatherGradeComponents(in pos, _gradeComponents, Math.Max(Definition.ExcavateRadius, Definition.FillRadius));
         }
 
         private readonly List<RailGradeComponent> _gradeComponents = new List<RailGradeComponent>();
@@ -220,7 +235,7 @@ namespace Equinox76561198048419394.RailSystem.Voxel
         protected override void Init(MyObjectBuilder_DefinitionBase def)
         {
             base.Init(def);
-            var ob = (MyObjectBuilder_RailGraderBehaviorDefinition) def;
+            var ob = (MyObjectBuilder_RailGraderBehaviorDefinition)def;
 
             ExcavateDefinition = ob.ExcavateVolume > 0 && ob.ExcavateRadius > 0
                 ? Assert.Definition<MyVoxelMiningDefinition>(ob.ExcavateDefinition, $"For rail grader behavior {def.Id}'s excavate definition")

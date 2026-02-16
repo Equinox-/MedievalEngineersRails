@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Threading;
 using Equinox76561198048419394.Core.Debug;
 using Equinox76561198048419394.Core.Util;
-using Equinox76561198048419394.RailSystem.Voxel.Shape;
 using Sandbox.Game.Entities;
 using Sandbox.ModAPI;
 using VRage.Collections;
@@ -15,9 +14,9 @@ using VRage.Voxels;
 using VRageMath;
 using VRageRender;
 
-namespace Equinox76561198048419394.RailSystem.Voxel
+namespace Equinox76561198048419394.RailSystem.Voxel.Shape
 {
-    sealed class CachedSdf
+    internal sealed class CachedSdf
     {
         private const int CellSizeBits = 3;
         public const int CellSize = 1 << CellSizeBits;

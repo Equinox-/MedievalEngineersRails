@@ -2,6 +2,7 @@
 using Equinox76561198048419394.RailSystem.Definition;
 using Equinox76561198048419394.RailSystem.Voxel;
 using VRage.Components;
+using VRage.Utils;
 
 namespace Equinox76561198048419394.RailSystem
 {
@@ -16,8 +17,8 @@ namespace Equinox76561198048419394.RailSystem
             public bool DrawBendyPhysics;
             public bool DrawSwitchControllers;
             public bool DrawBogieEdges;
-            public bool DrawGradingFillShapes;
-            public bool DrawGradingCutShapes;
+            public RailGradeComponentDefinition.ShapeOptions DrawGradingFill;
+            public RailGradeComponentDefinition.ShapeOptions DrawGradingCut;
 
             public bool DrawSdfCacheFill;
             public bool DrawSdfCacheCut;
@@ -40,7 +41,7 @@ namespace Equinox76561198048419394.RailSystem
             Debug = new DebugOptions
             {
                 AssertsWithStacks = false, DrawGraphEdges = false, DrawGraphNodes = false, DrawBogiePhysics = true,
-                DrawBendyPhysics = false, DrawSwitchControllers = true, DrawBogieEdges = true, DrawGradingFillShapes = true
+                DrawBendyPhysics = false, DrawSwitchControllers = true, DrawBogieEdges = true,
             };
             DebugCommit();
         }
@@ -56,7 +57,10 @@ namespace Equinox76561198048419394.RailSystem
             DebugDraw.SetEnabled(typeof(RailSwitchExternalComponent), Debug.DrawSwitchControllers);
             DebugDraw.SetEnabled(typeof(RailSegmentComponent), Debug.DrawSwitchControllers);
             DebugDraw.SetEnabled(typeof(BendyPhysicsComponent), Debug.DrawBendyPhysics);
-            DebugDraw.SetEnabled(typeof(RailGraderSystem), Debug.DrawSdfCacheCut || Debug.DrawSdfCacheFill || Debug.DrawGradingCutShapes || Debug.DrawGradingFillShapes);
+            DebugDraw.SetEnabled(typeof(RailGraderSystem), Debug.DrawSdfCacheCut
+                                                           || Debug.DrawSdfCacheFill
+                                                           || Debug.DrawGradingFill.Preset != default
+                                                           || Debug.DrawGradingCut.Preset != default);
         }
 
         // Maximum nodes in a single call

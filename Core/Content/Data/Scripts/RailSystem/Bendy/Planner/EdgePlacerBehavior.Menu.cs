@@ -1,5 +1,6 @@
 using System.Xml.Serialization;
 using Equinox76561198048419394.Core.UI;
+using Equinox76561198048419394.Core.Util;
 using Medieval.GUI.ContextMenu;
 using Medieval.GUI.ContextMenu.Attributes;
 using VRage.Game.Input;
@@ -11,8 +12,6 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
 {
     public partial class EdgePlacerBehavior
     {
-        private readonly MyInputContext _edgePlacerControls = new MyInputContext("Edge placer controls");
-
         private static bool _showMaxCurvature = true;
         private static bool _showMaxGrade = true;
         private static bool _snapToEdges = true;
@@ -23,36 +22,8 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
         private static float? _directionHint;
         private static float _verticalShift;
 
-        public EdgePlacerBehavior()
-        {
-            _edgePlacerControls.UnregisterAllActions();
-            _edgePlacerControls.RegisterAction(MyStringHash.GetOrCompute("CharacterUse"), ToggleMenu);
-        }
-
-        private MyContextMenu _menu;
-
-        private const string MenuSubtype = "EdgePlacerMenu";
-
-        private void ToggleMenu()
-        {
-            if (_menu != null && _menu.Visible && MyContextMenuScreen.GetContextMenu(MenuSubtype) != null)
-            {
-                _menu.Close();
-                _menu = null;
-            }
-            else
-            {
-                _menu?.Close();
-                _menu = MyContextMenuScreen.OpenMenu(Holder, MenuSubtype, this);
-            }
-        }
-
-        private void UpdateMenuContext()
-        {
-            var ctx = (MenuContext)_menu?.Context;
-            if (ctx == null)
-                return;
-        }
+        public string ToolContextMenuId => "EdgePlacerMenu";
+        public object[] ToolContextMenuArguments => new object[] { this };
 
         [MyContextMenuContextType(typeof(MyObjectBuilder_EdgePlacerConfigContext))]
         public sealed class MenuContext : MyContextMenuContext
