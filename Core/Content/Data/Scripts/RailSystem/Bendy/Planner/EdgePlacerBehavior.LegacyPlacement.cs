@@ -82,27 +82,87 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
             _vertices.Add(vertex);
             EdgePlacerSystem.AnnotateNodes(Graph, _vertices);
             vertex = _vertices[_vertices.Count - 1];
-            if ((vertex.Existing == null || vertex.Existing.TangentPins == 0) && (_gradeHint != null || _directionHint != null))
+            if ((vertex.Existing == null || vertex.Existing.TangentPins == 0) && (_gradeHint != null || _directionHint != null || _snapToVoxelGradient))
             {
-                // Apply gradle and direction constraints.
+                // Apply grade and direction constraints.
                 var surf = DirectionAndGrade.ComputeSurfaceMatrix(vertex.Position);
                 DirectionAndGrade.DecomposeTangent(surf, vertex.Tangent, out var dir, out var grade);
                 if (_directionHint != null)
                 {
                     // If the direction is flipping then also flip the suggested grade.
-                    dir += _directionHint.Value - MathHelper.PiOver2;
+                    if (Math.Abs(dir - _directionHint.Value) > MathHelper.Pi) grade = -grade;
+                    dir = _directionHint.Value;
                 }
 
                 if (_gradeHint.HasValue)
                     grade = (grade < 0 ? -1 : 1) * _gradeHint.Value;
 
+                if (_directionHint == null && _snapToVoxelGradient && TrySampleVoxelSurfaceNormal(in vertex.Position, in surf, out var surfaceNormal))
+                {
+                    Vector3.Cross(ref surf.UpMut(), ref surfaceNormal, out var level);
+                    Vector3.Cross(ref surfaceNormal, ref level, out var uphill);
+                    if (uphill.Normalize() > 0.05f)
+                    {
+                        DirectionAndGrade.DecomposeTangent(surf, uphill, out var uphillDirection, out var uphillGrade);
+                        dir = uphillDirection + MathHelper.Pi * MathHelper.Clamp(0.5f - grade / uphillGrade / 2, 0, 1);
+                    }
+                }
+
                 vertex.TangentPin = DirectionAndGrade.ComposeTangent(in surf, dir, grade);
                 _vertices[_vertices.Count - 1] = vertex;
                 EdgePlacerSystem.AnnotateNodes(Graph, _vertices);
             }
+
             return true;
         }
-        
+
+        private static bool TrySampleVoxelSurfaceNormal(in Vector3D center, in Matrix surface, out Vector3 norm)
+        {
+            var planet = MyGamePruningStructureSandbox.GetClosestPlanet(center);
+            if (planet == null)
+            {
+                norm = default;
+                return false;
+            }
+
+            var mid = Nearest(in center, Vector3.Zero);
+            var pX = Nearest(in center, surface.Right);
+            var nX = Nearest(in center, surface.Left);
+            var pZ = Nearest(in center, surface.Backward);
+            var nZ = Nearest(in center, surface.Forward);
+
+            var pXpZ = Nearest(in center, surface.Right + surface.Backward);
+            var pXnZ = Nearest(in center, surface.Right + surface.Forward);
+            var nXpZ = Nearest(in center, surface.Left + surface.Backward);
+            var nXnZ = Nearest(in center, surface.Left + surface.Forward);
+
+            norm = Vector3.Zero;
+            Normal(in mid, in pX, in nZ, ref norm);
+            Normal(in mid, in pXnZ, in nXnZ, ref norm);
+            Normal(in mid, in nZ, in nX, ref norm);
+            Normal(in mid, in nXnZ, in nXpZ, ref norm);
+            Normal(in mid, in nX, in pZ, ref norm);
+            Normal(in mid, in nXpZ, in pXpZ, ref norm);
+            Normal(in mid, in pZ, in pX, ref norm);
+            Normal(in mid, in pXpZ, in pXnZ, ref norm);
+            return norm.Normalize() > MathHelper.EPSILON;
+
+            Vector3D Nearest(in Vector3D rel, Vector3 delta)
+            {
+                var pos = rel + delta;
+                return planet.GetClosestSurfacePointGlobal(ref pos);
+            }
+
+            void Normal(in Vector3D midV, in Vector3D a, in Vector3D b, ref Vector3 dest)
+            {
+                var d1 = (Vector3)(a - midV);
+                var d2 = (Vector3)(b - midV);
+                Vector3.Cross(ref d1, ref d2, out var n);
+                if (n.Normalize() > MathHelper.EPSILON)
+                    Vector3.Add(ref n, ref dest, out dest);
+            }
+        }
+
         private bool StartPlacementLegacy(IMyPlayer player)
         {
             if (MyAPIGateway.Input.IsKeyDown(MyKeys.Shift) && _vertices.Count > 0)

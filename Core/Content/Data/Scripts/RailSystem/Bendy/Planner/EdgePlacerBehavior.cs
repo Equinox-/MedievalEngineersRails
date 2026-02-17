@@ -27,12 +27,13 @@ using VRage.ObjectBuilders.Definitions.Equipment;
 using VRage.Session;
 using VRage.Utils;
 using VRageMath;
+using VRageRender;
 using MessageUtil = Equinox76561198048419394.RailSystem.Util.MessageUtil;
 
 namespace Equinox76561198048419394.RailSystem.Bendy.Planner
 {
     [MyHandItemBehavior(typeof(MyObjectBuilder_EdgePlacerBehaviorDefinition))]
-    public partial class EdgePlacerBehavior : MyToolBehaviorBase, IToolWithMenu
+    public partial class EdgePlacerBehavior : MyToolBehaviorBase, IToolWithMenu, IToolWithUpdate
     {
         protected override bool ValidateTarget()
         {
@@ -65,11 +66,11 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
         {
             base.Activate();
             this.OnActivateWithMenu();
+            this.OnActivateWithUpdate();
             Graph = MySession.Static.Components.Get<BendyController>().GetOrCreateLayer(Layer);
             Graph.NodeCreated += NodesChanged;
             Graph.NodeMoved += NodesChanged;
             _vertices.Clear();
-            if (this.IsLocallyControlled()) Scene.Scheduler.AddFixedUpdate(Render);
         }
 
         private void NodesChanged(Node obj)
@@ -80,12 +81,12 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
         public override void Deactivate()
         {
             this.OnDeactivateWithMenu();
+            this.OnDeactivateWithUpdate();
             base.Deactivate();
             _vertices.Clear();
             Graph.NodeCreated -= NodesChanged;
             Graph.NodeMoved -= NodesChanged;
             Graph = null;
-            Scene.Scheduler.RemoveFixedUpdate(Render);
             _hintInfo?.Hide();
             _hintInfo = null;
         }
@@ -93,7 +94,7 @@ namespace Equinox76561198048419394.RailSystem.Bendy.Planner
 
         #region Rendering
 
-        private void Render()
+        void IToolWithUpdate.Update()
         {
             // Fix because OnTargetEntityChanged is only called when the actual entity changed.
             SetTarget();

@@ -15,6 +15,7 @@
         <Id Type="MyObjectBuilder_EquiAdvancedController" Subtype="EdgePlacerMenuMain" />
         <Title>Edge Planner</Title>
         <AutoCommit>true</AutoCommit>
+        <Width>400</Width>
         <Slider DataId="DirectionHint" StyleName="ContextMenuSlider" Min="-1" Max="180" Default="-1" IsInteger="false">
             <Text>Direction</Text>
             <TextFormat>{0}°</TextFormat>
@@ -49,6 +50,10 @@
         <Checkbox DataId="SnapToVoxels">
             <Text>Snap to Voxels</Text>
             <Tooltip>Snap created nodes to voxels. The final node position is then offset from the voxel position by the vertical shift.</Tooltip>
+        </Checkbox>
+        <Checkbox DataId="SnapToVoxelGradient">
+            <Text>Snap to Voxel Gradient</Text>
+            <Tooltip>Snaps the track direction to match the voxel gradient. A grade of zero will follow lines of constant elevation.</Tooltip>
         </Checkbox>
     </Definition>
 </Definitions>
